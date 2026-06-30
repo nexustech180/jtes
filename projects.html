@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Space — Jassan Technologies</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root {
+  --blue: #2563EB; --blue-light: #3B82F6; --blue-dark: #1D4ED8;
+  --dark: #0A0F1E; --dark2: #0F172A; --text: #1e293b;
+  --text-muted: #64748b; --white: #ffffff; --border: #e2e8f0;
+  --red: #ef4444; --orange: #f59e0b; --green: #10b981;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Manrope', sans-serif; color: var(--text); background: #f8fafc; }
+
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: #fff; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 48px; height: 64px;
+}
+.nav-logo img { height: 40px; cursor: pointer; }
+.nav-links { display: flex; align-items: center; gap: 4px; }
+.nav-links a { padding: 8px 18px; border-radius: 8px; font-size: 15px; font-weight: 500; color: var(--text); text-decoration: none; }
+.nav-links a:hover, .nav-links a.active { background: #EFF6FF; color: var(--blue); font-weight: 600; }
+.btn-primary { background: var(--blue); color: #fff; border-radius: 10px; padding: 10px 22px; text-decoration: none; font-weight: 600; }
+.mobile-menu-btn { display: none; background: none; border: none; font-size: 1.6rem; cursor: pointer; }
+
+/* ── HERO CAROUSEL ── */
+.hero-carousel {
+  position: relative;
+  height: 92vh;
+  min-height: 560px;
+  overflow: hidden;
+  padding-top: 64px;
+  background: #0A0F1E;
+}
+.carousel-track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+}
+.carousel-slide {
+  flex: 0 0 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.slide-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.22;
+  transform: scale(1.05);
+  transition: transform 8s ease;
+}
+.carousel-slide.active .slide-bg { transform: scale(1); }
+.slide-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, rgba(10,15,30,0.97) 40%, rgba(30,58,138,0.55) 100%);
+}
+.slide-content {
+  position: relative;
+  z-index: 2;
+  padding: 0 80px;
+  max-width: 780px;
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease 0.3s, transform 0.7s ease 0.3s;
+}
+.carousel-slide.active .slide-content { opacity: 1; transform: translateY(0); }
+.slide-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(37,99,235,0.18);
+  border: 1px solid rgba(59,130,246,0.35);
+  color: #93C5FD;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 7px 16px;
+  border-radius: 50px;
+  margin-bottom: 24px;
+}
+.slide-label .dot { width: 6px; height: 6px; border-radius: 50%; background: #3B82F6; }
+.slide-content h1 {
+  font-size: 58px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.08;
+  margin-bottom: 20px;
+  letter-spacing: -1px;
+}
+.slide-content h1 span { color: #3B82F6; }
+.slide-content p {
+  font-size: 17px;
+  color: rgba(255,255,255,0.65);
+  line-height: 1.75;
+  margin-bottom: 36px;
+  max-width: 560px;
+}
+.slide-cta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.btn-slide-primary {
+  background: #2563EB;
+  color: #fff;
+  padding: 14px 32px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.2s, transform 0.2s;
+}
+.btn-slide-primary:hover { background: #1D4ED8; transform: translateY(-2px); }
+.btn-slide-secondary {
+  color: rgba(255,255,255,0.75);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.2s;
+}
+.btn-slide-secondary:hover { color: #fff; }
+.slide-contact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.slide-contact i { color: #3B82F6; font-size: 16px; }
+.slide-contact span { color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 500; }
+.slide-contact strong { color: #fff; font-size: 15px; font-weight: 700; }
+
+/* Arrows */
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 50px; height: 50px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+}
+.carousel-arrow:hover { background: rgba(37,99,235,0.5); border-color: #3B82F6; }
+.carousel-arrow.prev { left: 28px; }
+.carousel-arrow.next { right: 28px; }
+
+/* Dots */
+.carousel-dots {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+}
+.carousel-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  transition: all 0.3s;
+}
+.carousel-dot.active { background: #fff; width: 28px; border-radius: 4px; }
+
+/* Progress bar */
+.carousel-progress {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 3px;
+  background: #2563EB;
+  z-index: 10;
+  animation: progressBar 5s linear infinite;
+}
+@keyframes progressBar { from { width: 0 } to { width: 100% } }
+
+/* Slide counter */
+.slide-counter {
+  position: absolute;
+  top: 32px;
+  right: 80px;
+  z-index: 10;
+  color: rgba(255,255,255,0.4);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.slide-counter span { color: #fff; }
+
+.project-container { max-width: 1400px; margin: 60px auto; padding: 0 40px; }
+.section-header { margin-bottom: 32px; }
+.section-header h2 { font-size: 32px; font-weight: 800; color: var(--dark2); display: flex; align-items: center; gap: 12px; }
+
+.folders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 24px;
+  margin-bottom: 60px;
+}
+
+/* Folder shape wrapper */
+.folder-card {
+  cursor: pointer;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1));
+}
+.folder-card:hover {
+  transform: translateY(-6px);
+  filter: drop-shadow(0 14px 28px rgba(37,99,235,0.2));
+}
+
+/* Folder tab */
+.folder-tab {
+  height: 13px;
+  width: 40%;
+  border-radius: 5px 5px 0 0;
+  margin-left: 10px;
+}
+.folder-tab.public  { background: #2563EB; }
+
+/* Folder main body */
+.folder-main {
+  border-radius: 0 10px 10px 10px;
+  overflow: hidden;
+  position: relative;
+}
+.folder-main.public  { background: #2563EB; }
+
+/* Folder preview image */
+.folder-preview {
+  height: 105px;
+  position: relative;
+  overflow: hidden;
+  margin: 6px 6px 0;
+  border-radius: 5px 5px 0 0;
+  background: rgba(0,0,0,0.25);
+}
+.folder-preview img, .folder-preview video {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.folder-card:hover .folder-preview img,
+.folder-card:hover .folder-preview video { transform: scale(1.06); }
+.folder-preview-placeholder {
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.folder-preview-placeholder i {
+  font-size: 32px;
+  color: rgba(255,255,255,0.18);
+}
+
+/* Badge */
+.folder-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  backdrop-filter: blur(6px);
+}
+.folder-badge.public  { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* File count */
+.folder-resource-count {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Info strip */
+.folder-body {
+  background: #fff;
+  margin: 0 6px 6px;
+  border-radius: 0 0 5px 5px;
+  padding: 10px 11px 12px;
+}
+.folder-category {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.folder-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--dark2);
+  margin-bottom: 3px;
+  line-height: 1.3;
+}
+.folder-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.folder-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.folder-date {
+  font-size: 10px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.btn-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s, transform 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.btn-view.public-btn  { background: #2563EB; }
+.btn-view:hover { opacity: 0.88; transform: translateX(2px); }
+.empty-state { text-align: center; padding: 60px; background: #fff; border-radius: 20px; }
+
+/* ── FULLSCREEN FOLDER VIEW ── */
+.folder-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #f8fafc;
+  z-index: 2000;
+  overflow-y: auto;
+  animation: fsIn 0.3s ease;
+}
+@keyframes fsIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fs-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(135deg, #0A0F1E 0%, #1E3A8A 100%);
+  padding: 20px 40px 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.fs-back-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.fs-back-btn:hover { background: rgba(255,255,255,0.22); }
+.fs-title-block { flex: 1; }
+.fs-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 4px;
+}
+.fs-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.2;
+}
+.fs-desc {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  margin-top: 3px;
+}
+.fs-toolbar {
+  padding: 14px 40px;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.fs-file-count {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.fs-body {
+  padding: 32px 40px 60px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+
+.resources-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+.resource-card {
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.resource-card:hover {
+  box-shadow: 0 6px 20px rgba(37,99,235,0.12);
+  transform: translateY(-3px);
+}
+.resource-preview {
+  height: 150px;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+.resource-preview img, .resource-preview video {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+.resource-card:hover .resource-preview img { transform: scale(1.05); }
+.resource-preview-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.resource-preview-icon i { font-size: 40px; }
+.resource-type-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+.resource-hover-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(37,99,235,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  gap: 12px;
+}
+.resource-card:hover .resource-hover-overlay { opacity: 1; }
+.overlay-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  border: 1.5px solid rgba(255,255,255,0.5);
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  text-decoration: none;
+}
+.overlay-btn:hover { background: rgba(255,255,255,0.35); }
+.resource-info {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+}
+.resource-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dark2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.resource-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* List view */
+.resources-list { display: flex; flex-direction: column; gap: 2px; }
+.resource-list-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.resource-list-item:hover {
+  background: #f8fafc;
+  border-color: var(--border);
+}
+.resource-list-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.resource-list-icon.image { background: #EFF6FF; color: #3B82F6; }
+.resource-list-icon.video { background: #F5F3FF; color: #8B5CF6; }
+.resource-list-icon.pdf   { background: #FEF2F2; color: #EF4444; }
+.resource-list-icon.doc   { background: #EFF6FF; color: #2563EB; }
+.resource-list-info { flex: 1; min-width: 0; }
+.resource-list-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dark2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.resource-list-type {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+.resource-list-actions {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.resource-list-item:hover .resource-list-actions { opacity: 1; }
+.list-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+.list-action-btn.view { background: var(--blue); color: #fff; }
+.list-action-btn.view:hover { background: var(--blue-dark); }
+.list-action-btn.dl { background: #f1f5f9; color: var(--text); }
+.list-action-btn.dl:hover { background: #e2e8f0; }
+
+.viewer-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.95);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.viewer-content {
+  max-width: 90vw;
+  max-height: 85vh;
+  background: transparent;
+}
+.viewer-content img, .viewer-content video {
+  max-width: 100%;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 12px;
+}
+.viewer-content iframe {
+  width: 90vw;
+  height: 85vh;
+  border: none;
+  border-radius: 12px;
+  background: #fff;
+}
+.viewer-close {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: #fff;
+  font-size: 30px;
+  cursor: pointer;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.viewer-close:hover { background: rgba(255,255,255,0.3); }
+.viewer-download {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: var(--blue);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 30px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.loading-spinner { text-align: center; padding: 60px; }
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--dark2); color: #fff; padding: 14px 20px; border-radius: 12px; z-index: 3000; display: none; }
+.toast.show { display: flex; align-items: center; gap: 10px; }
+.toast.error { background: var(--red); }
+
+footer { background: #0A0F1E; padding: 48px 80px 24px; text-align: center; color: rgba(255,255,255,0.4); }
+
+@media (max-width: 900px) {
+  nav { padding: 0 1.5rem; }
+  .nav-links { display: none; }
+  .mobile-menu-btn { display: block; }
+
+  .nav-links.open {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: rgba(255,255,255,0.98);
+    backdrop-filter: blur(10px);
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    z-index: 999;
+    animation: slideDown 0.3s ease;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  .nav-links.open a {
+    display: block;
+    padding: 0.9rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--dark2);
+    border-bottom: 1px solid var(--border);
+    text-decoration: none;
+  }
+  .nav-links.open a:last-child { border-bottom: none; }
+  .nav-links.open a:hover,
+  .nav-links.open a.active { color: var(--blue); background: #EFF6FF; }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .hero-carousel { height: auto; min-height: 520px; }
+  .slide-content { padding: 40px 24px; max-width: 100%; }
+  .slide-content h1 { font-size: 34px; letter-spacing: -0.5px; }
+  .slide-content p { font-size: 15px; }
+  .carousel-arrow { display: none; }
+  .slide-counter { top: 20px; right: 20px; }
+  .project-container { padding: 0 20px; }
+  .folders-grid { grid-template-columns: 1fr; }
+  .resources-grid { grid-template-columns: 1fr; }
+}
+  /* ===== NEWSLETTER ===== */
+  .newsletter-section {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #060D1F 0%, #0F1E45 50%, #0A0F1E 100%);
+    padding: 100px 80px 0; text-align: center;
+    margin-bottom: 0;
+  }
+  .newsletter-section::before {
+    content: ''; position: absolute;
+    width: 500px; height: 500px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%);
+    top: -200px; left: -100px; pointer-events: none;
+  }
+  .newsletter-section::after {
+    content: ''; position: absolute;
+    width: 400px; height: 400px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
+    bottom: -150px; right: -80px; pointer-events: none;
+  }
+  .nl-inner { position: relative; z-index: 2; max-width: 680px; margin: 0 auto; }
+  .nl-icon-wrap {
+    width: 72px; height: 72px; border-radius: 20px; margin: 0 auto 24px;
+    background: linear-gradient(135deg, #2563EB, #1D4ED8);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; color: #fff;
+    box-shadow: 0 12px 40px rgba(37,99,235,0.4);
+  }
+  .newsletter-section h2 { font-size: 48px; font-weight: 900; color: #fff; margin-bottom: 14px; line-height: 1.1; }
+  .newsletter-section h2 span { color: #3B82F6; }
+  .nl-inner > p { font-size: 17px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.7; max-width: 520px; margin-left: auto; margin-right: auto; }
+  .nl-perks { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin-bottom: 40px; }
+  .nl-perk { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.65); }
+  .nl-perk i { color: #3B82F6; font-size: 14px; }
+  .nl-card {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(16px); border-radius: 20px; padding: 32px 36px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+  }
+  .nl-fields { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
+  .nl-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .nl-input {
+    width: 100%; padding: 14px 18px; border: 1.5px solid rgba(255,255,255,0.12);
+    border-radius: 12px; font-size: 15px; font-family: 'Manrope', sans-serif;
+    color: #fff; background: rgba(255,255,255,0.08); outline: none;
+    transition: border-color 0.2s; box-sizing: border-box;
+  }
+  .nl-input::placeholder { color: rgba(255,255,255,0.3); }
+  .nl-input:focus { border-color: #3B82F6; background: rgba(37,99,235,0.1); }
+  .nl-submit-btn {
+    width: 100%; padding: 15px; border: none; border-radius: 12px;
+    background: linear-gradient(135deg, #2563EB, #1D4ED8);
+    color: #fff; font-size: 16px; font-weight: 700; cursor: pointer;
+    font-family: 'Manrope', sans-serif; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    box-shadow: 0 8px 24px rgba(37,99,235,0.4);
+  }
+  .nl-submit-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(37,99,235,0.55); }
+  .nl-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .nl-msg { margin-top: 14px; font-size: 14px; color: rgba(255,255,255,0.8); display: none; text-align: center; line-height: 1.6; }
+  .nl-fine { font-size: 12px; color: rgba(255,255,255,0.2); margin-top: 16px; }
+
+  /* ===== FOOTER ===== */
+  footer { background: #0A0F1E; padding: 72px 80px 0; margin-top: 0; }
+  .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1.2fr 1.2fr; gap: 48px; padding-bottom: 48px; }
+  .footer-logo {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px; padding: 10px 18px; display: inline-flex; align-items: center; gap: 10px; margin-bottom: 20px;
+  }
+  .footer-logo span { color: #fff; font-size: 13px; font-weight: 800; letter-spacing: 1px; }
+  .footer-brand p { font-size: 14px; color: rgba(255,255,255,0.55); line-height: 1.75; margin-bottom: 24px; }
+  .social-icons { display: flex; gap: 10px; }
+  .social-icon {
+    width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.6);
+    font-size: 15px; cursor: pointer; transition: all 0.2s; text-decoration: none;
+  }
+  .social-icon:hover { background: var(--blue); color: #fff; }
+  .footer-col h4 { color: #fff; font-size: 16px; font-weight: 700; margin-bottom: 20px; }
+  .footer-col a { display: block; color: rgba(255,255,255,0.55); font-size: 14px; margin-bottom: 12px; text-decoration: none; transition: color 0.2s; }
+  .footer-col a:hover { color: #fff; }
+  .footer-contact { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+  .contact-icon {
+    width: 36px; height: 36px; min-width: 36px; border-radius: 10px;
+    background: rgba(37,99,235,0.2); display: flex; align-items: center; justify-content: center;
+    color: #3B82F6; font-size: 14px;
+  }
+  .footer-contact div { font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.6; }
+  .footer-bottom {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding: 20px 0; display: flex; align-items: center; justify-content: space-between;
+  }
+  .footer-bottom p { font-size: 13px; color: rgba(255,255,255,0.4); }
+  .footer-bottom-links { display: flex; gap: 24px; }
+  .footer-bottom-links a { font-size: 13px; color: rgba(255,255,255,0.4); text-decoration: none; }
+  .footer-bottom-links a:hover { color: #fff; }
+
+  @media (max-width: 900px) {
+    .newsletter-section { padding: 80px 20px; }
+    .nl-field-row { grid-template-columns: 1fr; }
+    .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; padding: 0 0 40px; }
+    footer { padding: 48px 20px 0; }
+  }
+  @media (max-width: 600px) {
+    .footer-grid { grid-template-columns: 1fr; }
+    .newsletter-section h2 { font-size: 30px; }
+    .nl-card { padding: 24px 18px; }
+  }
+
+  /* ===== SERVICES DROPDOWN ===== */
+  .nav-dropdown { position: relative; }
+  .nav-dropdown > a { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+  .nav-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: transparent;
+    padding-top: 10px;
+    z-index: 2000;
+  }
+  .nav-dropdown-menu-inner {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(37,99,235,0.10), 0 2px 8px rgba(0,0,0,0.07);
+    min-width: 200px;
+    padding: 8px;
+  }
+  .nav-dropdown:hover .nav-dropdown-menu,
+  .nav-dropdown:focus-within .nav-dropdown-menu { display: block; }
+  .nav-dropdown-menu a {
+    display: block; padding: 10px 16px; border-radius: 9px;
+    font-size: 14px; font-weight: 500; color: var(--text);
+    text-decoration: none; transition: background 0.18s, color 0.18s;
+  }
+  .nav-dropdown-menu a:hover { background: #EFF6FF; color: var(--blue); }
+  .nav-dropdown-menu a.active { background: #EFF6FF; color: var(--blue); font-weight: 600; }
+  @media (max-width: 900px) {
+    .nav-dropdown-menu {
+      position: static; box-shadow: none; border: none;
+      border-radius: 0; padding: 0 0 0 16px; background: transparent; display: none;
+    }
+    .nav-dropdown.open .nav-dropdown-menu { display: block; }
+    .nav-dropdown-menu a { padding: 10px 20px; font-size: 0.97rem; border-bottom: 1px solid var(--border); }
+  }
+
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo" onclick="location.href='index.html'">
+    <img src="https://jassan-innovations-hub.vercel.app/assets/logo-CoQZjYGJ.jpg" alt="JTES">
+  </div>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <div class="nav-dropdown">
+      <a href="services.html" class="active">Services &#9660;</a>
+      <div class="nav-dropdown-menu"><div class="nav-dropdown-menu-inner">
+        <a href="services.html">Prime Aide</a>
+        <a href="gallery.html">Animation-Dot</a>
+        <a href="projects.html" class="active">Project Space</a>
+        <a href="sales.html">My Store</a>
+      </div></div>
+    </div>
+    <a href="blog.html">Blog</a>
+    <a href="contact.html">Contact</a>
+    <a href="learn.html" >Learn</a>
+    <a href="portal.html">Portal</a>
+ </div>
+  <button class="mobile-menu-btn" id="menuBtn">☰</button>
+  <a href="admin.html" title="Admin" style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:#f1f5f9;color:var(--text-muted);transition:all 0.2s;text-decoration:none;" onmouseover="this.style.background='#EFF6FF';this.style.color='var(--blue)'" onmouseout="this.style.background='#f1f5f9';this.style.color='var(--text-muted)'">
+    <i class="fas fa-lock" style="font-size:15px;"></i>
+  </a>
+</nav>
+
+<section class="hero-carousel">
+  <div class="carousel-track" id="carouselTrack">
+
+    <!-- Slide 1: Project Space -->
+    <div class="carousel-slide active">
+      <div class="slide-bg" style="background-image: url('https://images.unsplash.com/photo-1518770660439-4636190af475?w=1600&q=80');"></div>
+      <div class="slide-overlay"></div>
+      <div class="slide-content">
+        <div class="slide-label"><span class="dot"></span> JTES · Project Space</div>
+        <h1>Research <span>Components</span> &amp; Technical Assistance</h1>
+        <p>Need electrical or electronic components for your research project? Or expert technical assistance to bring your project to life? We have you covered.</p>
+        <div class="slide-cta">
+          <a href="contact.html" class="btn-slide-primary"><i class="fas fa-envelope"></i> Get in Touch</a>
+          <a href="#folders-container" class="btn-slide-secondary">Browse Projects <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="slide-contact">
+          <i class="fas fa-phone-alt"></i>
+          <span>Call us</span>
+          <strong>+233 548 029 027</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 2: Prime Aide -->
+    <div class="carousel-slide">
+      <div class="slide-bg" style="background-image: url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=80');"></div>
+      <div class="slide-overlay"></div>
+      <div class="slide-content">
+        <div class="slide-label"><span class="dot"></span> JTES · Prime Aide</div>
+        <h1>Electrical <span>Installation</span> &amp; Appliance Repair</h1>
+        <p>Electrical issues, installation services, or faulty appliances that need servicing — our certified team responds fast and works to the highest standard.</p>
+        <div class="slide-cta">
+          <a href="contact.html" class="btn-slide-primary"><i class="fas fa-tools"></i> Request Service</a>
+          <a href="services.html" class="btn-slide-secondary">Our Services <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="slide-contact">
+          <i class="fas fa-phone-alt"></i>
+          <span>Call us</span>
+          <strong>+233 548 029 027 &nbsp;|&nbsp; +233 555 097 254</strong>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Arrows -->
+  <button class="carousel-arrow prev" onclick="moveSlide(-1)"><i class="fas fa-chevron-left"></i></button>
+  <button class="carousel-arrow next" onclick="moveSlide(1)"><i class="fas fa-chevron-right"></i></button>
+
+  <!-- Dots -->
+  <div class="carousel-dots" id="carouselDots">
+    <button class="carousel-dot active" onclick="goToSlide(0)"></button>
+    <button class="carousel-dot" onclick="goToSlide(1)"></button>
+  </div>
+
+  <!-- Counter -->
+  <div class="slide-counter"><span id="slideNum">1</span> / 2</div>
+
+  <!-- Progress bar -->
+  <div class="carousel-progress" id="carouselProgress"></div>
+</section>
+
+<div class="project-container">
+  <div id="folders-container">
+    <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Loading projects...</p></div>
+  </div>
+</div>
+
+<div id="folderScreen" class="folder-screen">
+  <div class="fs-topbar">
+    <button class="fs-back-btn" onclick="closeModal()"><i class="fas fa-arrow-left"></i></button>
+    <div class="fs-title-block">
+      <div class="fs-label">Project Folder</div>
+      <div class="fs-title" id="modalTitle"></div>
+      <div class="fs-desc" id="modalDesc"></div>
+    </div>
+  </div>
+  <div class="fs-toolbar">
+    <span class="fs-file-count"><span id="resourceCount">0</span> file(s)</span>
+    <div class="view-toggle">
+      <button class="view-btn active" id="gridViewBtn" onclick="setView('grid')" title="Grid view"><i class="fas fa-th"></i></button>
+      <button class="view-btn" id="listViewBtn" onclick="setView('list')" title="List view"><i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <div class="fs-body">
+    <div id="modalResources" class="resources-grid"></div>
+  </div>
+</div>
+
+
+<div id="viewerModal" class="viewer-modal" style="display: none;">
+  <button class="viewer-close" onclick="closeViewer()">&times;</button>
+  <div id="viewerContent" class="viewer-content"></div>
+  <a id="viewerDownloadLink" class="viewer-download" download><i class="fas fa-download"></i> Download</a>
+</div>
+
+<div id="toastMsg" class="toast"></div>
+
+<div class="newsletter-section">
+  <div class="nl-inner">
+    <div class="nl-icon-wrap"><i class="fas fa-envelope-open-text"></i></div>
+    <h2>Stay Ahead with <span>JTES</span></h2>
+    <p>Join our exclusive community. Get event invites, new blog posts, STEM breakthroughs and tech insights from Ghana's leading technology team — straight to your inbox.</p>
+    <div class="nl-perks">
+      <div class="nl-perk"><i class="fas fa-calendar-alt"></i> Exclusive Events</div>
+      <div class="nl-perk"><i class="fas fa-newspaper"></i> Latest Articles</div>
+      <div class="nl-perk"><i class="fas fa-bolt"></i> Tech Insights</div>
+      <div class="nl-perk"><i class="fas fa-gift"></i> Member Perks</div>
+    </div>
+    <div class="nl-card">
+      <div class="nl-fields">
+        <div class="nl-field-row">
+          <input class="nl-input" id="nl-name" type="text" placeholder="Your name">
+          <input class="nl-input" id="nl-email" type="email" placeholder="Your email address">
+        </div>
+      </div>
+      <button class="nl-submit-btn" id="nl-btn" onclick="subscribeNewsletter()">
+        <i class="fas fa-paper-plane"></i> Subscribe Now — It's Free
+      </button>
+      <p class="nl-msg" id="nl-msg"></p>
+    </div>
+    <p class="nl-fine">Zero spam. Unsubscribe with one click, anytime.</p>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="footer-logo">
+        <img src="https://jassan-innovations-hub.vercel.app/assets/logo-CoQZjYGJ.jpg" alt="Jassan Logo" style="height:34px;width:auto;object-fit:contain;filter:brightness(0) invert(1);">
+      </div>
+      <p>Empowering Africa through innovative technology solutions, quality STEM education, and reliable electrical services.</p>
+      <div class="social-icons">
+  <a class="social-icon" href="https://www.facebook.com/share/18faNx8Dv2/"><i class="fab fa-facebook-f"></i></a>
+  <a class="social-icon" href="https://youtube.com/@therobotseries?si=xlG2jzS2aUnC-pyV"><i class="fab fa-youtube"></i></a>
+  <a class="social-icon" href="#"><i class="fab fa-instagram"></i></a>
+  <a class="social-icon" href="https://www.linkedin.com/in/assan-james-201016230?utm_source=share_via&utm_content=profile&utm_medium=member_android"><i class="fab fa-linkedin-in"></i></a>
+  <a class="social-icon" href="https://wa.me/233548029027"><i class="fas fa-comment"></i></a>
+</div>
+    </div>
+    <div class="footer-col">
+      <h4>Quick Links</h4>
+      <a href="index.html">Home</a>
+      <a href="about.html">About Us</a>
+      <a href="services.html">Our Services</a>
+      <a href="projects.html">Project Space</a>
+      <a href="blog.html">Blog</a>
+      <a href="contact.html">Contact</a>
+    </div>
+    <div class="footer-col">
+      <h4>Our Services</h4>
+      <a href="services.html#svc-stem">STEM &amp; Robotics Education</a>
+      <a href="services.html#svc-rd">Research &amp; Development</a>
+      <a href="services.html#svc-electrical">Electrical Services</a>
+      <a href="services.html#svc-iot">IoT &amp; Smart Automation</a>
+      <a href="services.html#svc-curriculum">Curriculum Development</a>
+      <a href="services.html#svc-components">Component Sales</a>
+    </div>
+    <div class="footer-col">
+      <h4>Contact Us</h4>
+      <div class="footer-contact">
+        <div class="contact-icon"><i class="fas fa-phone"></i></div>
+        <div>0548029027<br>0203212915</div>
+      </div>
+      <div class="footer-contact">
+        <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+        <div>jassantechnologies@gmail.com</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>&copy; 2025 JASSAN Technologies and Electrical Services. All Rights Reserved.</p>
+    <div class="footer-bottom-links">
+    <a href="admin.html" id="admin-link" title="" style="opacity:0;font-size:1px;color:transparent;user-select:none;position:absolute;">·</a>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+    </div>
+  </div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+const FB_DB_URL = 'https://jtes-website-default-rtdb.firebaseio.com';
+let allFolders = [];
+
+function showToast(msg, isError = false) {
+  const toast = document.getElementById('toastMsg');
+  toast.textContent = msg;
+  toast.className = 'toast show ' + (isError ? 'error' : '');
+  setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+async function loadFolders() {
+  const container = document.getElementById('folders-container');
+  container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Loading projects...</p></div>';
+  
+  try {
+    const response = await fetch(`${FB_DB_URL}/projectFolders.json`);
+    const data = await response.json();
+    
+    if (!data || Object.keys(data).length === 0) {
+      container.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><p>No projects available yet. Check back soon!</p></div>';
+      return;
+    }
+    
+    allFolders = Object.keys(data).map(key => ({ id: key, ...data[key] }))
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    
+    renderFolders();
+  } catch (error) {
+    console.error('Error:', error);
+    container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load projects. Please try again.</p></div>';
+  }
+}
+
+function renderFolders() {
+  const container = document.getElementById('folders-container');
+
+  if (allFolders.length === 0) {
+    container.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><p>No projects available yet. Check back soon!</p></div>';
+    return;
+  }
+
+  let html = `<div class="section-header"><h2><i class="fas fa-globe"></i> Projects</h2></div>`;
+  html += `<div class="folders-grid">`;
+  html += allFolders.map(f => renderFolderCard(f)).join('');
+  html += `</div>`;
+
+  container.innerHTML = html;
+}
+
+function renderFolderCard(folder) {
+  const previewResource = folder.resources && folder.resources.length > 0 ? folder.resources[0] : null;
+  let previewHtml = '';
+
+  if (previewResource && previewResource.type === 'image') {
+    previewHtml = `<img src="${previewResource.url}" alt="${escapeHtml(folder.name)}">`;
+  } else if (previewResource && previewResource.type === 'video') {
+    previewHtml = `<video src="${previewResource.url}" muted></video>`;
+  } else {
+    previewHtml = `<div class="folder-preview-placeholder"><i class="fas fa-folder-open"></i></div>`;
+  }
+
+  const resourceCount = folder.resources ? folder.resources.length : 0;
+  const dateStr = new Date(folder.updatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  return `
+    <div class="folder-card" onclick="openFolder('${folder.id}')">
+      <div class="folder-tab public"></div>
+      <div class="folder-main public">
+        <div class="folder-preview">
+          ${previewHtml}
+          <span class="folder-badge public"><i class="fas fa-globe"></i> Public</span>
+          <span class="folder-resource-count"><i class="fas fa-layer-group"></i> ${resourceCount} file${resourceCount !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="folder-body">
+          <div class="folder-category">Open Project</div>
+          <h3 class="folder-title">${escapeHtml(folder.name)}</h3>
+          <p class="folder-desc">${escapeHtml((folder.description || 'No description provided.').substring(0, 100))}</p>
+          <div class="folder-footer">
+            <span class="folder-date"><i class="fas fa-calendar-alt"></i> ${dateStr}</span>
+            <button class="btn-view public-btn" onclick="event.stopPropagation(); openFolder('${folder.id}')">
+              Open <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function openFolder(folderId) {
+  const folder = allFolders.find(f => f.id === folderId);
+  if (!folder) return;
+  displayFolderContent(folder);
+}
+
+let currentResources = [];
+let currentView = 'grid';
+let currentFilter = 'all';
+
+function displayFolderContent(folder) {
+  document.getElementById('modalTitle').textContent = folder.name;
+  document.getElementById('modalDesc').textContent = folder.description || 'No description provided.';
+
+  currentResources = folder.resources || [];
+  document.getElementById('resourceCount').textContent = currentResources.length;
+
+  currentFilter = 'all';
+  currentView = 'grid';
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === 'all'));
+  document.getElementById('gridViewBtn').classList.add('active');
+  document.getElementById('listViewBtn').classList.remove('active');
+  document.getElementById('modalResources').className = 'resources-grid';
+
+  renderResources();
+  document.getElementById('folderScreen').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function setView(view) {
+  currentView = view;
+  document.getElementById('gridViewBtn').classList.toggle('active', view === 'grid');
+  document.getElementById('listViewBtn').classList.toggle('active', view === 'list');
+  document.getElementById('modalResources').className = view === 'grid' ? 'resources-grid' : 'resources-list';
+  renderResources();
+}
+
+function filterResources(filter) {
+  currentFilter = filter;
+  renderResources();
+}
+
+function getTypeLabel(type) {
+  if (type === 'image') return 'Image';
+  if (type === 'video') return 'Video';
+  if (type === 'pdf') return 'PDF';
+  return 'Document';
+}
+function getTypeIcon(type) {
+  if (type === 'image') return 'fa-image';
+  if (type === 'video') return 'fa-film';
+  if (type === 'pdf') return 'fa-file-pdf';
+  return 'fa-file-word';
+}
+
+function renderResources() {
+  const filtered = currentFilter === 'all'
+    ? currentResources
+    : currentResources.filter(r => r.type === currentFilter);
+
+  const container = document.getElementById('modalResources');
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-muted);">
+      <i class="fas fa-filter" style="font-size:36px;display:block;margin-bottom:12px;opacity:0.3;"></i>
+      No ${currentFilter === 'all' ? '' : currentFilter + ' '}files in this folder.
+    </div>`;
+    return;
+  }
+
+  if (currentView === 'grid') {
+    container.innerHTML = filtered.map(resource => {
+      const icon = getTypeIcon(resource.type);
+      const label = getTypeLabel(resource.type);
+      let previewHtml = '';
+
+      if (resource.type === 'image') {
+        previewHtml = `<img src="${resource.url}" alt="${escapeHtml(resource.name)}">`;
+      } else if (resource.type === 'video') {
+        previewHtml = `<video src="${resource.url}" muted></video>`;
+      } else {
+        const colors = { pdf: '#ef4444', doc: '#2563EB', file: '#64748b' };
+        const color = colors[resource.type] || colors.file;
+        previewHtml = `<div class="resource-preview-icon">
+          <i class="fas ${icon}" style="font-size:44px;color:${color};"></i>
+          <span class="resource-type-label">${label}</span>
+        </div>`;
+      }
+
+      return `<div class="resource-card">
+        <div class="resource-preview">
+          ${previewHtml}
+          <div class="resource-hover-overlay">
+            <button class="overlay-btn" onclick="openViewer('${resource.url}','${resource.type}','${escapeHtml(resource.name)}')" title="View">
+              <i class="fas fa-eye"></i>
+            </button>
+            <a class="overlay-btn" href="${resource.url}" download="${escapeHtml(resource.name)}" title="Download">
+              <i class="fas fa-download"></i>
+            </a>
+          </div>
+        </div>
+        <div class="resource-info">
+          <div class="resource-name">${escapeHtml(resource.name.length > 30 ? resource.name.substring(0,30)+'…' : resource.name)}</div>
+          <div class="resource-meta">${label}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+  } else {
+    container.innerHTML = filtered.map(resource => {
+      const icon = getTypeIcon(resource.type);
+      const label = getTypeLabel(resource.type);
+      const iconClass = resource.type === 'image' ? 'image' : resource.type === 'video' ? 'video' : resource.type === 'pdf' ? 'pdf' : 'doc';
+
+      return `<div class="resource-list-item" onclick="openViewer('${resource.url}','${resource.type}','${escapeHtml(resource.name)}')">
+        <div class="resource-list-icon ${iconClass}">
+          <i class="fas ${icon}"></i>
+        </div>
+        <div class="resource-list-info">
+          <div class="resource-list-name">${escapeHtml(resource.name)}</div>
+          <div class="resource-list-type">${label}</div>
+        </div>
+        <div class="resource-list-actions">
+          <button class="list-action-btn view" onclick="event.stopPropagation();openViewer('${resource.url}','${resource.type}','${escapeHtml(resource.name)}')">
+            <i class="fas fa-eye"></i> View
+          </button>
+          <a class="list-action-btn dl" href="${resource.url}" download="${escapeHtml(resource.name)}" onclick="event.stopPropagation()">
+            <i class="fas fa-download"></i> Save
+          </a>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function openViewer(url, type, name) {
+  const viewer = document.getElementById('viewerModal');
+  const content = document.getElementById('viewerContent');
+  const downloadLink = document.getElementById('viewerDownloadLink');
+  
+  downloadLink.href = url;
+  downloadLink.download = name;
+  
+  if (type === 'image') {
+    content.innerHTML = `<img src="${url}" alt="${name}">`;
+  } else if (type === 'video') {
+    content.innerHTML = `<video src="${url}" controls autoplay style="width:100%; max-height:85vh;"></video>`;
+  } else if (type === 'pdf') {
+    content.innerHTML = `<iframe src="${url}" style="width:90vw; height:85vh; border:none; border-radius:12px; background:#fff;"></iframe>`;
+  } else {
+    // Word, PowerPoint, Excel and any other office/unknown file — use Google Docs Viewer
+    const encoded = encodeURIComponent(url);
+    content.innerHTML = `
+      <div style="text-align:center; color:#fff; margin-bottom:16px; font-size:14px; opacity:0.7;">
+        <i class="fas fa-file-word" style="margin-right:6px;"></i> ${name}
+      </div>
+      <iframe src="https://docs.google.com/viewer?url=${encoded}&embedded=true"
+        style="width:90vw; height:80vh; border:none; border-radius:12px; background:#fff;"
+        onerror="this.outerHTML='<p style=color:#fff>Unable to preview. Please download the file.</p>'">
+      </iframe>`;
+  }
+  
+  viewer.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeViewer() {
+  document.getElementById('viewerModal').style.display = 'none';
+  document.getElementById('viewerContent').innerHTML = '';
+  document.body.style.overflow = '';
+}
+
+function downloadFile(url, name) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast(`Downloading: ${name}`, false);
+}
+
+function closeModal() {
+  document.getElementById('folderScreen').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
+  });
+}
+
+document.getElementById('folderScreen')?.addEventListener('click', function(e) {
+  // only close if clicking the screen bg itself (not inner content)
+});
+document.getElementById('viewerModal')?.addEventListener('click', function(e) {
+  if (e.target === this) closeViewer();
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeModal();
+    closeViewer();
+  }
+});
+
+var menuBtn = document.getElementById('menuBtn');
+var navLinks = document.querySelector('.nav-links');
+if (menuBtn) {
+  menuBtn.addEventListener('click', function(e) { e.stopPropagation(); navLinks.classList.toggle('open'); });
+}
+document.querySelectorAll('.nav-links a').forEach(function(link) {
+    // Skip the Services dropdown trigger — it needs its own tap logic
+    if (link.closest('.nav-dropdown') && !link.closest('.nav-dropdown-menu')) return;
+    link.addEventListener('click', function() { navLinks.classList.remove('open'); });
+});
+document.addEventListener('click', function(e) {
+  if (navLinks && !navLinks.contains(e.target) && menuBtn && !menuBtn.contains(e.target)) {
+    navLinks.classList.remove('open');
+  }
+});
+
+// ── NEWSLETTER ──────────────────────────────────────────
+var SUB_BIN_NL = '69befda1c3097a1dd5480987';
+var SUB_KEY_NL = '$2a$10$d8wjYi.E/IcAmu515faPoesz/PUitzug7E4FJwqt6TdyABnaNAwiq';
+var SUB_URL_NL = 'https://api.jsonbin.io/v3/b/' + SUB_BIN_NL;
+
+async function subscribeNewsletter() {
+  var name  = (document.getElementById('nl-name')  || {}).value || '';
+  var email = (document.getElementById('nl-email') || {}).value || '';
+  var msg   = document.getElementById('nl-msg');
+  var btn   = document.getElementById('nl-btn');
+  name = name.trim(); email = email.trim();
+  if (!email || !email.includes('@')) {
+    msg.style.display = 'block'; msg.textContent = 'Please enter a valid email address.'; return;
+  }
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subscribing...'; }
+  try {
+    var res  = await fetch(SUB_URL_NL + '/latest', { headers: { 'X-Master-Key': SUB_KEY_NL } });
+    var data = await res.json();
+    var subs = data.record.subscribers || [];
+    if (subs.find(function(s) { return s.email === email; })) {
+      msg.style.display = 'block'; msg.textContent = 'You are already subscribed!';
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Subscribe Now — It\'s Free'; } return;
+    }
+    subs.push({ name: name || 'Subscriber', email: email, date: new Date().toISOString() });
+    await fetch(SUB_URL_NL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': SUB_KEY_NL, 'X-Bin-Versioning': 'false' },
+      body: JSON.stringify({ subscribers: subs })
+    });
+    msg.style.display = 'block';
+    msg.innerHTML = "<strong style='color:#fff;'>Welcome aboard!</strong> You'll now receive exclusive updates from JTES.";
+    if (document.getElementById('nl-name'))  document.getElementById('nl-name').value  = '';
+    if (document.getElementById('nl-email')) document.getElementById('nl-email').value = '';
+  } catch(e) { msg.style.display = 'block'; msg.textContent = 'Something went wrong. Please try again.'; }
+  if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Subscribe Now — It\'s Free'; }
+}
+
+loadFolders();
+
+let currentSlide = 0;
+const totalSlides = 2;
+let autoplayTimer;
+
+function goToSlide(index) {
+  const slides = document.querySelectorAll('.carousel-slide');
+  const dots = document.querySelectorAll('.carousel-dot');
+  slides[currentSlide].classList.remove('active');
+  dots[currentSlide].classList.remove('active');
+  currentSlide = (index + totalSlides) % totalSlides;
+  slides[currentSlide].classList.add('active');
+  dots[currentSlide].classList.add('active');
+  document.getElementById('carouselTrack').style.transform = `translateX(-${currentSlide * 100}%)`;
+  document.getElementById('slideNum').textContent = currentSlide + 1;
+  restartProgress();
+}
+
+function moveSlide(dir) { goToSlide(currentSlide + dir); }
+
+function restartProgress() {
+  const bar = document.getElementById('carouselProgress');
+  bar.style.animation = 'none';
+  bar.offsetHeight;
+  bar.style.animation = 'progressBar 5s linear infinite';
+}
+
+goToSlide(0);
+autoplayTimer = setInterval(() => moveSlide(1), 5000);
+
+// ── SERVICES DROPDOWN MOBILE TOGGLE
+document.querySelectorAll('.nav-dropdown > a').forEach(function(link) {
+  link.addEventListener('click', function(e) {
+    if (window.innerWidth <= 900) {
+      e.preventDefault();
+      e.stopPropagation(); // prevent the document click from closing the nav
+      var parent = link.closest('.nav-dropdown');
+      var isOpen = parent.classList.contains('open');
+      // Toggle the submenu
+      parent.classList.toggle('open');
+      // If we just CLOSED the dropdown via second tap, also close the whole nav
+      if (isOpen) {
+        navLinks.classList.remove('open');
+      }
+    }
+  });
+});
+
+</script>
+
+<!-- ===== FLOATING SHOP CTA ===== -->
+<style>
+  .jtes-shop-fab {
+    position: fixed; bottom: 28px; left: 28px; z-index: 9500;
+    display: flex; align-items: center; text-decoration: none; cursor: pointer;
+    animation: jtesFabIn 0.6s cubic-bezier(.34,1.56,.64,1) 0.5s both;
+  }
+  @keyframes jtesFabIn {
+    0% { transform: translateY(40px) scale(0.6); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .jtes-shop-fab-float {
+    display: flex; align-items: center; position: relative;
+    animation: jtesFabFloat 6.5s ease-in-out infinite;
+  }
+  @keyframes jtesFabFloat {
+    0%   { transform: translate(0px, 0px) rotate(0deg); }
+    20%  { transform: translate(12px, -16px) rotate(2deg); }
+    40%  { transform: translate(-8px, -26px) rotate(-2deg); }
+    60%  { transform: translate(-16px, -8px) rotate(1.5deg); }
+    80%  { transform: translate(7px, 9px) rotate(-1deg); }
+    100% { transform: translate(0px, 0px) rotate(0deg); }
+  }
+  .jtes-shop-fab:hover .jtes-shop-fab-float { animation-play-state: paused; }
+  .jtes-shop-fab-ring {
+    position: absolute; inset: 0; border-radius: 50px;
+    box-shadow: 0 0 0 0 rgba(37,99,235,0.55);
+    animation: jtesFabPulse 2.4s ease-out infinite; pointer-events: none;
+  }
+  @keyframes jtesFabPulse {
+    0% { box-shadow: 0 0 0 0 rgba(37,99,235,0.55); }
+    70% { box-shadow: 0 0 0 18px rgba(37,99,235,0); }
+    100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
+  }
+  .jtes-shop-fab-badge {
+    position: absolute; top: -7px; right: -6px; background: #EF4444; color: #fff;
+    font-family: 'Manrope', sans-serif; font-size: 9px; font-weight: 800; padding: 3px 7px;
+    border-radius: 50px; box-shadow: 0 2px 8px rgba(239,68,68,0.5); z-index: 2; letter-spacing: 0.3px;
+    animation: jtesFabBadgeBlink 1.8s ease-in-out infinite;
+  }
+  @keyframes jtesFabBadgeBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+  .jtes-shop-fab-inner {
+    position: relative; display: flex; align-items: center; gap: 10px; overflow: hidden;
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    color: #fff; border-radius: 50px; padding: 13px 22px 13px 13px;
+    box-shadow: 0 10px 32px rgba(37,99,235,0.45), inset 0 1px 0 rgba(255,255,255,0.25);
+    transition: transform 0.25s, box-shadow 0.25s;
+  }
+  .jtes-shop-fab:hover .jtes-shop-fab-inner {
+    transform: scale(1.05);
+    box-shadow: 0 16px 40px rgba(37,99,235,0.55), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .jtes-shop-fab-shine {
+    position: absolute; top: 0; left: -60%; width: 45%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.45), transparent);
+    transform: skewX(-20deg); animation: jtesFabShine 3s ease-in-out infinite;
+  }
+  @keyframes jtesFabShine { 0% { left: -60%; } 35% { left: 130%; } 100% { left: 130%; } }
+  .jtes-shop-fab-icon {
+    width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
+    position: relative; z-index: 1;
+  }
+  .jtes-shop-fab-text {
+    font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 13.5px; letter-spacing: 0.2px;
+    white-space: nowrap; position: relative; z-index: 1; line-height: 1.25;
+  }
+  .jtes-shop-fab-text small {
+    display: block; font-size: 10px; font-weight: 600; opacity: 0.85; letter-spacing: 0.3px;
+  }
+  @media (max-width: 560px) {
+    .jtes-shop-fab { bottom: 20px; left: 20px; }
+    .jtes-shop-fab-text { display: none; }
+    .jtes-shop-fab-inner { padding: 13px; }
+    .jtes-shop-fab-float { animation-name: jtesFabFloatSmall; }
+  }
+  @keyframes jtesFabFloatSmall {
+    0%   { transform: translate(0px, 0px); }
+    25%  { transform: translate(8px, -10px); }
+    50%  { transform: translate(-6px, -16px); }
+    75%  { transform: translate(-4px, 4px); }
+    100% { transform: translate(0px, 0px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .jtes-shop-fab, .jtes-shop-fab-float, .jtes-shop-fab-ring, .jtes-shop-fab-badge, .jtes-shop-fab-shine {
+      animation: none !important;
+    }
+  }
+</style>
+<a href="sales.html" class="jtes-shop-fab" aria-label="Shop JTES products">
+  <span class="jtes-shop-fab-float">
+    <span class="jtes-shop-fab-ring"></span>
+    <span class="jtes-shop-fab-badge">SALE</span>
+    <span class="jtes-shop-fab-inner">
+      <span class="jtes-shop-fab-shine"></span>
+      <span class="jtes-shop-fab-icon"><i class="fas fa-bag-shopping"></i></span>
+      <span class="jtes-shop-fab-text">Shop Now<small>Kits, tools &amp; components</small></span>
+    </span>
+  </span>
+</a>
+
+</body>
+</html>

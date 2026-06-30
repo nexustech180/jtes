@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact — Jassan Technologies & Electrical Services</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+  .page { display: block !important; }
+  :root {
+    --blue: #2563EB; --blue-light: #3B82F6; --blue-dark: #1D4ED8;
+    --dark: #0A0F1E; --dark2: #0F172A; --navy: #1E3A8A;
+    --text: #1e293b; --text-muted: #64748b; --white: #ffffff;
+    --gray-light: #f8fafc; --border: #e2e8f0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Manrope', sans-serif; color: var(--text); overflow-x: hidden; }
+
+  /* NAVBAR */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    background: #fff; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 48px; height: 64px; box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+  }
+  .nav-logo { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a {
+    padding: 8px 18px; border-radius: 8px; font-size: 15px; font-weight: 500;
+    color: var(--text); text-decoration: none; cursor: pointer; transition: all 0.2s;
+  }
+  .nav-links a:hover { background: #f1f5f9; }
+  .nav-links a.active { background: #EFF6FF; color: var(--blue); font-weight: 600; }
+  .btn-primary {
+    background: var(--blue); color: #fff; border: none; border-radius: 10px;
+    padding: 10px 22px; font-size: 15px; font-weight: 600; cursor: pointer;
+    transition: background 0.2s; text-decoration: none;
+  }
+  .btn-primary:hover { background: var(--blue-dark); }
+
+  /* CAROUSEL */
+  .carousel { position: relative; height: 100vh; min-height: 600px; overflow: hidden; padding-top: 64px; background: #0a0f1e; }
+  .carousel-track { display: flex; height: 100%; transition: transform 0.7s cubic-bezier(0.77,0,0.175,1); }
+  .carousel-slide { flex: 0 0 100vw; width: 100vw; height: 100%; position: relative; display: flex; align-items: center; }
+  .carousel-slide-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-size: cover; background-position: center; opacity: 0.38; transition: opacity 0.7s; }
+  .carousel-slide-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to right, rgba(0,0,0,0.88) 50%, rgba(0,0,0,0.25) 100%); }
+  .carousel-content {
+    position: relative; z-index: 2; max-width: 720px; padding: 80px 80px;
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 0.6s ease 0.3s, transform 0.6s ease 0.3s;
+  }
+  .carousel-slide.active .carousel-content { opacity: 1; transform: translateY(0); }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+    color: #fff; padding: 7px 16px; border-radius: 50px; font-size: 13px; font-weight: 500;
+    margin-bottom: 28px; backdrop-filter: blur(8px);
+  }
+  .badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue-light); }
+  .carousel-content h1 { font-size: 66px; font-weight: 900; line-height: 1.05; color: #fff; margin-bottom: 20px; }
+  .carousel-content h1 span { color: var(--blue-light); }
+  .carousel-content p { font-size: 17px; color: rgba(255,255,255,0.78); max-width: 560px; line-height: 1.7; }
+  .carousel-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 10;
+    width: 48px; height: 48px; border-radius: 50%;
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
+    color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 15px; transition: all 0.2s; backdrop-filter: blur(8px);
+  }
+  .carousel-arrow:hover { background: rgba(255,255,255,0.28); }
+  .carousel-arrow.prev { left: 24px; }
+  .carousel-arrow.next { right: 24px; }
+  .carousel-dots { position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 10; }
+  .carousel-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.35); cursor: pointer; transition: all 0.3s; border: none; padding: 0; }
+  .carousel-dot.active { background: #fff; width: 28px; border-radius: 4px; }
+  .carousel-progress { position: absolute; bottom: 0; left: 0; height: 3px; background: var(--blue); z-index: 10; animation: progress-bar 5s linear infinite; transform-origin: left; }
+  @keyframes progress-bar { from { width: 0 } to { width: 100% } }
+  .page-carousel { position: relative; height: 55vh; min-height: 420px; overflow: hidden; padding-top: 64px; }
+  .page-carousel .carousel-slide { height: 100%; }
+  .page-carousel .carousel-content { padding: 60px 80px; }
+  .page-carousel .carousel-content h1 { font-size: 58px; }
+
+  /* SECTION ELEMENTS */
+  .section-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--border); color: var(--text); padding: 7px 16px;
+    border-radius: 50px; font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; margin-bottom: 24px; background: #f8fafc;
+  }
+  .section-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue-light); }
+  .section-divider { display: flex; align-items: center; gap: 8px; margin: 16px 0 24px; }
+  .div-line { width: 40px; height: 3px; background: var(--blue); border-radius: 2px; }
+  .div-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blue-light); }
+  .div-line2 { width: 55px; height: 3px; background: var(--blue); border-radius: 2px; opacity: 0.5; }
+  .section-divider.center { justify-content: center; }
+
+  /* CONTACT PAGE */
+  .contact-info-section { padding: 80px 80px; background: #fff; }
+  .contact-info-header { text-align: center; margin-bottom: 56px; }
+  .contact-info-header h2 { font-size: 48px; font-weight: 900; color: var(--dark2); }
+  .contact-info-header h2 span { color: var(--blue); }
+  .contact-info-header p { font-size: 16px; color: var(--text-muted); margin-top: 10px; max-width: 600px; margin-left: auto; margin-right: auto; }
+  .contact-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 60px; }
+  .contact-card { border: 1px solid var(--border); border-radius: 20px; padding: 36px 28px; text-align: center; transition: all 0.2s; }
+  .contact-card:hover { box-shadow: 0 8px 32px rgba(37,99,235,0.1); }
+  .contact-card-icon { width: 64px; height: 64px; border-radius: 18px; background: #EFF6FF; display: flex; align-items: center; justify-content: center; font-size: 26px; color: var(--blue); margin: 0 auto 20px; }
+  .contact-card h4 { font-size: 20px; font-weight: 800; color: var(--dark2); margin-bottom: 12px; }
+  .contact-card p { font-size: 15px; color: var(--text-muted); line-height: 1.7; }
+  .contact-form-card { background: #fff; border-radius: 24px; padding: 56px 64px; box-shadow: 0 8px 48px rgba(0,0,0,0.08); border: 1px solid var(--border); max-width: 960px; margin: 0 auto; }
+  .contact-form-card h2 { font-size: 38px; font-weight: 900; color: var(--dark2); text-align: center; margin-bottom: 8px; }
+  .contact-form-card h2 span { color: var(--blue); }
+  .contact-form-card > p { font-size: 15px; color: var(--text-muted); text-align: center; margin-bottom: 40px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+  .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+  .form-group label { font-size: 14px; font-weight: 600; color: var(--dark2); }
+  .form-group input, .form-group select, .form-group textarea {
+    padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 10px;
+    font-size: 15px; font-family: 'Manrope', sans-serif; color: var(--text);
+    outline: none; transition: border-color 0.2s; background: #fff;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+  .form-group textarea { resize: vertical; min-height: 120px; }
+  .form-submit { text-align: center; margin-top: 8px; }
+  .btn-send {
+    background: var(--blue); color: #fff; border: none; padding: 15px 40px;
+    border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 10px; transition: background 0.2s;
+    font-family: 'Manrope', sans-serif;
+  }
+  .btn-send:hover { background: var(--blue-dark); }
+  .map-section { background: #0A0F1E; height: 300px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
+  .map-section .map-pin { font-size: 48px; color: var(--blue); }
+  .map-section p { color: rgba(255,255,255,0.5); font-size: 14px; }
+
+  /* NEWSLETTER */
+  .newsletter-section { position:relative;overflow:hidden;background:linear-gradient(135deg,#060D1F 0%,#0F1E45 50%,#0A0F1E 100%);padding:100px 80px;text-align:center; }
+  .newsletter-section::before { content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,0.15) 0%,transparent 70%);top:-200px;left:-100px;pointer-events:none; }
+  .newsletter-section::after { content:'';position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(59,130,246,0.12) 0%,transparent 70%);bottom:-150px;right:-80px;pointer-events:none; }
+  .nl-inner { position:relative;z-index:2;max-width:680px;margin:0 auto; }
+  .nl-icon-wrap { width:72px;height:72px;border-radius:20px;margin:0 auto 24px;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;box-shadow:0 12px 40px rgba(37,99,235,0.4); }
+  .newsletter-section h2 { font-size:48px;font-weight:900;color:#fff;margin-bottom:14px;line-height:1.1; }
+  .newsletter-section h2 span { color:#3B82F6; }
+  .nl-inner > p { font-size:17px;color:rgba(255,255,255,0.55);margin-bottom:40px;line-height:1.7;max-width:520px;margin-left:auto;margin-right:auto; }
+  .nl-perks { display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin-bottom:40px; }
+  .nl-perk { display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:rgba(255,255,255,0.65); }
+  .nl-perk i { color:#3B82F6;font-size:14px; }
+  .nl-card { background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(16px);border-radius:20px;padding:32px 36px;box-shadow:0 24px 60px rgba(0,0,0,0.3); }
+  .nl-fields { display:flex;flex-direction:column;gap:12px;margin-bottom:14px; }
+  .nl-field-row { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+  .nl-input { width:100%;padding:14px 18px;border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;font-size:15px;font-family:'Manrope',sans-serif;color:#fff;background:rgba(255,255,255,0.08);outline:none;transition:border-color 0.2s;box-sizing:border-box; }
+  .nl-input::placeholder { color:rgba(255,255,255,0.3); }
+  .nl-input:focus { border-color:#3B82F6;background:rgba(37,99,235,0.1); }
+  .nl-submit-btn { width:100%;padding:15px;border:none;border-radius:12px;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 8px 24px rgba(37,99,235,0.4); }
+  .nl-submit-btn:hover { transform:translateY(-2px);box-shadow:0 12px 32px rgba(37,99,235,0.55); }
+  .nl-submit-btn:disabled { opacity:0.6;cursor:not-allowed;transform:none; }
+  .nl-msg { margin-top:14px;font-size:14px;color:rgba(255,255,255,0.8);display:none;text-align:center;line-height:1.6; }
+  .nl-fine { font-size:12px;color:rgba(255,255,255,0.2);margin-top:16px; }
+  @media(max-width:600px) { .newsletter-section{padding:60px 14px;} .newsletter-section h2{font-size:28px;} .nl-card{padding:20px 16px;} .nl-field-row{grid-template-columns:1fr;} }
+
+  /* FOOTER */
+  footer { background: #0A0F1E; padding: 72px 80px 0; }
+  .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1.2fr 1.2fr; gap: 48px; padding-bottom: 48px; }
+  .footer-logo { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 10px 18px; display: inline-flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .footer-brand p { font-size: 14px; color: rgba(255,255,255,0.55); line-height: 1.75; margin-bottom: 24px; }
+  .social-icons { display: flex; gap: 10px; }
+  .social-icon { width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.6); font-size: 15px; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+  .social-icon:hover { background: var(--blue); color: #fff; }
+  .footer-col h4 { color: #fff; font-size: 16px; font-weight: 700; margin-bottom: 20px; }
+  .footer-col a { display: block; color: rgba(255,255,255,0.55); font-size: 14px; margin-bottom: 12px; text-decoration: none; cursor: pointer; transition: color 0.2s; }
+  .footer-col a:hover { color: #fff; }
+  .footer-contact { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+  .contact-icon { width: 36px; height: 36px; min-width: 36px; border-radius: 10px; background: rgba(37,99,235,0.2); display: flex; align-items: center; justify-content: center; color: var(--blue-light); font-size: 14px; }
+  .footer-contact div { font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.6; }
+  .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding: 20px 0; display: flex; align-items: center; justify-content: space-between; }
+  .footer-bottom p { font-size: 13px; color: rgba(255,255,255,0.4); }
+  .footer-bottom-links { display: flex; gap: 24px; }
+  .footer-bottom-links a { font-size: 13px; color: rgba(255,255,255,0.4); text-decoration: none; }
+  .footer-bottom-links a:hover { color: #fff; }
+
+  /* SUCCESS POPUP */
+  .popup-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .popup-overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .popup-box { background: #fff; border-radius: 24px; padding: 48px 40px; max-width: 440px; width: 90%; text-align: center; box-shadow: 0 24px 80px rgba(0,0,0,0.2); animation: popUp 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes popUp { from { opacity: 0; transform: scale(0.8) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  .popup-icon { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #22c55e, #16a34a); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; box-shadow: 0 8px 32px rgba(34,197,94,0.35); }
+  .popup-icon i { font-size: 36px; color: #fff; }
+  .popup-box h3 { font-size: 26px; font-weight: 900; color: var(--dark2); margin-bottom: 12px; }
+  .popup-box p { font-size: 15px; color: var(--text-muted); line-height: 1.7; margin-bottom: 28px; }
+  .popup-close { background: var(--blue); color: #fff; border: none; padding: 13px 36px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s; font-family: 'Manrope', sans-serif; }
+  .popup-close:hover { background: var(--blue-dark); }
+  .popup-ref { font-size: 12px; color: var(--text-muted); margin-top: 12px; display: block; }
+
+  /* HAMBURGER */
+  .mobile-menu-btn { display: none; background: none; border: none; font-size: 1.6rem; cursor: pointer; color: var(--dark2); padding: 4px 6px; line-height: 1; }
+
+  /* TABLET */
+  @media (max-width: 900px) {
+    nav { padding: 0 1.5rem; }
+    .nav-links { display: none; }
+    .mobile-menu-btn { display: block; }
+    #nav-cta { display: none; }
+    .nav-links.open {
+      display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; width: 100%;
+      background: rgba(255,255,255,0.98); backdrop-filter: blur(10px); padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border); box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      z-index: 999; animation: slideDown 0.3s ease; max-height: 70vh; overflow-y: auto;
+    }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .nav-links.open a { display: block; padding: 0.9rem 1.5rem; font-size: 1rem; font-weight: 600; color: var(--dark2); border-bottom: 1px solid var(--border); text-decoration: none; }
+    .nav-links.open a:last-child { border-bottom: none; }
+    .nav-links.open a:hover, .nav-links.open a.active { color: var(--blue); background: #EFF6FF; }
+    .carousel { height: 70vh; min-height: 500px; }
+    .carousel-slide { height: 100%; }
+    .carousel-content { padding: 60px 28px 80px; max-width: 100%; }
+    .carousel-content h1 { font-size: 42px; }
+    .page-carousel { height: 45vh; min-height: 360px; }
+    .page-carousel .carousel-slide { height: 100%; }
+    .page-carousel .carousel-content { padding: 48px 28px; }
+    .page-carousel .carousel-content h1 { font-size: 36px; }
+    .contact-info-section { padding-left: 20px; padding-right: 20px; }
+    footer { padding-left: 20px; padding-right: 20px; padding-top: 48px; }
+    .contact-cards { grid-template-columns: 1fr; }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .contact-form-card { padding: 28px 20px; }
+    .footer-bottom { flex-direction: column; gap: 10px; text-align: center; }
+    .footer-bottom-links { justify-content: center; }
+  }
+
+  /* MOBILE */
+  @media (max-width: 600px) {
+    nav { height: 60px; }
+    .nav-logo img { height: 34px; }
+    .carousel { height: 100svh; min-height: 500px; }
+    .carousel-slide { height: 100%; }
+    .carousel-content { padding: 40px 18px 80px; }
+    .carousel-content h1 { font-size: 32px; line-height: 1.1; }
+    .carousel-content p { font-size: 14px; }
+    .badge { font-size: 12px; padding: 6px 12px; margin-bottom: 18px; }
+    .page-carousel .carousel-content h1 { font-size: 26px; }
+    .contact-info-section { padding: 48px 14px; }
+    footer { padding: 44px 14px 0; }
+    .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    .contact-info-header h2 { font-size: 26px; }
+    .contact-form-card h2 { font-size: 24px; }
+    .contact-form-card { padding: 20px 14px; }
+    .form-group input, .form-group select, .form-group textarea { font-size: 16px; }
+    .btn-send { width: 100%; justify-content: center; }
+    .footer-bottom { flex-direction: column; gap: 8px; text-align: center; padding: 16px 0; }
+    .footer-bottom-links { justify-content: center; }
+    .popup-box { padding: 36px 24px; }
+  }
+
+  /* ===== SERVICES DROPDOWN ===== */
+  .nav-dropdown { position: relative; }
+  .nav-dropdown > a { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+  .nav-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: transparent;
+    padding-top: 10px;
+    z-index: 2000;
+  }
+  .nav-dropdown-menu-inner {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(37,99,235,0.10), 0 2px 8px rgba(0,0,0,0.07);
+    min-width: 200px;
+    padding: 8px;
+  }
+  .nav-dropdown:hover .nav-dropdown-menu,
+  .nav-dropdown:focus-within .nav-dropdown-menu { display: block; }
+  .nav-dropdown-menu a {
+    display: block; padding: 10px 16px; border-radius: 9px;
+    font-size: 14px; font-weight: 500; color: var(--text);
+    text-decoration: none; transition: background 0.18s, color 0.18s;
+  }
+  .nav-dropdown-menu a:hover { background: #EFF6FF; color: var(--blue); }
+  .nav-dropdown-menu a.active { background: #EFF6FF; color: var(--blue); font-weight: 600; }
+  @media (max-width: 900px) {
+    .nav-dropdown-menu {
+      position: static; box-shadow: none; border: none;
+      border-radius: 0; padding: 0 0 0 16px; background: transparent; display: none;
+    }
+    .nav-dropdown.open .nav-dropdown-menu { display: block; }
+    .nav-dropdown-menu a { padding: 10px 20px; font-size: 0.97rem; border-bottom: 1px solid var(--border); }
+  }
+
+  </style>
+</head>
+<body>
+
+<!-- SUCCESS POPUP -->
+<div class="popup-overlay" id="success-popup">
+  <div class="popup-box">
+    <div class="popup-icon"><i class="fas fa-check"></i></div>
+    <h3>Message Sent! 🎉</h3>
+    <p>Thank you for reaching out to <strong>JASSAN Technologies</strong>.<br>We'll get back to you within <strong>24 hours</strong>.</p>
+    <button class="popup-close" onclick="closePopup()">Got it, thanks!</button>
+    <span class="popup-ref" id="popup-ref"></span>
+  </div>
+</div>
+
+<nav>
+  <div class="nav-logo" onclick="location.href='index.html'" style="cursor:pointer">
+    <img src="https://jassan-innovations-hub.vercel.app/assets/logo-CoQZjYGJ.jpg" alt="Jassan Logo" style="height:40px;width:auto;object-fit:contain;">
+  </div>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <div class="nav-dropdown">
+      <a>Services &#9660;</a>
+      <div class="nav-dropdown-menu"><div class="nav-dropdown-menu-inner">
+        <a href="services.html">Prime Aide</a>
+        <a href="gallery.html">Animation-Dot</a>
+        <a href="projects.html">Project Space</a>
+        <a href="sales.html">My Store</a>
+      </div></div>
+    </div>
+    <a href="blog.html">Blog</a>
+    <a href="contact.html" class="active">Contact</a>
+    <a href="learn.html" >Learn</a>
+    <a href="portal.html">Portal</a>
+  </div>
+  <a class="nav-admin-lock" href="admin.html" title="Admin"><i class="fas fa-lock"></i></a>
+  <button class="mobile-menu-btn" id="menuBtn">&#9776;</button>
+  <a class="btn-primary" id="nav-cta" href="contact.html">Get Started</a>
+</nav>
+
+<!-- CONTACT HERO CAROUSEL -->
+<div class="carousel page-carousel" id="carousel-contact">
+  <div class="carousel-track" id="track-contact">
+    <div class="carousel-slide active">
+      <div class="carousel-slide-bg" style="background-image:url('https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1600&q=80');"></div>
+      <div class="carousel-slide-overlay"></div>
+      <div class="carousel-content">
+        <div class="badge"><span class="badge-dot"></span> Contact Us</div>
+        <h1>Let's Build <span>Together</span></h1>
+        <p>Have a project in mind or want to learn more about our services? We'd love to hear from you.</p>
+      </div>
+    </div>
+    <div class="carousel-slide">
+      <div class="carousel-slide-bg" style="background-image:url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=80');"></div>
+      <div class="carousel-slide-overlay"></div>
+      <div class="carousel-content">
+        <div class="badge"><span class="badge-dot"></span> Get a Quote</div>
+        <h1>Start Your <span>Project</span><br>With Us</h1>
+        <p>Whether it's STEM training, electrical services, or IoT automation — we'll tailor the perfect solution for you.</p>
+      </div>
+    </div>
+    <div class="carousel-slide">
+      <div class="carousel-slide-bg" style="background-image:url('https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=1600&q=80');"></div>
+      <div class="carousel-slide-overlay"></div>
+      <div class="carousel-content">
+        <div class="badge"><span class="badge-dot"></span> Partnership</div>
+        <h1>Partner With<br><span>Africa's</span> Tech Leader</h1>
+        <p>Join the growing network of schools, businesses, and institutions building the future with JASSAN Technologies.</p>
+      </div>
+    </div>
+  </div>
+  <button class="carousel-arrow prev" onclick="moveCarousel('contact', -1)"><i class="fas fa-chevron-left"></i></button>
+  <button class="carousel-arrow next" onclick="moveCarousel('contact', 1)"><i class="fas fa-chevron-right"></i></button>
+  <div class="carousel-dots" id="dots-contact">
+    <button class="carousel-dot active" onclick="goToSlide('contact', 0)"></button>
+    <button class="carousel-dot" onclick="goToSlide('contact', 1)"></button>
+    <button class="carousel-dot" onclick="goToSlide('contact', 2)"></button>
+  </div>
+  <div class="carousel-progress" id="progress-contact"></div>
+</div>
+
+<section class="contact-info-section">
+  <div class="contact-info-header">
+    <div class="section-badge" style="margin:0 auto 16px;display:inline-flex;"><span class="dot"></span> CONTACT US</div>
+    <h2>Get in <span>Touch</span></h2>
+    <div class="section-divider center"><div class="div-line"></div><div class="div-dot"></div><div class="div-line2"></div></div>
+    <p>Reach out to us through any of the following channels or fill out the contact form below. We're based in Kumasi, Ghana and here to help bring your vision to life.</p>
+  </div>
+  <div class="contact-cards">
+    <div class="contact-card">
+      <div class="contact-card-icon"><i class="fas fa-phone"></i></div>
+      <h4>Phone</h4>
+      <p>0548029027<br>0203212915</p>
+    </div>
+    <div class="contact-card">
+      <div class="contact-card-icon"><i class="fas fa-envelope"></i></div>
+      <h4>Email</h4>
+      <p>jassantechnologies@gmail.com</p>
+    </div>
+    <div class="contact-card">
+      <div class="contact-card-icon"><i class="fas fa-clock"></i></div>
+      <h4>Business Hours</h4>
+      <p>Mon - Fri: 8:00 AM - 5:00 PM<br>Sat: 9:00 AM - 2:00 PM</p>
+    </div>
+  </div>
+  <div class="contact-form-card">
+    <h2>Send Us a <span>Message</span></h2>
+    <p>Fill out the form below and we'll get back to you within 24 hours.</p>
+    <form id="contact-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="name" name="name" placeholder="John Doe" required>
+        </div>
+        <div class="form-group">
+          <label>Email Address *</label>
+          <input type="email" id="email" name="email" placeholder="john@example.com" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="phone" name="phone" placeholder="+233 xxx xxx xxxx">
+        </div>
+        <div class="form-group">
+          <label>Organization</label>
+          <input type="text" id="organisation" name="organisation" placeholder="Your company or school">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Service Requested</label>
+        <select id="service" name="service">
+          <option>Select a service</option>
+          <option>STEM, STEAM &amp; Robotics Education</option>
+          <option>Research &amp; Product Development</option>
+          <option>Electrical &amp; Electronics Services</option>
+          <option>IoT &amp; Smart Automation</option>
+          <option>Curriculum Development &amp; Consulting</option>
+          <option>Sales of Electrical &amp; Electronics Components</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Message *</label>
+        <textarea id="message" name="message" placeholder="Tell us about your project or inquiry..." required></textarea>
+      </div>
+      <div class="form-submit">
+        <button type="submit" class="btn-send" id="send-btn">Send Message <i class="fas fa-paper-plane"></i></button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<div class="map-section">
+  <div class="map-pin"><i class="fas fa-map-marker-alt"></i></div>
+  <p>Ghana, Kumasi-Lake-Road, Kumasi</p>
+</div>
+
+  <div class="newsletter-section">
+    <div class="nl-inner">
+      <div class="nl-icon-wrap"><i class="fas fa-envelope-open-text"></i></div>
+      <h2>Stay Ahead with <span>JTES</span></h2>
+      <p>Join our exclusive community. Get event invites, new blog posts, STEM breakthroughs and tech insights from Ghana's leading technology team — straight to your inbox.</p>
+      <div class="nl-perks">
+        <div class="nl-perk"><i class="fas fa-calendar-star"></i> Exclusive Events</div>
+        <div class="nl-perk"><i class="fas fa-newspaper"></i> Latest Articles</div>
+        <div class="nl-perk"><i class="fas fa-bolt"></i> Tech Insights</div>
+        <div class="nl-perk"><i class="fas fa-trophy"></i> STEM News</div>
+      </div>
+      <div class="nl-card">
+        <div class="nl-fields">
+          <div class="nl-field-row">
+            <input class="nl-input" type="text" id="nl-name" placeholder="👤  Your name">
+            <input class="nl-input" type="email" id="nl-email" placeholder="✉️  Your email address">
+          </div>
+          <button class="nl-submit-btn" id="nl-btn" onclick="subscribeNewsletter()">
+            <i class="fas fa-paper-plane"></i> Subscribe Now — It's Free
+          </button>
+        </div>
+        <p class="nl-msg" id="nl-msg"></p>
+      </div>
+      <p class="nl-fine">🔒 Zero spam. Unsubscribe with one click, anytime.</p>
+    </div>
+  </div>
+
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="footer-logo">
+        <img src="https://jassan-innovations-hub.vercel.app/assets/logo-CoQZjYGJ.jpg" alt="Jassan Logo" style="height:34px;width:auto;object-fit:contain;filter:brightness(0) invert(1);">
+      </div>
+      <p>Empowering Africa through innovative technology solutions, quality STEM education, and reliable electrical services.</p>
+<div class="social-icons">
+  <a class="social-icon" href="https://www.facebook.com/share/18faNx8Dv2/"><i class="fab fa-facebook-f"></i></a>
+  <a class="social-icon" href="https://youtube.com/@therobotseries?si=xlG2jzS2aUnC-pyV"><i class="fab fa-youtube"></i></a>
+  <a class="social-icon" href="#"><i class="fab fa-instagram"></i></a>
+  <a class="social-icon" href="https://www.linkedin.com/in/assan-james-201016230?utm_source=share_via&utm_content=profile&utm_medium=member_android"><i class="fab fa-linkedin-in"></i></a>
+  <a class="social-icon" href="https://wa.me/233548029027"><i class="fas fa-comment"></i></a>
+</div>
+    </div>
+    <div class="footer-col">
+      <h4>Quick Links</h4>
+      <a href="index.html">Home</a>
+      <a href="about.html">About Us</a>
+      <a href="services.html">Our Services</a>
+          <a href="gallery.html">Animation-Dot</a>
+      <a href="projects.html">Project Space</a>
+      <a href="blog.html">Blog</a>
+      <a href="contact.html">Contact</a>
+
+    </div>
+    <div class="footer-col">
+      <h4>Our Services</h4>
+      <a href="services.html#svc-stem">STEM &amp; Robotics Education</a>
+      <a href="services.html#svc-rd">Research &amp; Development</a>
+      <a href="services.html#svc-electrical">Electrical Services</a>
+      <a href="services.html#svc-iot">IoT &amp; Smart Automation</a>
+      <a href="services.html#svc-curriculum">Curriculum Development</a>
+      <a href="services.html#svc-components">Component Sales</a>
+    </div>
+    <div class="footer-col">
+      <h4>Contact Us</h4>
+      <div class="footer-contact">
+        <div class="contact-icon"><i class="fas fa-phone"></i></div>
+        <div>0548029027<br>0203212915</div>
+      </div>
+      <div class="footer-contact">
+        <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+        <div>jassantechnologies@gmail.com</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>&copy; 2025 JASSAN Technologies and Electrical Services. All Rights Reserved.</p>
+    <div class="footer-bottom-links">
+    <a href="admin.html" id="admin-link" title="" style="opacity:0;font-size:1px;color:transparent;user-select:none;position:absolute;">·</a>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== CAROUSEL ENGINE =====
+var carousels = {};
+
+function initCarousel(id) {
+  var slides = document.querySelectorAll('#track-' + id + ' .carousel-slide');
+  if (!slides.length) return;
+  carousels[id] = { current: 0, total: slides.length, timer: null };
+  goToSlide(id, 0);
+  startAutoPlay(id);
+}
+
+function goToSlide(id, index) {
+  var c = carousels[id];
+  if (!c) return;
+  var slides = document.querySelectorAll('#track-' + id + ' .carousel-slide');
+  var dots   = document.querySelectorAll('#dots-' + id + ' .carousel-dot');
+  var track  = document.getElementById('track-' + id);
+  if (!track) return;
+
+  slides[c.current].classList.remove('active');
+  if (dots[c.current]) dots[c.current].classList.remove('active');
+
+  c.current = (index + c.total) % c.total;
+
+  slides[c.current].classList.add('active');
+  if (dots[c.current]) dots[c.current].classList.add('active');
+
+  // Use 100vw per slide — works on all screen sizes
+  // Measure the actual rendered slide width for pixel-perfect sliding
+  var slideW = slides[0].getBoundingClientRect().width || track.parentElement.clientWidth;
+  track.style.transform = 'translateX(-' + (c.current * slideW) + 'px)';
+
+  resetProgress(id);
+}
+
+function moveCarousel(id, dir) {
+  var c = carousels[id];
+  if (!c) return;
+  clearTimeout(c.timer);
+  goToSlide(id, c.current + dir);
+  startAutoPlay(id);
+}
+
+function startAutoPlay(id) {
+  var c = carousels[id];
+  if (!c) return;
+  clearTimeout(c.timer);
+  c.timer = setTimeout(function() {
+    goToSlide(id, c.current + 1);
+    startAutoPlay(id);
+  }, 5000);
+}
+
+function restartCarousel(id) {
+  var c = carousels[id];
+  if (!c) return;
+  goToSlide(id, 0);
+  startAutoPlay(id);
+}
+
+function resetProgress(id) {
+  var bar = document.getElementById('progress-' + id);
+  if (!bar) return;
+  bar.style.animation = 'none';
+  bar.offsetHeight;
+  bar.style.animation = 'progress-bar 5s linear forwards';
+}
+
+// ===== POPUP =====
+function closePopup() {
+  var p = document.getElementById('success-popup');
+  if (p) p.classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', function() {
+  initCarousel('contact');
+
+  document.querySelectorAll('.carousel').forEach(function(el) {
+    var id = el.id.replace('carousel-', '');
+    el.addEventListener('mouseenter', function() { if (carousels[id]) clearTimeout(carousels[id].timer); });
+    el.addEventListener('mouseleave', function() { startAutoPlay(id); });
+  });
+
+  var popup = document.getElementById('success-popup');
+  if (popup) popup.addEventListener('click', function(e) { if (e.target === this) closePopup(); });
+
+  // ===== EMAILJS =====
+  emailjs.init('vWuux6AIkMKqJ1Cz5');
+
+  var form = document.getElementById('contact-form');
+  var btn  = document.getElementById('send-btn');
+  if (!form) return;
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var name    = document.getElementById('name').value.trim();
+    var email   = document.getElementById('email').value.trim();
+    var message = document.getElementById('message').value.trim();
+
+    if (!name || !email || !message) {
+      alert('Please fill in your Name, Email and Message.');
+      return;
+    }
+
+    var params = {
+      name:         name,
+      email:        email,
+      phone:        document.getElementById('phone').value.trim() || 'Not provided',
+      organisation: document.getElementById('organisation').value.trim() || 'Not provided',
+      service:      document.getElementById('service').value,
+      message:      message
+    };
+
+    form.reset();
+    btn.disabled = true;
+    btn.innerHTML = 'Sending... <i class="fas fa-spinner fa-spin"></i>';
+
+    emailjs.send('service_5yc9b0i', 'template_zo9jh1c', params)
+      .then(function() {
+        btn.disabled = false;
+        btn.innerHTML = 'Send Message <i class="fas fa-paper-plane"></i>';
+        document.getElementById('popup-ref').textContent = 'Reference: JTES-' + Date.now().toString().slice(-6);
+        document.getElementById('success-popup').classList.add('show');
+        document.body.style.overflow = 'hidden';
+      })
+      .catch(function(err) {
+        btn.disabled = false;
+        btn.innerHTML = 'Send Message <i class="fas fa-paper-plane"></i>';
+        alert('Failed to send. Please try again or email us at jassantechnologies@gmail.com');
+        console.error('EmailJS error:', err);
+      });
+  });
+});
+
+// ===== MOBILE MENU =====
+document.addEventListener('DOMContentLoaded', function() {
+  var menuBtn  = document.getElementById('menuBtn');
+  var navLinks = document.querySelector('.nav-links');
+  if (!menuBtn || !navLinks) return;
+
+  menuBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    navLinks.classList.toggle('open');
+  });
+  document.querySelectorAll('.nav-links a').forEach(function(link) {
+    // Skip the Services dropdown trigger — it needs its own tap logic
+    if (link.closest('.nav-dropdown') && !link.closest('.nav-dropdown-menu')) return;
+    link.addEventListener('click', function() { navLinks.classList.remove('open'); });
+  });
+  document.addEventListener('click', function(e) {
+    if (!navLinks.contains(e.target) && !menuBtn.contains(e.target)) {
+      navLinks.classList.remove('open');
+    }
+  });
+});
+// ── SECRET ADMIN SHORTCUT (press A + D + M together) ──
+(function() {
+  var keys = {};
+  document.addEventListener('keydown', function(e) {
+    keys[e.key.toLowerCase()] = true;
+    if (keys['a'] && keys['d'] && keys['m']) {
+      window.location.href = 'admin.html';
+    }
+  });
+  document.addEventListener('keyup', function(e) {
+    delete keys[e.key.toLowerCase()];
+  });
+})();
+
+// ── NEWSLETTER SIGNUP ─────────────────────────────────────
+var SUB_BIN_NL  = '69befda1c3097a1dd5480987';
+var SUB_KEY_NL  = '$2a$10$d8wjYi.E/IcAmu515faPoesz/PUitzug7E4FJwqt6TdyABnaNAwiq';
+var SUB_URL_NL  = 'https://api.jsonbin.io/v3/b/' + SUB_BIN_NL;
+
+async function subscribeNewsletter() {
+  var name  = (document.getElementById('nl-name')  || {}).value || '';
+  var email = (document.getElementById('nl-email') || {}).value || '';
+  var msg   = document.getElementById('nl-msg');
+  var btn   = document.getElementById('nl-btn');
+  name  = name.trim(); email = email.trim();
+  if (!email || !email.includes('@')) {
+    msg.style.display = 'block'; msg.textContent = '⚠ Please enter a valid email address.'; return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = 'Subscribing...'; }
+  try {
+    var res  = await fetch(SUB_URL_NL + '/latest', { headers: { 'X-Master-Key': SUB_KEY_NL } });
+    var data = await res.json();
+    var subs = data.record.subscribers || [];
+    if (subs.find(function(s) { return s.email === email; })) {
+      msg.style.display = 'block'; msg.textContent = '✅ You are already subscribed!';
+      if (btn) { btn.disabled = false; btn.textContent = 'Subscribe'; } return;
+    }
+    subs.push({ name: name || 'Subscriber', email: email, date: new Date().toISOString() });
+    await fetch(SUB_URL_NL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': SUB_KEY_NL, 'X-Bin-Versioning': 'false' },
+      body: JSON.stringify({ subscribers: subs })
+    });
+    msg.style.display = 'block';
+    msg.innerHTML = "🎉 <strong style='color:#fff;'>Welcome aboard!</strong> You'll now receive exclusive updates from JTES.";
+    if (document.getElementById('nl-name'))  document.getElementById('nl-name').value  = '';
+    if (document.getElementById('nl-email')) document.getElementById('nl-email').value = '';
+  } catch(e) { msg.style.display = 'block'; msg.textContent = '✗ Something went wrong. Try again.'; }
+  if (btn) { btn.disabled = false; btn.textContent = 'Subscribe'; }
+}
+
+
+// ── SERVICES DROPDOWN MOBILE TOGGLE
+document.querySelectorAll('.nav-dropdown > a').forEach(function(link) {
+  link.addEventListener('click', function(e) {
+    if (window.innerWidth <= 900) {
+      e.preventDefault();
+      e.stopPropagation(); // prevent the document click from closing the nav
+      var parent = link.closest('.nav-dropdown');
+      var isOpen = parent.classList.contains('open');
+      // Toggle the submenu
+      parent.classList.toggle('open');
+      // If we just CLOSED the dropdown via second tap, also close the whole nav
+      if (isOpen) {
+        navLinks.classList.remove('open');
+      }
+    }
+  });
+});
+
+</script>
+
+<!-- ===== FLOATING SHOP CTA ===== -->
+<style>
+  .jtes-shop-fab {
+    position: fixed; bottom: 28px; left: 28px; z-index: 9500;
+    display: flex; align-items: center; text-decoration: none; cursor: pointer;
+    animation: jtesFabIn 0.6s cubic-bezier(.34,1.56,.64,1) 0.5s both;
+  }
+  @keyframes jtesFabIn {
+    0% { transform: translateY(40px) scale(0.6); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .jtes-shop-fab-float {
+    display: flex; align-items: center; position: relative;
+    animation: jtesFabFloat 6.5s ease-in-out infinite;
+  }
+  @keyframes jtesFabFloat {
+    0%   { transform: translate(0px, 0px) rotate(0deg); }
+    20%  { transform: translate(12px, -16px) rotate(2deg); }
+    40%  { transform: translate(-8px, -26px) rotate(-2deg); }
+    60%  { transform: translate(-16px, -8px) rotate(1.5deg); }
+    80%  { transform: translate(7px, 9px) rotate(-1deg); }
+    100% { transform: translate(0px, 0px) rotate(0deg); }
+  }
+  .jtes-shop-fab:hover .jtes-shop-fab-float { animation-play-state: paused; }
+  .jtes-shop-fab-ring {
+    position: absolute; inset: 0; border-radius: 50px;
+    box-shadow: 0 0 0 0 rgba(37,99,235,0.55);
+    animation: jtesFabPulse 2.4s ease-out infinite; pointer-events: none;
+  }
+  @keyframes jtesFabPulse {
+    0% { box-shadow: 0 0 0 0 rgba(37,99,235,0.55); }
+    70% { box-shadow: 0 0 0 18px rgba(37,99,235,0); }
+    100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
+  }
+  .jtes-shop-fab-badge {
+    position: absolute; top: -7px; right: -6px; background: #EF4444; color: #fff;
+    font-family: 'Manrope', sans-serif; font-size: 9px; font-weight: 800; padding: 3px 7px;
+    border-radius: 50px; box-shadow: 0 2px 8px rgba(239,68,68,0.5); z-index: 2; letter-spacing: 0.3px;
+    animation: jtesFabBadgeBlink 1.8s ease-in-out infinite;
+  }
+  @keyframes jtesFabBadgeBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+  .jtes-shop-fab-inner {
+    position: relative; display: flex; align-items: center; gap: 10px; overflow: hidden;
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    color: #fff; border-radius: 50px; padding: 13px 22px 13px 13px;
+    box-shadow: 0 10px 32px rgba(37,99,235,0.45), inset 0 1px 0 rgba(255,255,255,0.25);
+    transition: transform 0.25s, box-shadow 0.25s;
+  }
+  .jtes-shop-fab:hover .jtes-shop-fab-inner {
+    transform: scale(1.05);
+    box-shadow: 0 16px 40px rgba(37,99,235,0.55), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .jtes-shop-fab-shine {
+    position: absolute; top: 0; left: -60%; width: 45%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.45), transparent);
+    transform: skewX(-20deg); animation: jtesFabShine 3s ease-in-out infinite;
+  }
+  @keyframes jtesFabShine { 0% { left: -60%; } 35% { left: 130%; } 100% { left: 130%; } }
+  .jtes-shop-fab-icon {
+    width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
+    position: relative; z-index: 1;
+  }
+  .jtes-shop-fab-text {
+    font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 13.5px; letter-spacing: 0.2px;
+    white-space: nowrap; position: relative; z-index: 1; line-height: 1.25;
+  }
+  .jtes-shop-fab-text small {
+    display: block; font-size: 10px; font-weight: 600; opacity: 0.85; letter-spacing: 0.3px;
+  }
+  @media (max-width: 560px) {
+    .jtes-shop-fab { bottom: 20px; left: 20px; }
+    .jtes-shop-fab-text { display: none; }
+    .jtes-shop-fab-inner { padding: 13px; }
+    .jtes-shop-fab-float { animation-name: jtesFabFloatSmall; }
+  }
+  @keyframes jtesFabFloatSmall {
+    0%   { transform: translate(0px, 0px); }
+    25%  { transform: translate(8px, -10px); }
+    50%  { transform: translate(-6px, -16px); }
+    75%  { transform: translate(-4px, 4px); }
+    100% { transform: translate(0px, 0px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .jtes-shop-fab, .jtes-shop-fab-float, .jtes-shop-fab-ring, .jtes-shop-fab-badge, .jtes-shop-fab-shine {
+      animation: none !important;
+    }
+  }
+</style>
+<a href="sales.html" class="jtes-shop-fab" aria-label="Shop JTES products">
+  <span class="jtes-shop-fab-float">
+    <span class="jtes-shop-fab-ring"></span>
+    <span class="jtes-shop-fab-badge">SALE</span>
+    <span class="jtes-shop-fab-inner">
+      <span class="jtes-shop-fab-shine"></span>
+      <span class="jtes-shop-fab-icon"><i class="fas fa-bag-shopping"></i></span>
+      <span class="jtes-shop-fab-text">Shop Now<small>Kits, tools &amp; components</small></span>
+    </span>
+  </span>
+</a>
+
+</body>
+</html>

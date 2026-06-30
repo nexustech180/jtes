@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Article Editor — JTES</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+:root {
+  --blue: #2563EB; --blue-dark: #1D4ED8; --blue-light: #3B82F6;
+  --dark: #0A0F1E; --dark2: #0F172A;
+  --text: #1e293b; --text-muted: #64748b;
+  --border: #e2e8f0; --bg: #f8fafc;
+  --green: #16a34a; --red: #ef4444; --orange: #f59e0b;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ── LOGIN ── */
+#login-screen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #0A0F1E 0%, #1E3A8A 60%, #0A0F1E 100%);
+}
+.login-box {
+  background: #fff; border-radius: 24px; padding: 52px 44px;
+  width: 100%; max-width: 420px; text-align: center;
+  box-shadow: 0 32px 100px rgba(0,0,0,0.4);
+}
+.login-logo { margin-bottom: 20px; }
+.login-logo img { height: 52px; object-fit: contain; }
+.login-box h2 { font-size: 26px; font-weight: 900; color: var(--dark2); margin-bottom: 4px; }
+.login-box .login-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 32px; }
+.login-field { margin-bottom: 16px; text-align: left; }
+.login-field label { font-size: 12px; font-weight: 700; color: var(--dark2); display: block; margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
+.login-field input { width: 100%; padding: 13px 16px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 15px; font-family: 'Manrope', sans-serif; outline: none; transition: all 0.2s; }
+.login-field input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+.btn-login { width: 100%; background: var(--blue); color: #fff; border: none; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Manrope', sans-serif; transition: background 0.2s; margin-top: 8px; }
+.btn-login:hover { background: var(--blue-dark); }
+#login-error { color: var(--red); font-size: 13px; margin-top: 10px; display: none; }
+
+/* ── MAIN EDITOR ── */
+#editor-app { display: none; flex-direction: column; min-height: 100vh; }
+
+/* TOPBAR */
+.editor-topbar {
+  position: sticky; top: 0; z-index: 200;
+  background: var(--dark); border-bottom: 1px solid rgba(255,255,255,0.08);
+  height: 62px; padding: 0 32px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.topbar-left { display: flex; align-items: center; gap: 14px; }
+.topbar-left img { height: 34px; object-fit: contain; }
+.topbar-brand { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: 0.5px; }
+.topbar-badge { background: rgba(37,99,235,0.3); border: 1px solid rgba(59,130,246,0.4); color: #93C5FD; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 50px; letter-spacing: 0.5px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.btn-preview { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.15); padding: 8px 18px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Manrope', sans-serif; transition: all 0.2s; display: flex; align-items: center; gap: 7px; }
+.btn-preview:hover { background: rgba(255,255,255,0.14); color: #fff; }
+.btn-publish { background: var(--blue); color: #fff; border: none; padding: 9px 22px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Manrope', sans-serif; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
+.btn-publish:hover { background: var(--blue-dark); }
+.btn-publish:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-logout-top { background: none; color: rgba(255,255,255,0.4); border: none; font-size: 18px; cursor: pointer; transition: color 0.2s; padding: 6px; }
+.btn-logout-top:hover { color: var(--red); }
+
+/* EDITOR LAYOUT */
+.editor-layout { display: grid; grid-template-columns: 340px 1fr; gap: 0; flex: 1; min-height: calc(100vh - 62px); }
+
+/* LEFT SIDEBAR */
+.editor-sidebar {
+  background: #fff; border-right: 1px solid var(--border);
+  padding: 28px 24px; overflow-y: auto; max-height: calc(100vh - 62px);
+  position: sticky; top: 62px;
+}
+.sidebar-section { margin-bottom: 28px; }
+.sidebar-section:last-child { margin-bottom: 0; }
+.sidebar-label {
+  font-size: 10px; font-weight: 800; color: var(--text-muted);
+  letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.sidebar-label i { font-size: 11px; }
+.sidebar-input {
+  width: 100%; padding: 11px 14px; border: 1.5px solid var(--border);
+  border-radius: 10px; font-size: 14px; font-family: 'Manrope', sans-serif;
+  color: var(--text); outline: none; transition: all 0.2s; background: #fff;
+}
+.sidebar-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+.sidebar-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; padding-right: 36px; cursor: pointer; }
+.sidebar-textarea { resize: vertical; min-height: 90px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* POSTER IMAGE ZONE */
+.poster-zone {
+  border: 2px dashed var(--border); border-radius: 14px;
+  padding: 0; cursor: pointer; transition: all 0.2s; background: #f8fafc;
+  position: relative; overflow: hidden; min-height: 150px;
+  display: flex; align-items: center; justify-content: center;
+}
+.poster-zone:hover { border-color: var(--blue); background: #EFF6FF; }
+.poster-zone.has-image { border-style: solid; border-color: var(--blue); padding: 0; }
+.poster-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; z-index: 2; }
+.poster-placeholder { text-align: center; padding: 28px 20px; pointer-events: none; }
+.poster-placeholder i { font-size: 32px; color: #cbd5e1; margin-bottom: 10px; display: block; }
+.poster-placeholder p { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+.poster-placeholder p strong { color: var(--blue); }
+.poster-placeholder .required-badge { display: inline-block; background: #FEF2F2; color: var(--red); border: 1px solid #FECACA; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 50px; margin-top: 6px; letter-spacing: 0.5px; }
+.poster-preview { width: 100%; height: 160px; object-fit: cover; display: block; }
+.poster-video-preview { width: 100%; height: 160px; object-fit: cover; display: block; background: #000; }
+.poster-overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.2s; z-index: 3; pointer-events: none;
+}
+.poster-zone:hover .poster-overlay { opacity: 1; }
+.poster-overlay span { color: #fff; font-size: 13px; font-weight: 700; background: rgba(37,99,235,0.8); padding: 6px 14px; border-radius: 8px; }
+.poster-progress { padding: 10px 14px; }
+.poster-bar-wrap { background: #e2e8f0; border-radius: 50px; height: 5px; overflow: hidden; margin-bottom: 5px; }
+.poster-bar-fill { height: 100%; background: var(--blue); border-radius: 50px; transition: width 0.3s; width: 0%; }
+.poster-status { font-size: 12px; color: var(--text-muted); }
+.poster-ok { font-size: 12px; color: var(--green); font-weight: 700; margin-top: 4px; display: flex; align-items: center; gap: 5px; }
+
+/* WORD COUNT */
+.word-count { font-size: 11px; color: var(--text-muted); margin-top: 6px; text-align: right; }
+
+/* RIGHT EDITOR PANE */
+.editor-pane { background: #fff; display: flex; flex-direction: column; }
+
+/* TITLE */
+.title-area { padding: 36px 56px 0; border-bottom: 1px solid var(--border); }
+#article-title {
+  width: 100%; border: none; outline: none; font-family: 'Manrope', sans-serif;
+  font-size: 38px; font-weight: 900; color: var(--dark2); line-height: 1.2;
+  resize: none; background: transparent; overflow: hidden;
+  min-height: 52px; display: block;
+}
+#article-title::placeholder { color: #cbd5e1; }
+.title-underline { height: 3px; background: linear-gradient(90deg, var(--blue), transparent); border-radius: 2px; margin-top: 14px; }
+
+/* TOOLBAR */
+.editor-toolbar {
+  display: flex; align-items: center; gap: 2px; flex-wrap: wrap;
+  padding: 10px 56px; background: #fff;
+  border-bottom: 1px solid var(--border); position: sticky; top: 62px; z-index: 100;
+}
+.toolbar-group { display: flex; align-items: center; gap: 2px; }
+.toolbar-sep { width: 1px; height: 22px; background: var(--border); margin: 0 6px; }
+.tb {
+  width: 34px; height: 34px; border: none; border-radius: 8px; background: none;
+  color: var(--text); font-size: 14px; cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center; font-family: 'Manrope', sans-serif;
+}
+.tb:hover { background: #f1f5f9; color: var(--blue); }
+.tb.active { background: #EFF6FF; color: var(--blue); }
+.tb-text { width: auto; padding: 0 10px; font-size: 13px; font-weight: 700; }
+.tb-heading { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; }
+
+/* CONTENT EDITABLE */
+.editor-content-wrap { flex: 1; padding: 36px 56px 80px; overflow-y: auto; }
+#editor-content {
+  min-height: 500px; outline: none; font-size: 17px; color: #374151;
+  line-height: 1.9; caret-color: var(--blue);
+  font-family: 'Manrope', sans-serif;
+}
+#editor-content:empty::before {
+  content: 'Start writing your article here…\A\AUse the toolbar above to format your text — add headings, bold, lists, quotes, images and more.';
+  white-space: pre-wrap; color: #cbd5e1; pointer-events: none;
+}
+#editor-content h2 { font-size: 26px; font-weight: 800; color: var(--dark2); margin: 32px 0 14px; line-height: 1.3; }
+#editor-content h3 { font-size: 20px; font-weight: 700; color: var(--dark2); margin: 24px 0 10px; line-height: 1.4; }
+#editor-content p { margin-bottom: 16px; }
+#editor-content ul, #editor-content ol { margin: 0 0 16px 24px; }
+#editor-content li { margin-bottom: 6px; }
+#editor-content blockquote { border-left: 4px solid var(--blue); padding: 14px 20px; background: #EFF6FF; border-radius: 0 10px 10px 0; margin: 20px 0; font-style: italic; color: var(--text-muted); }
+#editor-content a { color: var(--blue); text-decoration: underline; }
+#editor-content img { max-width: 100%; border-radius: 12px; margin: 16px 0; display: block; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+#editor-content video { max-width: 100%; border-radius: 12px; margin: 16px 0; display: block; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+#editor-content hr { border: none; border-top: 2px solid var(--border); margin: 32px 0; }
+#editor-content strong { font-weight: 800; color: var(--dark2); }
+
+/* LINK DIALOG */
+.link-dialog {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999;
+  display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px);
+}
+.link-dialog.open { display: flex; }
+.link-dialog-box { background: #fff; border-radius: 20px; padding: 32px; width: 440px; max-width: 95vw; box-shadow: 0 24px 80px rgba(0,0,0,0.25); }
+.link-dialog-box h4 { font-size: 18px; font-weight: 800; color: var(--dark2); margin-bottom: 20px; }
+.link-dialog-box input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; font-family: 'Manrope', sans-serif; outline: none; margin-bottom: 12px; transition: border-color 0.2s; }
+.link-dialog-box input:focus { border-color: var(--blue); }
+.link-dialog-btns { display: flex; gap: 10px; margin-top: 4px; }
+.btn-dialog-ok { flex: 1; background: var(--blue); color: #fff; border: none; padding: 11px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Manrope', sans-serif; }
+.btn-dialog-cancel { flex: 1; background: #f1f5f9; color: var(--text); border: none; padding: 11px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Manrope', sans-serif; }
+
+/* INLINE IMAGE UPLOAD DIALOG */
+.img-dialog { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+.img-dialog.open { display: flex; }
+.img-dialog-box { background: #fff; border-radius: 20px; padding: 32px; width: 480px; max-width: 95vw; box-shadow: 0 24px 80px rgba(0,0,0,0.25); }
+.img-dialog-box h4 { font-size: 18px; font-weight: 800; color: var(--dark2); margin-bottom: 20px; }
+.img-upload-zone { border: 2px dashed var(--border); border-radius: 12px; padding: 32px; text-align: center; cursor: pointer; background: #f8fafc; position: relative; transition: all 0.2s; margin-bottom: 14px; }
+.img-upload-zone:hover { border-color: var(--blue); background: #EFF6FF; }
+.img-upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.img-upload-zone i { font-size: 28px; color: #cbd5e1; margin-bottom: 10px; display: block; }
+.img-upload-zone p { font-size: 13px; color: var(--text-muted); }
+.img-upload-zone p strong { color: var(--blue); }
+.img-url-row { display: flex; gap: 8px; margin-bottom: 14px; }
+.img-url-row input { flex: 1; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; font-family: 'Manrope', sans-serif; outline: none; }
+.img-url-row input:focus { border-color: var(--blue); }
+.img-url-row button { background: var(--blue); color: #fff; border: none; padding: 11px 18px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Manrope', sans-serif; white-space: nowrap; }
+#img-progress { display: none; margin-bottom: 12px; }
+#img-progress .poster-bar-wrap { background: #e2e8f0; border-radius: 50px; height: 5px; margin-bottom: 4px; overflow: hidden; }
+#img-progress .poster-bar-fill { height: 100%; background: var(--blue); border-radius: 50px; transition: width 0.3s; width: 0%; }
+#img-status { font-size: 12px; color: var(--text-muted); }
+.img-dialog-cancel { width: 100%; background: #f1f5f9; color: var(--text); border: none; padding: 11px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Manrope', sans-serif; }
+
+/* MEDIA DIALOG TABS */
+.media-tabs { display: flex; gap: 0; margin-bottom: 20px; border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; }
+.media-tab { flex: 1; padding: 10px; background: #f8fafc; border: none; font-size: 13px; font-weight: 700; color: var(--text-muted); cursor: pointer; font-family: 'Manrope', sans-serif; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.media-tab.active { background: var(--blue); color: #fff; }
+.media-tab:not(.active):hover { background: #e2e8f0; color: var(--text); }
+.media-tab-panel { display: none; }
+.media-tab-panel.active { display: block; }
+
+/* PREVIEW MODAL */
+#preview-modal { position: fixed; inset: 0; z-index: 8888; background: #fff; display: none; overflow-y: auto; }
+.preview-topbar { position: sticky; top: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); height: 58px; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; }
+.preview-topbar span { font-size: 14px; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+.btn-close-preview { background: none; border: 1.5px solid var(--border); color: var(--text); padding: 8px 18px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Manrope', sans-serif; display: flex; align-items: center; gap: 7px; transition: all 0.2s; }
+.btn-close-preview:hover { border-color: var(--blue); color: var(--blue); }
+.preview-hero { width: 100%; height: 55vh; min-height: 300px; object-fit: cover; display: block; background: var(--dark); }
+.preview-body { max-width: 780px; margin: 0 auto; padding: 52px 32px 100px; }
+.preview-cat { display: inline-block; background: var(--blue); color: #fff; padding: 4px 14px; border-radius: 50px; font-size: 12px; font-weight: 700; margin-bottom: 16px; }
+.preview-title { font-size: 38px; font-weight: 900; color: var(--dark2); margin-bottom: 10px; line-height: 1.2; }
+.preview-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 32px; display: flex; gap: 16px; flex-wrap: wrap; }
+.preview-divider { width: 56px; height: 4px; background: var(--blue); border-radius: 2px; margin-bottom: 36px; }
+.preview-summary { font-size: 18px; color: var(--text-muted); line-height: 1.8; margin-bottom: 36px; font-weight: 500; border-left: 4px solid var(--blue); padding-left: 20px; }
+.preview-content { font-size: 17px; color: #374151; line-height: 2; }
+.preview-content h2 { font-size: 26px; font-weight: 800; color: var(--dark2); margin: 32px 0 14px; }
+.preview-content h3 { font-size: 20px; font-weight: 700; color: var(--dark2); margin: 24px 0 10px; }
+.preview-content p { margin-bottom: 16px; }
+.preview-content ul, .preview-content ol { margin: 0 0 16px 24px; }
+.preview-content blockquote { border-left: 4px solid var(--blue); padding: 14px 20px; background: #EFF6FF; border-radius: 0 10px 10px 0; margin: 20px 0; font-style: italic; color: var(--text-muted); }
+.preview-content img { max-width: 100%; border-radius: 12px; margin: 16px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+.preview-content video { max-width: 100%; border-radius: 12px; margin: 16px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+.preview-content hr { border: none; border-top: 2px solid var(--border); margin: 32px 0; }
+.preview-content strong { font-weight: 800; color: var(--dark2); }
+
+/* TOAST */
+.toast { position: fixed; bottom: 28px; right: 28px; z-index: 99999; background: var(--dark2); color: #fff; padding: 14px 22px; border-radius: 14px; font-size: 14px; font-weight: 600; display: none; align-items: center; gap: 10px; box-shadow: 0 12px 40px rgba(0,0,0,0.35); max-width: 340px; }
+.toast.show { display: flex; }
+.toast.success { background: var(--green); }
+.toast.error { background: var(--red); }
+.toast.warning { background: var(--orange); }
+
+/* PUBLISH SUCCESS */
+#success-overlay { position: fixed; inset: 0; z-index: 99999; background: rgba(10,15,30,0.85); display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+#success-overlay.show { display: flex; }
+.success-card { background: #fff; border-radius: 28px; padding: 52px 44px; text-align: center; max-width: 420px; width: 95vw; box-shadow: 0 32px 100px rgba(0,0,0,0.5); }
+.success-icon { width: 80px; height: 80px; border-radius: 50%; background: #DCFCE7; display: flex; align-items: center; justify-content: center; font-size: 36px; color: var(--green); margin: 0 auto 24px; }
+.success-card h3 { font-size: 26px; font-weight: 900; color: var(--dark2); margin-bottom: 10px; }
+.success-card p { font-size: 15px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.6; }
+.success-btns { display: flex; flex-direction: column; gap: 10px; }
+.btn-new-article { background: var(--blue); color: #fff; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'Manrope', sans-serif; transition: background 0.2s; }
+.btn-new-article:hover { background: var(--blue-dark); }
+.btn-go-blog { background: #f1f5f9; color: var(--text); border: none; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Manrope', sans-serif; text-decoration: none; display: block; transition: background 0.2s; }
+.btn-go-blog:hover { background: #e2e8f0; }
+
+/* FLOATING BACK BUTTON */
+.btn-back-float {
+  position: fixed; bottom: 32px; left: 32px; z-index: 9000;
+  background: var(--blue); color: #fff;
+  border: none; border-radius: 50px;
+  padding: 12px 20px;
+  font-size: 14px; font-weight: 700; font-family: 'Manrope', sans-serif;
+  cursor: pointer; text-decoration: none;
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 8px 28px rgba(37,99,235,0.35);
+  transition: all 0.2s;
+}
+.btn-back-float:hover {
+  background: var(--blue-dark); transform: translateY(-2px);
+  box-shadow: 0 12px 36px rgba(37,99,235,0.5);
+}
+.btn-back-float i { font-size: 13px; }
+
+@media (max-width: 768px) {
+  .btn-back-float { bottom: 80px; left: 16px; padding: 10px 16px; font-size: 13px; }
+}
+
+/* ══════════════════════════════════════
+   MOBILE  (≤ 768px) — Google Docs style
+══════════════════════════════════════ */
+
+/* Elements only shown on mobile */
+.mob-only { display: none; }
+
+@media (max-width: 768px) {
+
+  /* ── Hide desktop elements ── */
+  .editor-sidebar,
+  .title-area,
+  .editor-toolbar,
+  .topbar-badge,
+  .btn-preview,
+  .btn-publish,
+  .btn-logout-top { display: none !important; }
+
+  /* ── Show mobile-only elements ── */
+  .mob-only { display: flex; }
+
+  /* ── Layout: full screen ── */
+  .editor-layout { grid-template-columns: 1fr; min-height: calc(100vh - 52px); }
+  #editor-app { padding-bottom: 0; }
+
+  /* ── Topbar: minimal, like Docs ── */
+  .editor-topbar {
+    padding: 0 12px; height: 52px; gap: 6px;
+    background: #f1f3f4; border-bottom: 1px solid #dadce0;
+  }
+  .topbar-left { gap: 8px; }
+  .topbar-left img { height: 26px; }
+  .topbar-brand { font-size: 13px; color: #3c4043; font-weight: 600; }
+
+  /* ── Writing canvas: full width, clean white ── */
+  .editor-pane { background: #fff; min-height: calc(100vh - 52px - 52px); }
+  .editor-content-wrap {
+    padding: 24px 20px 120px;
+    min-height: calc(100vh - 52px - 52px);
+  }
+  #editor-content {
+    font-size: 16px; line-height: 1.8;
+    min-height: calc(100vh - 200px);
+  }
+  #editor-content h2 { font-size: 22px; }
+  #editor-content h3 { font-size: 18px; }
+
+  /* ── Mobile title bar (above content) ── */
+  .mob-title-area {
+    display: flex !important;
+    padding: 20px 20px 0;
+    border-bottom: 1px solid var(--border);
+    background: #fff;
+    flex-direction: column;
+  }
+  #mob-article-title {
+    width: 100%; border: none; outline: none;
+    font-family: 'Manrope', sans-serif;
+    font-size: 26px; font-weight: 900; color: var(--dark2);
+    line-height: 1.2; resize: none; background: transparent;
+    overflow: hidden; min-height: 40px; display: block;
+  }
+  #mob-article-title::placeholder { color: #cbd5e1; }
+  .mob-title-underline {
+    height: 3px;
+    background: linear-gradient(90deg, var(--blue), transparent);
+    border-radius: 2px; margin-top: 12px;
+  }
+
+  /* ── Fixed bottom toolbar ── */
+  .mob-toolbar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
+    background: #f1f3f4; border-top: 1px solid #dadce0;
+    height: 52px; display: flex !important;
+    align-items: center; gap: 0;
+    overflow-x: auto; scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mob-toolbar::-webkit-scrollbar { display: none; }
+  .mob-tb {
+    min-width: 44px; height: 52px; border: none; background: none;
+    color: #3c4043; font-size: 15px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: background 0.15s; font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+  }
+  .mob-tb:hover, .mob-tb:active { background: #dadce0; }
+  .mob-tb.active { color: var(--blue); background: #EFF6FF; }
+  .mob-tb-sep {
+    width: 1px; height: 28px; background: #dadce0;
+    flex-shrink: 0; margin: 0 2px;
+  }
+  .mob-tb-text { font-size: 12px; font-weight: 800; letter-spacing: 0.3px; }
+
+  /* ── Settings panel (slide up) ── */
+  .mob-settings-overlay {
+    position: fixed; inset: 0; z-index: 800;
+    background: rgba(0,0,0,0.4);
+    display: none; align-items: flex-end;
+  }
+  .mob-settings-overlay.open { display: flex; }
+  .mob-settings-panel {
+    background: #fff; width: 100%; border-radius: 20px 20px 0 0;
+    padding: 0 0 32px; max-height: 85vh; overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+  .mob-panel-handle {
+    width: 40px; height: 4px; background: #dadce0;
+    border-radius: 2px; margin: 14px auto 20px;
+  }
+  .mob-panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px 16px; border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .mob-panel-header h3 { font-size: 16px; font-weight: 800; color: var(--dark2); }
+  .mob-panel-close {
+    background: #f1f5f9; border: none; width: 32px; height: 32px;
+    border-radius: 50%; cursor: pointer; font-size: 14px; color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mob-panel-body { padding: 16px 20px; }
+  .mob-field { margin-bottom: 18px; }
+  .mob-field label {
+    font-size: 10px; font-weight: 800; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1.2px; display: block; margin-bottom: 6px;
+  }
+  .mob-field input, .mob-field select, .mob-field textarea {
+    width: 100%; padding: 12px 14px; border: 1.5px solid var(--border);
+    border-radius: 10px; font-size: 15px; font-family: 'Manrope', sans-serif;
+    color: var(--text); outline: none; background: #fff;
+  }
+  .mob-field input:focus, .mob-field select:focus, .mob-field textarea:focus {
+    border-color: var(--blue);
+  }
+  .mob-field textarea { resize: vertical; min-height: 80px; }
+  .mob-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ── Mobile poster zone ── */
+  .mob-poster-zone {
+    border: 2px dashed var(--border); border-radius: 12px;
+    min-height: 120px; display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden; cursor: pointer; background: #f8fafc;
+    transition: all 0.2s;
+  }
+  .mob-poster-zone.has-image { border-style: solid; border-color: var(--blue); }
+  .mob-poster-zone input[type=file] { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+  .mob-poster-zone img { width: 100%; height: 120px; object-fit: cover; display: block; }
+  .mob-poster-placeholder { text-align: center; padding: 20px; pointer-events: none; }
+  .mob-poster-placeholder i { font-size: 28px; color: #cbd5e1; margin-bottom: 8px; display: block; }
+  .mob-poster-placeholder p { font-size: 13px; color: var(--text-muted); }
+  .mob-poster-placeholder .req { color: var(--red); font-size: 11px; font-weight: 700; display: block; margin-top: 4px; }
+  .mob-poster-ok { font-size: 12px; color: var(--green); font-weight: 700; margin-top: 6px; display: none; align-items: center; gap: 5px; }
+
+  /* ── Publish button in settings panel ── */
+  .mob-publish-btn {
+    width: 100%; background: var(--blue); color: #fff; border: none;
+    padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 700;
+    cursor: pointer; font-family: 'Manrope', sans-serif;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    margin-top: 8px; transition: background 0.2s;
+  }
+  .mob-publish-btn:hover { background: var(--blue-dark); }
+  .mob-publish-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .mob-preview-btn {
+    width: 100%; background: #f1f5f9; color: var(--text); border: 1.5px solid var(--border);
+    padding: 13px; border-radius: 12px; font-size: 15px; font-weight: 600;
+    cursor: pointer; font-family: 'Manrope', sans-serif;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 10px; transition: background 0.2s;
+  }
+
+  /* ── Topbar right: mobile actions ── */
+  .mob-topbar-actions {
+    display: flex !important; align-items: center; gap: 4px;
+  }
+  .mob-icon-btn {
+    width: 38px; height: 38px; border-radius: 50%; border: none; background: none;
+    color: #5f6368; font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .mob-icon-btn:hover { background: #dadce0; }
+
+  /* Preview modal on mobile */
+  .preview-topbar { padding: 0 14px; height: 52px; }
+  .preview-body { padding: 24px 16px 80px; }
+  .preview-title { font-size: 24px; }
+  .preview-summary { font-size: 15px; padding-left: 14px; }
+  .preview-content { font-size: 15px; }
+  .preview-content h2 { font-size: 20px; }
+  .preview-content h3 { font-size: 17px; }
+  .preview-content img { max-width: 100%; height: auto; }
+
+  /* Toast above toolbar */
+  .toast { bottom: 64px; right: 12px; left: 12px; max-width: none; }
+
+  /* Dialogs */
+  .link-dialog-box, .img-dialog-box { padding: 24px 16px; border-radius: 16px; margin: 0 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="https://jassan-innovations-hub.vercel.app/assets/logo-CoQZjYGJ.jpg" alt="JTES">
+    </div>
+    <h2>Article Editor</h2>
+    <p class="login-sub">JTES Admin Access Required</p>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="login-pass" placeholder="Enter admin password" onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <button class="btn-login" onclick="doLogin()"><i class="fas fa-pen-nib"></i> Open Editor</button>
+    <p id="login-error"><i class="fas fa-exclamation-circle"></i> Incorrect password. Try again.</p>
+  </div>
+</div>
+
+<!-- ── MAIN EDITOR ── -->
+<div id="editor-app">
+
+  <!-- TOPBAR -->
+  <div class="editor-topbar">
+    <div class="topbar-left">
+      <img src="https://jassan-innovations-hub.vercel.app/assets/logo-CoQZjYGJ.jpg" alt="JTES">
+      <span class="topbar-brand">JTES</span>
+      <span class="topbar-badge">Article Editor</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-preview" onclick="openPreview()"><i class="fas fa-eye"></i> Preview</button>
+      <button class="btn-publish" id="publish-btn" onclick="publishArticle()"><i class="fas fa-paper-plane"></i> Publish</button>
+      <button class="btn-logout-top" onclick="doLogout()" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+      <!-- Mobile topbar actions -->
+      <div class="mob-topbar-actions" style="display:none;">
+        <button class="mob-icon-btn" onclick="mobUndo()" title="Undo"><i class="fas fa-undo"></i></button>
+        <button class="mob-icon-btn" onclick="mobRedo()" title="Redo"><i class="fas fa-redo"></i></button>
+        <button class="mob-icon-btn" onclick="openMobSettings()" title="Article Settings"><i class="fas fa-sliders-h"></i></button>
+        <button class="mob-icon-btn" onclick="openPreview()" title="Preview"><i class="fas fa-eye"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE TITLE AREA (shown on mobile only) -->
+  <div class="mob-title-area" style="display:none;">
+    <textarea id="mob-article-title" placeholder="Article title…" rows="1" oninput="mobSyncTitle(this)"></textarea>
+    <div class="mob-title-underline"></div>
+  </div>
+
+  <!-- LAYOUT -->
+  <div class="editor-layout">
+
+    <!-- SIDEBAR -->
+    <div class="editor-sidebar">
+
+      <!-- POSTER IMAGE — MANDATORY -->
+      <div class="sidebar-section">
+        <div class="sidebar-label" style="color:var(--red);"><i class="fas fa-photo-video"></i> Poster Media <span style="background:#FEF2F2;color:var(--red);border:1px solid #FECACA;font-size:9px;padding:1px 6px;border-radius:50px;margin-left:4px;">REQUIRED</span></div>
+        <div class="poster-zone" id="poster-zone">
+          <input type="file" id="poster-file" accept="image/*,video/*" onchange="handlePosterUpload(this)">
+          <div class="poster-placeholder" id="poster-placeholder">
+            <i class="fas fa-photo-video"></i>
+            <p>Click to upload a <strong>poster image or video</strong><br>JPG, PNG, WebP, MP4, WebM · Max 50MB</p>
+            <span class="required-badge">REQUIRED TO PUBLISH</span>
+          </div>
+          <img id="poster-preview" class="poster-preview" style="display:none;" alt="Poster">
+          <video id="poster-video-preview" class="poster-video-preview" style="display:none;" autoplay muted loop playsinline></video>
+          <div class="poster-overlay" id="poster-overlay"><span><i class="fas fa-redo"></i> Change Media</span></div>
+        </div>
+        <div id="poster-progress" style="display:none;" class="poster-progress">
+          <div class="poster-bar-wrap"><div class="poster-bar-fill" id="poster-bar"></div></div>
+          <div class="poster-status" id="poster-status">Uploading…</div>
+        </div>
+        <div class="poster-ok" id="poster-ok" style="display:none;"><i class="fas fa-check-circle"></i> Media ready</div>
+      </div>
+
+      <!-- CATEGORY -->
+      <div class="sidebar-section">
+        <div class="sidebar-label"><i class="fas fa-tag"></i> Category</div>
+        <select class="sidebar-input sidebar-select" id="post-cat">
+          <option value="STEM Trends">STEM Trends</option>
+          <option value="Robotics Tutorials">Robotics Tutorials</option>
+          <option value="AI & IoT">AI & IoT</option>
+          <option value="Electrical Safety">Electrical Safety</option>
+          <option value="Student Success Stories">Student Success Stories</option>
+          <option value="Events & Competitions">Events & Competitions</option>
+          <option value="Company News">Company News</option>
+        </select>
+      </div>
+
+      <!-- SUMMARY -->
+      <div class="sidebar-section">
+        <div class="sidebar-label"><i class="fas fa-align-left"></i> Summary <span style="color:var(--red);margin-left:2px;">*</span></div>
+        <textarea class="sidebar-input sidebar-textarea" id="post-summary" placeholder="A brief description shown on the blog cards and in email notifications…" rows="4"></textarea>
+        <div class="word-count" id="summary-count">0 / 200 chars</div>
+      </div>
+
+      <!-- AUTHOR & READ TIME -->
+      <div class="sidebar-section">
+        <div class="two-col">
+          <div>
+            <div class="sidebar-label"><i class="fas fa-user"></i> Author</div>
+            <input class="sidebar-input" type="text" id="post-author" value="JTES Team">
+          </div>
+          <div>
+            <div class="sidebar-label"><i class="fas fa-clock"></i> Read Time</div>
+            <input class="sidebar-input" type="text" id="post-read" value="5 min read">
+          </div>
+        </div>
+      </div>
+
+      <!-- ARTICLE STATS -->
+      <div class="sidebar-section" style="background:#f8fafc;border-radius:14px;padding:16px;">
+        <div class="sidebar-label" style="margin-bottom:12px;"><i class="fas fa-chart-bar"></i> Article Stats</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;justify-content:space-between;font-size:13px;">
+            <span style="color:var(--text-muted);">Words</span>
+            <span id="stat-words" style="font-weight:700;color:var(--dark2);">0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;">
+            <span style="color:var(--text-muted);">Characters</span>
+            <span id="stat-chars" style="font-weight:700;color:var(--dark2);">0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;">
+            <span style="color:var(--text-muted);">Est. read time</span>
+            <span id="stat-time" style="font-weight:700;color:var(--dark2);">— min</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /editor-sidebar -->
+
+    <!-- EDITOR PANE -->
+    <div class="editor-pane">
+
+      <!-- TITLE -->
+      <div class="title-area">
+        <textarea id="article-title" placeholder="Article title…" rows="1" oninput="autoResize(this)"></textarea>
+        <div class="title-underline"></div>
+      </div>
+
+      <!-- TOOLBAR -->
+      <div class="editor-toolbar" id="editor-toolbar">
+        <div class="toolbar-group">
+          <button class="tb tb-text tb-heading" onclick="cmd('formatBlock','h2')" title="Heading 2">H2</button>
+          <button class="tb tb-text tb-heading" onclick="cmd('formatBlock','h3')" title="Heading 3">H3</button>
+          <button class="tb tb-text tb-heading" onclick="cmd('formatBlock','p')" title="Paragraph">P</button>
+        </div>
+        <div class="toolbar-sep"></div>
+        <div class="toolbar-group">
+          <button class="tb" onclick="cmd('bold')" title="Bold"><i class="fas fa-bold"></i></button>
+          <button class="tb" onclick="cmd('italic')" title="Italic"><i class="fas fa-italic"></i></button>
+          <button class="tb" onclick="cmd('underline')" title="Underline"><i class="fas fa-underline"></i></button>
+          <button class="tb" onclick="cmd('strikeThrough')" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
+        </div>
+        <div class="toolbar-sep"></div>
+        <div class="toolbar-group">
+          <button class="tb" onclick="cmd('insertUnorderedList')" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+          <button class="tb" onclick="cmd('insertOrderedList')" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+        </div>
+        <div class="toolbar-sep"></div>
+        <div class="toolbar-group">
+          <button class="tb" onclick="cmd('justifyLeft')" title="Align Left"><i class="fas fa-align-left"></i></button>
+          <button class="tb" onclick="cmd('justifyCenter')" title="Align Center"><i class="fas fa-align-center"></i></button>
+          <button class="tb" onclick="cmd('justifyRight')" title="Align Right"><i class="fas fa-align-right"></i></button>
+        </div>
+        <div class="toolbar-sep"></div>
+        <div class="toolbar-group">
+          <button class="tb" onclick="insertBlockquote()" title="Blockquote"><i class="fas fa-quote-left"></i></button>
+          <button class="tb" onclick="cmd('insertHorizontalRule')" title="Divider"><i class="fas fa-minus"></i></button>
+        </div>
+        <div class="toolbar-sep"></div>
+        <div class="toolbar-group">
+          <button class="tb" onclick="openLinkDialog()" title="Insert Link"><i class="fas fa-link"></i></button>
+          <button class="tb" onclick="cmd('unlink')" title="Remove Link"><i class="fas fa-unlink"></i></button>
+          <button class="tb" onclick="openImageDialog()" title="Insert Image"><i class="fas fa-image"></i></button>
+          <button class="tb" onclick="openVideoDialog()" title="Insert Video"><i class="fas fa-film"></i></button>
+        </div>
+        <div class="toolbar-sep"></div>
+        <div class="toolbar-group">
+          <button class="tb" onclick="cmd('removeFormat')" title="Clear Formatting" style="color:var(--text-muted);"><i class="fas fa-eraser"></i></button>
+        </div>
+      </div>
+
+      <!-- CONTENT AREA -->
+      <div class="editor-content-wrap">
+        <div id="editor-content" contenteditable="true" spellcheck="true"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MOBILE BOTTOM TOOLBAR -->
+  <div class="mob-toolbar" style="display:none;">
+    <button class="mob-tb mob-tb-text" onclick="mobCmd('formatBlock','h2')" title="H2">H2</button>
+    <button class="mob-tb mob-tb-text" onclick="mobCmd('formatBlock','h3')" title="H3">H3</button>
+    <button class="mob-tb mob-tb-text" onclick="mobCmd('formatBlock','p')"  title="P">P</button>
+    <div class="mob-tb-sep"></div>
+    <button class="mob-tb" onclick="mobCmd('bold')"          title="Bold">        <i class="fas fa-bold"></i></button>
+    <button class="mob-tb" onclick="mobCmd('italic')"        title="Italic">      <i class="fas fa-italic"></i></button>
+    <button class="mob-tb" onclick="mobCmd('underline')"     title="Underline">   <i class="fas fa-underline"></i></button>
+    <div class="mob-tb-sep"></div>
+    <button class="mob-tb" onclick="mobCmd('insertUnorderedList')" title="Bullet"><i class="fas fa-list-ul"></i></button>
+    <button class="mob-tb" onclick="mobCmd('insertOrderedList')"   title="Numbered"><i class="fas fa-list-ol"></i></button>
+    <div class="mob-tb-sep"></div>
+    <button class="mob-tb" onclick="mobInsertBlockquote()"   title="Quote">      <i class="fas fa-quote-left"></i></button>
+    <button class="mob-tb" onclick="mobCmd('insertHorizontalRule')" title="Line"> <i class="fas fa-minus"></i></button>
+    <div class="mob-tb-sep"></div>
+    <button class="mob-tb" onclick="openLinkDialog()"        title="Link">       <i class="fas fa-link"></i></button>
+    <button class="mob-tb" onclick="openImageDialog()"       title="Image">      <i class="fas fa-image"></i></button>
+    <button class="mob-tb" onclick="openVideoDialog()"       title="Video">      <i class="fas fa-film"></i></button>
+  </div>
+
+  <!-- MOBILE SETTINGS PANEL -->
+  <div class="mob-settings-overlay" id="mob-settings-overlay" onclick="if(event.target===this)closeMobSettings()">
+    <div class="mob-settings-panel">
+      <div class="mob-panel-handle"></div>
+      <div class="mob-panel-header">
+        <h3><i class="fas fa-sliders-h" style="color:var(--blue);margin-right:8px;"></i>Article Settings</h3>
+        <button class="mob-panel-close" onclick="closeMobSettings()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="mob-panel-body">
+
+        <!-- Poster -->
+        <div class="mob-field">
+          <label style="color:var(--red);">Poster Media <span style="background:#FEF2F2;border:1px solid #FECACA;color:var(--red);padding:1px 6px;border-radius:50px;font-size:9px;margin-left:4px;">REQUIRED</span></label>
+          <div class="mob-poster-zone" id="mob-poster-zone">
+            <input type="file" accept="image/*,video/*" onchange="handlePosterUpload(this)">
+            <div class="mob-poster-placeholder" id="mob-poster-placeholder">
+              <i class="fas fa-photo-video"></i>
+              <p>Tap to upload poster image or video</p>
+              <span class="req">REQUIRED TO PUBLISH</span>
+            </div>
+            <img id="mob-poster-img" style="display:none;width:100%;height:120px;object-fit:cover;" alt="Poster">
+            <video id="mob-poster-video" style="display:none;width:100%;height:120px;object-fit:cover;" autoplay muted loop playsinline></video>
+          </div>
+          <div id="mob-poster-ok" class="mob-poster-ok"><i class="fas fa-check-circle"></i> Media ready</div>
+        </div>
+
+        <!-- Category -->
+        <div class="mob-field">
+          <label>Category</label>
+          <select id="mob-post-cat" onchange="document.getElementById('post-cat').value=this.value">
+            <option value="STEM Trends">STEM Trends</option>
+            <option value="Robotics Tutorials">Robotics Tutorials</option>
+            <option value="AI &amp; IoT">AI &amp; IoT</option>
+            <option value="Electrical Safety">Electrical Safety</option>
+            <option value="Student Success Stories">Student Success Stories</option>
+            <option value="Events &amp; Competitions">Events &amp; Competitions</option>
+            <option value="Company News">Company News</option>
+          </select>
+        </div>
+
+        <!-- Summary -->
+        <div class="mob-field">
+          <label>Summary <span style="color:var(--red);">*</span></label>
+          <textarea rows="3" id="mob-post-summary" placeholder="Brief description for blog cards…" oninput="document.getElementById('post-summary').value=this.value"></textarea>
+        </div>
+
+        <!-- Author + Read time -->
+        <div class="mob-two-col">
+          <div class="mob-field" style="margin-bottom:0;">
+            <label>Author</label>
+            <input type="text" id="mob-post-author" value="JTES Team" oninput="document.getElementById('post-author').value=this.value">
+          </div>
+          <div class="mob-field" style="margin-bottom:0;">
+            <label>Read Time</label>
+            <input type="text" id="mob-post-read" value="5 min read" oninput="document.getElementById('post-read').value=this.value">
+          </div>
+        </div>
+
+        <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px;">
+          <button class="mob-publish-btn" onclick="closeMobSettings();publishArticle()"><i class="fas fa-paper-plane"></i> Publish Article</button>
+          <button class="mob-preview-btn" onclick="closeMobSettings();openPreview()"><i class="fas fa-eye"></i> Preview</button>
+          <button style="width:100%;background:none;border:none;color:var(--red);font-size:14px;font-weight:600;padding:12px;cursor:pointer;font-family:'Manrope',sans-serif;margin-top:6px;" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOATING BACK BUTTON (editor only) -->
+  <button class="btn-back-float" onclick="window.location.href='admin.html'" title="Back to Admin">
+    <i class="fas fa-arrow-left"></i> Back to Admin
+  </button>
+
+</div>
+
+<!-- LINK DIALOG -->
+<div class="link-dialog" id="link-dialog">
+  <div class="link-dialog-box">
+    <h4><i class="fas fa-link" style="color:var(--blue);margin-right:8px;"></i>Insert Link</h4>
+    <input type="text" id="link-text" placeholder="Link text (leave empty to wrap selection)">
+    <input type="url" id="link-url" placeholder="https://example.com">
+    <div class="link-dialog-btns">
+      <button class="btn-dialog-cancel" onclick="closeLinkDialog()">Cancel</button>
+      <button class="btn-dialog-ok" onclick="insertLink()"><i class="fas fa-check"></i> Insert</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMAGE / VIDEO DIALOG -->
+<div class="img-dialog" id="img-dialog">
+  <div class="img-dialog-box">
+    <h4 style="margin-bottom:16px;"><i class="fas fa-photo-video" style="color:var(--blue);margin-right:8px;"></i>Insert Media</h4>
+    <!-- Tabs -->
+    <div class="media-tabs">
+      <button class="media-tab active" id="tab-image-btn" onclick="switchMediaTab('image')"><i class="fas fa-image"></i> Image</button>
+      <button class="media-tab" id="tab-video-btn" onclick="switchMediaTab('video')"><i class="fas fa-film"></i> Video</button>
+    </div>
+
+    <!-- IMAGE PANEL -->
+    <div class="media-tab-panel active" id="tab-image-panel">
+      <div class="img-upload-zone">
+        <input type="file" id="inline-img-file" accept="image/*" onchange="handleInlineImageUpload(this)">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <p>Click to <strong>upload</strong> from your device</p>
+      </div>
+      <div style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:12px;">— or paste a URL —</div>
+      <div class="img-url-row">
+        <input type="url" id="inline-img-url" placeholder="https://example.com/image.jpg">
+        <button onclick="insertImageFromUrl()">Insert</button>
+      </div>
+    </div>
+
+    <!-- VIDEO PANEL -->
+    <div class="media-tab-panel" id="tab-video-panel">
+      <div class="img-upload-zone">
+        <input type="file" id="inline-vid-file" accept="video/*" onchange="handleInlineVideoUpload(this)">
+        <i class="fas fa-film"></i>
+        <p>Click to <strong>upload</strong> a video from your device</p>
+      </div>
+      <div style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:12px;">— or paste a video URL —</div>
+      <div class="img-url-row">
+        <input type="url" id="inline-vid-url" placeholder="https://example.com/video.mp4">
+        <button onclick="insertVideoFromUrl()">Insert</button>
+      </div>
+    </div>
+
+    <div id="img-progress">
+      <div class="poster-bar-wrap"><div class="poster-bar-fill" id="img-bar"></div></div>
+      <div id="img-status">Uploading…</div>
+    </div>
+    <button class="img-dialog-cancel" style="margin-top:10px;" onclick="closeImageDialog()">Cancel</button>
+  </div>
+</div>
+
+<!-- PREVIEW MODAL -->
+<div id="preview-modal">
+  <div class="preview-topbar">
+    <span><i class="fas fa-eye" style="color:var(--blue);"></i> Article Preview</span>
+    <button class="btn-close-preview" onclick="closePreview()"><i class="fas fa-arrow-left"></i> Back to Editor</button>
+  </div>
+  <div id="preview-hero-wrap"></div>
+  <div class="preview-body">
+    <span class="preview-cat" id="prev-cat"></span>
+    <div class="preview-title" id="prev-title"></div>
+    <div class="preview-meta" id="prev-meta"></div>
+    <div class="preview-divider"></div>
+    <div class="preview-summary" id="prev-summary"></div>
+    <div class="preview-content" id="prev-content"></div>
+  </div>
+</div>
+
+<!-- PUBLISH SUCCESS -->
+<div id="success-overlay">
+  <div class="success-card">
+    <div class="success-icon"><i class="fas fa-check"></i></div>
+    <h3>Published! 🎉</h3>
+    <p>Your article is now live on the blog and subscribers have been notified.</p>
+    <div class="success-btns">
+      <button class="btn-new-article" onclick="window.location.href='admin.html'">Back to Admin</button>
+      <a class="btn-go-blog" href="blog.html" target="_blank">View Blog <i class="fas fa-external-link-alt"></i></a>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══ CONSTANTS ═══
+var ADMIN_PASS   = 'JTES@2025';
+var FB_DB_URL    = 'https://jtes-website-default-rtdb.firebaseio.com';
+var CLD_CLOUD    = 'dx8ziypwz';
+var CLD_PRESET   = 'JASSAN';
+var SUB_BIN_URL  = 'https://api.jsonbin.io/v3/b/69befda1c3097a1dd5480987';
+var SUB_MASTER   = '$2a$10$d8wjYi.E/IcAmu515faPoesz/PUitzug7E4FJwqt6TdyABnaNAwiq';
+var EMAILJS_SVC  = 'service_5yc9b0i';
+var EMAILJS_TPL  = 'template_57mlgkw';
+
+emailjs.init('vWuux6AIkMKqJ1Cz5');
+
+var editingPostId = null;
+
+// Read post ID from URL and auto-login if session exists
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var id = params.get('id');
+  if (id) { editingPostId = id; }
+})();
+
+document.addEventListener('DOMContentLoaded', function() {
+  var saved = sessionStorage.getItem('jtes_auth');
+  if (saved && saved === ADMIN_PASS) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('editor-app').style.display   = 'flex';
+    if (editingPostId) {
+      loadPostForEditing(editingPostId);
+    } else {
+      document.getElementById('editor-content').focus();
+    }
+  }
+});
+
+var posterUrl = '';
+var savedRange = null;
+
+// ═══ LOAD EXISTING POST FOR EDITING ═══
+async function loadPostForEditing(id) {
+  try {
+    var res  = await fetch(FB_DB_URL + '/posts/' + id + '.json');
+    var post = await res.json();
+    if (!post) return;
+
+    document.getElementById('article-title').value      = post.title    || '';
+    document.getElementById('post-summary').value       = post.summary  || '';
+    document.getElementById('post-author').value        = post.author   || 'JTES Team';
+    document.getElementById('post-read').value          = post.readTime || '5 min read';
+    document.getElementById('editor-content').innerHTML = post.content  || '';
+
+    var catSel = document.getElementById('post-cat');
+    for (var i = 0; i < catSel.options.length; i++) {
+      if (catSel.options[i].value === post.category) { catSel.selectedIndex = i; break; }
+    }
+
+    if (post.mediaUrl) {
+      posterUrl = post.mediaUrl;
+      var isVid = /\.(mp4|webm|ogg|mov)(\?|$)/i.test(post.mediaUrl) || post.mediaType === 'video';
+      posterIsVideo = isVid;
+      document.getElementById('poster-placeholder').style.display = 'none';
+      if (isVid) {
+        var vid = document.getElementById('poster-video-preview');
+        vid.src = post.mediaUrl; vid.style.display = 'block';
+      } else {
+        var img = document.getElementById('poster-preview');
+        img.src = post.mediaUrl; img.style.display = 'block';
+      }
+      document.getElementById('poster-zone').classList.add('has-image');
+      document.getElementById('poster-ok').style.display = 'flex';
+    }
+
+    document.getElementById('publish-btn').innerHTML = '<i class="fas fa-save"></i> Save Changes';
+    document.getElementById('article-title').dispatchEvent(new Event('input'));
+    showToast('Post loaded — make your changes and save.', 'success');
+  } catch(e) { console.error('Failed to load post:', e); showToast('Failed to load post.', 'error'); }
+}
+
+// ═══ AUTH ═══
+function doLogin() {
+  var pass = document.getElementById('login-pass').value;
+  if (pass === ADMIN_PASS) {
+    sessionStorage.setItem('jtes_auth', pass);
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('editor-app').style.display   = 'flex';
+    if (editingPostId) {
+      loadPostForEditing(editingPostId);
+    } else {
+      document.getElementById('editor-content').focus();
+    }
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-pass').focus();
+  }
+}
+function doLogout() {
+  if (!confirm('Leave the editor? Unsaved changes will be lost.')) return;
+  sessionStorage.removeItem('jtes_auth');
+  document.getElementById('editor-app').style.display   = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
+}
+
+// ═══ TITLE AUTO-RESIZE ═══
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+document.addEventListener('DOMContentLoaded', function() {
+  var ta = document.getElementById('article-title');
+  ta.addEventListener('input', function() { autoResize(this); });
+  autoResize(ta);
+});
+
+// ═══ SUMMARY COUNTER ═══
+document.getElementById('post-summary').addEventListener('input', function() {
+  var len = this.value.length;
+  document.getElementById('summary-count').textContent = len + ' / 200 chars';
+  this.style.borderColor = len > 200 ? 'var(--red)' : '';
+});
+
+// ═══ POSTER UPLOAD ═══
+var posterIsVideo = false;
+function handlePosterUpload(input) {
+  if (!input.files[0]) return;
+  var file = input.files[0];
+  var isVideo = file.type.startsWith('video/');
+  var isImage = file.type.startsWith('image/');
+  if (!isImage && !isVideo) { showToast('Please upload an image or video file.', 'error'); return; }
+  posterIsVideo = isVideo;
+  uploadToCloudinary(file, 'poster');
+}
+function uploadToCloudinary(file, target) {
+  var isVideo = file.type.startsWith('video/');
+  var resType  = isVideo ? 'video' : 'image';
+  var fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CLD_PRESET);
+
+  if (target === 'poster') {
+    document.getElementById('poster-progress').style.display = 'block';
+    document.getElementById('poster-ok').style.display       = 'none';
+    document.getElementById('poster-bar').style.width        = '0%';
+    document.getElementById('poster-status').textContent     = 'Uploading…';
+  } else {
+    document.getElementById('img-progress').style.display = 'block';
+    document.getElementById('img-bar').style.width        = '0%';
+    document.getElementById('img-status').textContent     = 'Uploading…';
+  }
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/' + resType + '/upload');
+  xhr.upload.onprogress = function(e) {
+    if (!e.lengthComputable) return;
+    var pct = Math.round(e.loaded / e.total * 100);
+    if (target === 'poster') {
+      document.getElementById('poster-bar').style.width    = pct + '%';
+      document.getElementById('poster-status').textContent = 'Uploading… ' + pct + '%';
+    } else {
+      document.getElementById('img-bar').style.width    = pct + '%';
+      document.getElementById('img-status').textContent = 'Uploading… ' + pct + '%';
+    }
+  };
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      var url = JSON.parse(xhr.responseText).secure_url;
+      if (target === 'poster') {
+        posterUrl = url;
+        document.getElementById('poster-placeholder').style.display = 'none';
+        if (isVideo) {
+          var vid = document.getElementById('poster-video-preview');
+          vid.src = url; vid.style.display = 'block';
+          document.getElementById('poster-preview').style.display = 'none';
+        } else {
+          var img = document.getElementById('poster-preview');
+          img.src = url; img.style.display = 'block';
+          document.getElementById('poster-video-preview').style.display = 'none';
+        }
+        document.getElementById('poster-zone').classList.add('has-image');
+        document.getElementById('poster-overlay').style.opacity = '';
+        document.getElementById('poster-status').textContent = '✓ Upload complete!';
+        document.getElementById('poster-ok').style.display  = 'flex';
+      } else {
+        document.getElementById('img-status').textContent = '✓ Done!';
+        closeImageDialog();
+        if (isVideo) {
+          insertVideoAtCursor(url);
+        } else {
+          insertImageAtCursor(url);
+        }
+      }
+    } else {
+      var errEl = target === 'poster' ? 'poster-status' : 'img-status';
+      document.getElementById(errEl).textContent = '✗ Upload failed. Try again.';
+    }
+  };
+  xhr.onerror = function() {
+    var errEl = target === 'poster' ? 'poster-status' : 'img-status';
+    document.getElementById(errEl).textContent = '✗ Connection error.';
+  };
+  xhr.send(fd);
+}
+
+// ═══ RICH TEXT COMMANDS ═══
+function cmd(command, value) {
+  document.getElementById('editor-content').focus();
+  document.execCommand(command, false, value || null);
+  updateToolbarState();
+}
+
+function insertBlockquote() {
+  document.getElementById('editor-content').focus();
+  var sel = window.getSelection();
+  var selectedText = sel ? sel.toString() : '';
+  if (selectedText) {
+    document.execCommand('formatBlock', false, 'blockquote');
+  } else {
+    document.execCommand('insertHTML', false, '<blockquote>Quote text here…</blockquote><p><br></p>');
+  }
+}
+
+function updateToolbarState() {
+  var cmds = ['bold','italic','underline','strikeThrough','insertUnorderedList','insertOrderedList','justifyLeft','justifyCenter','justifyRight'];
+  cmds.forEach(function(c) {
+    var btns = document.querySelectorAll('[onclick="cmd(\'' + c + '\')"]');
+    btns.forEach(function(btn) {
+      btn.classList.toggle('active', document.queryCommandState(c));
+    });
+  });
+}
+
+document.getElementById('editor-content').addEventListener('keyup', updateToolbarState);
+document.getElementById('editor-content').addEventListener('mouseup', updateToolbarState);
+document.getElementById('editor-content').addEventListener('input', updateStats);
+
+function updateStats() {
+  var text = document.getElementById('editor-content').innerText || '';
+  var words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  var chars = text.length;
+  document.getElementById('stat-words').textContent = words;
+  document.getElementById('stat-chars').textContent = chars;
+  var mins = Math.max(1, Math.ceil(words / 200));
+  document.getElementById('stat-time').textContent  = mins + ' min';
+  document.getElementById('post-read').value = mins + ' min read';
+}
+
+// ═══ LINK DIALOG ═══
+function openLinkDialog() {
+  var sel = window.getSelection();
+  if (sel && sel.rangeCount) savedRange = sel.getRangeAt(0);
+  document.getElementById('link-text').value = sel ? sel.toString() : '';
+  document.getElementById('link-url').value  = '';
+  document.getElementById('link-dialog').classList.add('open');
+  setTimeout(function() { document.getElementById('link-url').focus(); }, 50);
+}
+function closeLinkDialog() { document.getElementById('link-dialog').classList.remove('open'); }
+function insertLink() {
+  var text = document.getElementById('link-text').value.trim();
+  var url  = document.getElementById('link-url').value.trim();
+  if (!url) { showToast('Please enter a URL.', 'error'); return; }
+  if (!url.startsWith('http')) url = 'https://' + url;
+  document.getElementById('editor-content').focus();
+  if (savedRange) {
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+  }
+  if (text && (!savedRange || savedRange.toString() === '')) {
+    document.execCommand('insertHTML', false, '<a href="' + url + '" target="_blank">' + text + '</a>');
+  } else {
+    document.execCommand('createLink', false, url);
+    var links = document.getElementById('editor-content').querySelectorAll('a');
+    links.forEach(function(a) { a.target = '_blank'; });
+  }
+  closeLinkDialog();
+}
+
+// ═══ IMAGE DIALOG ═══
+function openImageDialog() {
+  var sel = window.getSelection();
+  if (sel && sel.rangeCount) savedRange = sel.getRangeAt(0);
+  document.getElementById('inline-img-url').value = '';
+  document.getElementById('img-progress').style.display = 'none';
+  switchMediaTab('image');
+  document.getElementById('img-dialog').classList.add('open');
+}
+function openVideoDialog() {
+  var sel = window.getSelection();
+  if (sel && sel.rangeCount) savedRange = sel.getRangeAt(0);
+  document.getElementById('inline-vid-url').value = '';
+  document.getElementById('img-progress').style.display = 'none';
+  switchMediaTab('video');
+  document.getElementById('img-dialog').classList.add('open');
+}
+function switchMediaTab(tab) {
+  document.getElementById('tab-image-btn').classList.toggle('active', tab === 'image');
+  document.getElementById('tab-video-btn').classList.toggle('active', tab === 'video');
+  document.getElementById('tab-image-panel').classList.toggle('active', tab === 'image');
+  document.getElementById('tab-video-panel').classList.toggle('active', tab === 'video');
+}
+function closeImageDialog() { document.getElementById('img-dialog').classList.remove('open'); }
+function handleInlineImageUpload(input) {
+  if (!input.files[0]) return;
+  uploadToCloudinary(input.files[0], 'inline');
+}
+function handleInlineVideoUpload(input) {
+  if (!input.files[0]) return;
+  uploadToCloudinary(input.files[0], 'inline');
+}
+function insertImageFromUrl() {
+  var url = document.getElementById('inline-img-url').value.trim();
+  if (!url) { showToast('Please enter an image URL.', 'error'); return; }
+  closeImageDialog();
+  insertImageAtCursor(url);
+}
+function insertVideoFromUrl() {
+  var url = document.getElementById('inline-vid-url').value.trim();
+  if (!url) { showToast('Please enter a video URL.', 'error'); return; }
+  closeImageDialog();
+  insertVideoAtCursor(url);
+}
+function insertImageAtCursor(url) {
+  document.getElementById('editor-content').focus();
+  if (savedRange) {
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+  }
+  document.execCommand('insertHTML', false,
+    '<img src="' + url + '" alt="Article image" style="max-width:100%;border-radius:12px;margin:16px 0;display:block;"><br>');
+}
+function insertVideoAtCursor(url) {
+  document.getElementById('editor-content').focus();
+  if (savedRange) {
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+  }
+  document.execCommand('insertHTML', false,
+    '<video src="' + url + '" controls style="max-width:100%;border-radius:12px;margin:16px 0;display:block;box-shadow:0 4px 20px rgba(0,0,0,0.1);"></video><br>');
+}
+
+// Close dialogs on overlay click
+document.getElementById('link-dialog').addEventListener('click', function(e) {
+  if (e.target === this) closeLinkDialog();
+});
+document.getElementById('img-dialog').addEventListener('click', function(e) {
+  if (e.target === this) closeImageDialog();
+});
+
+// ═══ PREVIEW ═══
+function openPreview() {
+  var title   = document.getElementById('article-title').value.trim();
+  var summary = document.getElementById('post-summary').value.trim();
+  var content = document.getElementById('editor-content').innerHTML;
+  var cat     = document.getElementById('post-cat').value;
+  var author  = document.getElementById('post-author').value.trim() || 'JTES Team';
+  var read    = document.getElementById('post-read').value.trim()   || '5 min read';
+
+  if (!title) { showToast('Add a title first.', 'warning'); return; }
+
+  // Hero
+  var heroWrap = document.getElementById('preview-hero-wrap');
+  if (posterUrl) {
+    if (posterIsVideo) {
+      heroWrap.innerHTML = '<video class="preview-hero" src="' + posterUrl + '" autoplay muted loop playsinline style="object-fit:cover;"></video>';
+    } else {
+      heroWrap.innerHTML = '<img class="preview-hero" src="' + posterUrl + '" alt="Poster">';
+    }
+  } else {
+    heroWrap.innerHTML = '<div style="width:100%;height:55vh;min-height:300px;background:linear-gradient(135deg,#0A0F1E,#1E3A8A);display:flex;align-items:center;justify-content:center;"><span style="color:rgba(255,255,255,0.2);font-size:72px;font-weight:900;">JTES</span></div>';
+  }
+
+  document.getElementById('prev-cat').textContent     = cat;
+  document.getElementById('prev-title').textContent   = title || 'Untitled Article';
+  document.getElementById('prev-meta').innerHTML      = '<span><i class="fas fa-user-circle"></i> ' + author + '</span><span><i class="fas fa-clock"></i> ' + read + '</span><span><i class="fas fa-calendar-alt"></i> ' + new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) + '</span>';
+  document.getElementById('prev-summary').textContent = summary || '(No summary added)';
+  document.getElementById('prev-content').innerHTML   = content;
+
+  document.getElementById('preview-modal').style.display = 'block';
+  document.getElementById('preview-modal').scrollTop     = 0;
+}
+function closePreview() {
+  document.getElementById('preview-modal').style.display = 'none';
+}
+
+// ═══ PUBLISH ═══
+async function publishArticle() {
+  var title   = document.getElementById('article-title').value.trim();
+  var summary = document.getElementById('post-summary').value.trim();
+  var content = document.getElementById('editor-content').innerHTML;
+  var plainContent = document.getElementById('editor-content').innerText.trim();
+
+  // Validation
+  if (!title)        { showToast('Please add a title.', 'error');         return; }
+  if (!summary)      { showToast('Please add a summary.', 'error');       return; }
+  if (!posterUrl)    { showToast('A poster image or video is required.', 'error'); highlightPoster(); return; }
+  if (!plainContent) { showToast('Article content is empty.', 'error');   return; }
+
+  var btn = document.getElementById('publish-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publishing…';
+
+  var post = {
+    title:    title,
+    summary:  summary,
+    content:  content,           // stored as HTML
+    category: document.getElementById('post-cat').value,
+    author:   document.getElementById('post-author').value.trim() || 'JTES Team',
+    readTime: document.getElementById('post-read').value.trim()   || '5 min read',
+    mediaUrl:   posterUrl,
+    mediaType:  posterIsVideo ? 'video' : 'image',
+    date:     new Date().toISOString(),
+    likes:    0,
+    dislikes: 0
+  };
+
+  try {
+    if (editingPostId) {
+      // Update existing post
+      await fetch(FB_DB_URL + '/posts/' + editingPostId + '.json', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: post.title, summary: post.summary, content: post.content,
+          category: post.category, author: post.author, readTime: post.readTime,
+          mediaUrl: post.mediaUrl, mediaType: post.mediaType
+        })
+      });
+      showToast('Post updated! ✅', 'success');
+      setTimeout(function() { window.location.href = 'admin.html'; }, 1500);
+    } else {
+      // Create new post
+      var res = await fetch(FB_DB_URL + '/posts.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(post)
+      });
+      var result = await res.json();
+      if (!result.name) throw new Error('Firebase save failed');
+
+      // Notify subscribers
+      await notifySubscribers('New Article: ' + title, 'New Article', buildEmailContent(post));
+
+      // Show success
+      document.getElementById('success-overlay').classList.add('show');
+    }
+  } catch(e) {
+    console.error(e);
+    showToast('Publish failed. Check your connection.', 'error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-paper-plane"></i> Publish';
+}
+
+function highlightPoster() {
+  var zone = document.getElementById('poster-zone');
+  zone.style.borderColor = 'var(--red)';
+  zone.style.background  = '#FEF2F2';
+  zone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(function() {
+    zone.style.borderColor = '';
+    zone.style.background  = '';
+  }, 2000);
+}
+
+// ═══ NOTIFY SUBSCRIBERS ═══
+async function notifySubscribers(subject, badge, content) {
+  try {
+    var res  = await fetch(SUB_BIN_URL + '/latest', { headers: { 'X-Master-Key': SUB_MASTER } });
+    var subs = (await res.json()).record.subscribers || [];
+    if (!subs.length) return;
+    for (var i = 0; i < subs.length; i++) {
+      await emailjs.send(EMAILJS_SVC, EMAILJS_TPL, {
+        subject:          subject,
+        badge:            badge,
+        content:          content,
+        subscriber_email: subs[i].email,
+        subscriber_name:  subs[i].name || 'Subscriber'
+      });
+      await new Promise(function(r) { setTimeout(r, 200); });
+    }
+  } catch(e) { console.error('Notify error:', e); }
+}
+
+function buildEmailContent(p) {
+  var banner = p.mediaUrl && p.mediaType !== 'video'
+    ? '<img src="' + p.mediaUrl + '" width="580" style="display:block;width:100%;height:220px;object-fit:cover;">'
+    : '<div style="width:100%;height:160px;background:linear-gradient(135deg,#0d1f4a,#1E3A8A);text-align:center;padding-top:50px;"><span style="color:rgba(255,255,255,0.2);font-size:48px;font-weight:900;">JTES</span></div>';
+  return banner +
+    '<div style="padding:32px 36px;">' +
+    '<div style="display:inline-block;background:#EFF6FF;color:#2563EB;border:1px solid #BFDBFE;padding:5px 14px;border-radius:50px;font-size:12px;font-weight:700;margin-bottom:14px;">● ' + (p.category || 'Blog Post') + '</div>' +
+    '<h1 style="font-size:26px;font-weight:900;color:#0F172A;line-height:1.2;margin:0 0 12px;">' + p.title + '</h1>' +
+    '<p style="font-size:14px;color:#64748b;margin:0 0 20px;line-height:1.8;">' + p.summary + '</p>' +
+    '<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">' +
+    '<a href="https://jtes.oneapp.dev/blog.html" style="display:inline-block;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;padding:13px 36px;border-radius:12px;font-size:14px;font-weight:700;text-decoration:none;">📖 Read Full Article</a>' +
+    '</td></tr></table></div>';
+}
+
+// ═══ RESET ═══
+function resetEditor() {
+  document.getElementById('article-title').value           = '';
+  document.getElementById('editor-content').innerHTML      = '';
+  document.getElementById('post-summary').value            = '';
+  document.getElementById('post-author').value             = 'JTES Team';
+  document.getElementById('post-read').value               = '5 min read';
+  document.getElementById('poster-preview').style.display  = 'none';
+  document.getElementById('poster-video-preview').style.display = 'none';
+  document.getElementById('poster-video-preview').src = '';
+  document.getElementById('poster-placeholder').style.display = '';
+  document.getElementById('poster-zone').classList.remove('has-image');
+  document.getElementById('poster-ok').style.display       = 'none';
+  document.getElementById('poster-progress').style.display = 'none';
+  document.getElementById('post-cat').selectedIndex        = 0;
+  document.getElementById('summary-count').textContent     = '0 / 200 chars';
+  posterUrl = '';
+  updateStats();
+  document.getElementById('success-overlay').classList.remove('show');
+  autoResize(document.getElementById('article-title'));
+  document.getElementById('editor-content').focus();
+}
+
+// ═══ TOAST ═══
+function showToast(msg, type) {
+  var toast = document.getElementById('toast');
+  var icon  = type === 'success' ? 'fa-check-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-exclamation-circle';
+  toast.className = 'toast show ' + (type || '');
+  toast.innerHTML = '<i class="fas ' + icon + '"></i> <span>' + msg + '</span>';
+  setTimeout(function() { toast.classList.remove('show'); }, 3500);
+}
+
+// ═══ MOBILE SETUP ═══
+function isMobile() { return window.innerWidth <= 768; }
+
+function mobSetup() {
+  if (!isMobile()) return;
+  // Sync title from desktop input to mobile textarea
+  var mobTitle = document.getElementById('mob-article-title');
+  var deskTitle = document.getElementById('article-title');
+  if (mobTitle && deskTitle) mobTitle.value = deskTitle.value;
+  mobAutoResize(mobTitle);
+}
+
+function mobSyncTitle(el) {
+  mobAutoResize(el);
+  document.getElementById('article-title').value = el.value;
+}
+
+function mobAutoResize(el) {
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+function mobCmd(command, value) {
+  document.getElementById('editor-content').focus();
+  document.execCommand(command, false, value || null);
+}
+function mobUndo() { document.execCommand('undo'); }
+function mobRedo() { document.execCommand('redo'); }
+function mobInsertBlockquote() {
+  document.getElementById('editor-content').focus();
+  document.execCommand('formatBlock', false, 'blockquote');
+}
+
+function openMobSettings() {
+  // Sync desktop fields → mobile panel
+  document.getElementById('mob-post-summary').value = document.getElementById('post-summary').value;
+  document.getElementById('mob-post-author').value  = document.getElementById('post-author').value;
+  document.getElementById('mob-post-read').value    = document.getElementById('post-read').value;
+  // Sync poster state
+  if (posterUrl) {
+    document.getElementById('mob-poster-placeholder').style.display = 'none';
+    if (posterIsVideo) {
+      var vid = document.getElementById('mob-poster-video');
+      vid.src = posterUrl; vid.style.display = 'block';
+      document.getElementById('mob-poster-img').style.display = 'none';
+    } else {
+      document.getElementById('mob-poster-img').src = posterUrl;
+      document.getElementById('mob-poster-img').style.display = 'block';
+      document.getElementById('mob-poster-video').style.display = 'none';
+    }
+    document.getElementById('mob-poster-zone').classList.add('has-image');
+    document.getElementById('mob-poster-ok').style.display = 'flex';
+  }
+  document.getElementById('mob-settings-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeMobSettings() {
+  document.getElementById('mob-settings-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  // Sync mobile panel → desktop fields
+  document.getElementById('post-summary').value = document.getElementById('mob-post-summary').value;
+  document.getElementById('post-author').value  = document.getElementById('mob-post-author').value;
+  document.getElementById('post-read').value    = document.getElementById('mob-post-read').value;
+  document.getElementById('post-cat').value     = document.getElementById('mob-post-cat').value;
+}
+
+// Sync poster upload to mobile panel
+var _origPosterUpload = handlePosterUpload;
+handlePosterUpload = function(input) {
+  _origPosterUpload(input);
+  // After upload completes the uploadToCloudinary onload will set posterUrl
+  // We watch for it and sync
+  var checkInterval = setInterval(function() {
+    if (posterUrl) {
+      clearInterval(checkInterval);
+      document.getElementById('mob-poster-placeholder').style.display = 'none';
+      if (posterIsVideo) {
+        var vid = document.getElementById('mob-poster-video');
+        vid.src = posterUrl; vid.style.display = 'block';
+        document.getElementById('mob-poster-img').style.display = 'none';
+      } else {
+        document.getElementById('mob-poster-img').src = posterUrl;
+        document.getElementById('mob-poster-img').style.display = 'block';
+        document.getElementById('mob-poster-video').style.display = 'none';
+      }
+      document.getElementById('mob-poster-zone').classList.add('has-image');
+      document.getElementById('mob-poster-ok').style.display = 'flex';
+    }
+  }, 500);
+};
+
+window.addEventListener('resize', mobSetup);
+document.addEventListener('DOMContentLoaded', mobSetup);
+
+// Keyboard shortcut: Escape closes preview
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closePreview(); closeLinkDialog(); closeImageDialog(); }
+  // Ctrl/Cmd+S to publish
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); publishArticle(); }
+  // Ctrl/Cmd+Shift+P to preview
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'P') { e.preventDefault(); openPreview(); }
+});
+</script>
+
+<!-- ===== FLOATING SHOP CTA ===== -->
+<style>
+  .jtes-shop-fab {
+    position: fixed; bottom: 28px; right: 28px; z-index: 9500;
+    display: flex; align-items: center; text-decoration: none; cursor: pointer;
+    animation: jtesFabIn 0.6s cubic-bezier(.34,1.56,.64,1) 0.5s both;
+  }
+  @keyframes jtesFabIn {
+    0% { transform: translateY(40px) scale(0.6); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .jtes-shop-fab-float {
+    display: flex; align-items: center; position: relative;
+    animation: jtesFabFloat 6.5s ease-in-out infinite;
+  }
+  @keyframes jtesFabFloat {
+    0%   { transform: translate(0px, 0px) rotate(0deg); }
+    20%  { transform: translate(12px, -16px) rotate(2deg); }
+    40%  { transform: translate(-8px, -26px) rotate(-2deg); }
+    60%  { transform: translate(-16px, -8px) rotate(1.5deg); }
+    80%  { transform: translate(7px, 9px) rotate(-1deg); }
+    100% { transform: translate(0px, 0px) rotate(0deg); }
+  }
+  .jtes-shop-fab:hover .jtes-shop-fab-float { animation-play-state: paused; }
+  .jtes-shop-fab-ring {
+    position: absolute; inset: 0; border-radius: 50px;
+    box-shadow: 0 0 0 0 rgba(37,99,235,0.55);
+    animation: jtesFabPulse 2.4s ease-out infinite; pointer-events: none;
+  }
+  @keyframes jtesFabPulse {
+    0% { box-shadow: 0 0 0 0 rgba(37,99,235,0.55); }
+    70% { box-shadow: 0 0 0 18px rgba(37,99,235,0); }
+    100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
+  }
+  .jtes-shop-fab-badge {
+    position: absolute; top: -7px; left: -6px; background: #EF4444; color: #fff;
+    font-family: 'Manrope', sans-serif; font-size: 9px; font-weight: 800; padding: 3px 7px;
+    border-radius: 50px; box-shadow: 0 2px 8px rgba(239,68,68,0.5); z-index: 2; letter-spacing: 0.3px;
+    animation: jtesFabBadgeBlink 1.8s ease-in-out infinite;
+  }
+  @keyframes jtesFabBadgeBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+  .jtes-shop-fab-inner {
+    position: relative; display: flex; align-items: center; gap: 10px; overflow: hidden;
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    color: #fff; border-radius: 50px; padding: 13px 22px 13px 13px;
+    box-shadow: 0 10px 32px rgba(37,99,235,0.45), inset 0 1px 0 rgba(255,255,255,0.25);
+    transition: transform 0.25s, box-shadow 0.25s;
+  }
+  .jtes-shop-fab:hover .jtes-shop-fab-inner {
+    transform: scale(1.05);
+    box-shadow: 0 16px 40px rgba(37,99,235,0.55), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .jtes-shop-fab-shine {
+    position: absolute; top: 0; left: -60%; width: 45%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.45), transparent);
+    transform: skewX(-20deg); animation: jtesFabShine 3s ease-in-out infinite;
+  }
+  @keyframes jtesFabShine { 0% { left: -60%; } 35% { left: 130%; } 100% { left: 130%; } }
+  .jtes-shop-fab-icon {
+    width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
+    position: relative; z-index: 1;
+  }
+  .jtes-shop-fab-text {
+    font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 13.5px; letter-spacing: 0.2px;
+    white-space: nowrap; position: relative; z-index: 1; line-height: 1.25;
+  }
+  .jtes-shop-fab-text small {
+    display: block; font-size: 10px; font-weight: 600; opacity: 0.85; letter-spacing: 0.3px;
+  }
+  @media (max-width: 560px) {
+    .jtes-shop-fab { bottom: 20px; right: 20px; }
+    .jtes-shop-fab-text { display: none; }
+    .jtes-shop-fab-inner { padding: 13px; }
+    .jtes-shop-fab-float { animation-name: jtesFabFloatSmall; }
+  }
+  @keyframes jtesFabFloatSmall {
+    0%   { transform: translate(0px, 0px); }
+    25%  { transform: translate(8px, -10px); }
+    50%  { transform: translate(-6px, -16px); }
+    75%  { transform: translate(-4px, 4px); }
+    100% { transform: translate(0px, 0px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .jtes-shop-fab, .jtes-shop-fab-float, .jtes-shop-fab-ring, .jtes-shop-fab-badge, .jtes-shop-fab-shine {
+      animation: none !important;
+    }
+  }
+</style>
+<a href="sales.html" class="jtes-shop-fab" aria-label="Shop JTES products">
+  <span class="jtes-shop-fab-float">
+    <span class="jtes-shop-fab-ring"></span>
+    <span class="jtes-shop-fab-badge">SALE</span>
+    <span class="jtes-shop-fab-inner">
+      <span class="jtes-shop-fab-shine"></span>
+      <span class="jtes-shop-fab-icon"><i class="fas fa-bag-shopping"></i></span>
+      <span class="jtes-shop-fab-text">Shop Now<small>Kits, tools &amp; components</small></span>
+    </span>
+  </span>
+</a>
+
+</body>
+</html>

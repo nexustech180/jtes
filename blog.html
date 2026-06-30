@@ -1,0 +1,2118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog — Jassan Technologies & Electrical Services</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  .page { display: block !important; }
+
+  .page { display: block !important; }
+
+  :root {
+    --blue: #2563EB;
+    --blue-light: #3B82F6;
+    --blue-dark: #1D4ED8;
+    --dark: #0A0F1E;
+    --dark2: #0F172A;
+    --navy: #1E3A8A;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --white: #ffffff;
+    --gray-light: #f8fafc;
+    --border: #e2e8f0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Manrope', sans-serif; color: var(--text); overflow-x: hidden; }
+
+  /* ===== NAVBAR ===== */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    background: #fff; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 48px; height: 64px; box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+  }
+  .nav-logo { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .nav-logo svg { width: 38px; height: 38px; }
+  .nav-logo span { font-size: 15px; font-weight: 800; color: var(--dark2); letter-spacing: 1px; }
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a {
+    padding: 8px 18px; border-radius: 8px; font-size: 15px; font-weight: 500;
+    color: var(--text); text-decoration: none; cursor: pointer; transition: all 0.2s;
+  }
+  .nav-links a:hover { background: #f1f5f9; }
+  .nav-links a.active { background: #EFF6FF; color: var(--blue); font-weight: 600; }
+  .btn-primary {
+    background: var(--blue); color: #fff; border: none; border-radius: 10px;
+    padding: 10px 22px; font-size: 15px; font-weight: 600; cursor: pointer;
+    transition: background 0.2s; text-decoration: none;
+  }
+  .btn-primary:hover { background: var(--blue-dark); }
+
+  /* ===== PAGES ===== */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ===== CAROUSEL HERO ===== */
+  .carousel {
+    position: relative; height: 100vh; min-height: 600px; overflow: hidden;
+    padding-top: 64px; background: #0a0f1e;
+  }
+  .carousel-track {
+    display: flex; height: 100%;
+    transition: transform 0.7s cubic-bezier(0.77,0,0.175,1);
+  }
+  .carousel-slide {
+    flex: 0 0 100vw; width: 100vw; height: 100%;
+    position: relative; display: flex; align-items: center;
+  }
+  .carousel-slide-bg {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-size: cover; background-position: center;
+    opacity: 0.38; transition: opacity 0.7s;
+  }
+  .carousel-slide-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to right, rgba(0,0,0,0.88) 50%, rgba(0,0,0,0.25) 100%);
+  }
+  .carousel-content {
+    position: relative; z-index: 2; max-width: 720px;
+    padding: 80px 80px;
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 0.6s ease 0.3s, transform 0.6s ease 0.3s;
+  }
+  .carousel-slide.active .carousel-content {
+    opacity: 1; transform: translateY(0);
+  }
+
+  /* Arrows */
+  .carousel-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 10;
+    width: 48px; height: 48px; border-radius: 50%;
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
+    color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 15px; transition: all 0.2s; backdrop-filter: blur(8px);
+  }
+  .carousel-arrow:hover { background: rgba(255,255,255,0.28); border-color: rgba(255,255,255,0.6); }
+  .carousel-arrow.prev { left: 24px; }
+  .carousel-arrow.next { right: 24px; }
+
+  /* Dots */
+  .carousel-dots {
+    position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 10px; z-index: 10;
+  }
+  .carousel-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(255,255,255,0.35); cursor: pointer;
+    transition: all 0.3s; border: none; padding: 0;
+  }
+  .carousel-dot.active {
+    background: #fff; width: 28px; border-radius: 4px;
+  }
+
+  /* Progress bar */
+  .carousel-progress {
+    position: absolute; bottom: 0; left: 0; height: 3px;
+    background: var(--blue); z-index: 10;
+    animation: progress-bar 5s linear infinite;
+    transform-origin: left;
+  }
+  @keyframes progress-bar { from { width: 0 } to { width: 100% } }
+
+  /* Page hero (non-home) */
+  .page-carousel {
+    position: relative; height: 55vh; min-height: 420px; overflow: hidden; padding-top: 64px;
+  }
+  .page-carousel .carousel-slide { height: 100%; }
+  .page-carousel .carousel-content { padding: 60px 80px; }
+  .page-carousel .carousel-content h1 { font-size: 58px; }
+
+  /* Section label */
+  .section-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--border); color: var(--text); padding: 7px 16px;
+    border-radius: 50px; font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; margin-bottom: 24px; background: #f8fafc;
+  }
+  .section-badge.dark {
+    background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.8);
+  }
+  .section-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue-light); }
+
+  /* Divider decoration */
+  .section-divider {
+    display: flex; align-items: center; gap: 8px; margin: 16px 0 24px;
+  }
+  .div-line { width: 40px; height: 3px; background: var(--blue); border-radius: 2px; }
+  .div-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blue-light); }
+  .div-line2 { width: 55px; height: 3px; background: var(--blue); border-radius: 2px; opacity: 0.5; }
+  .section-divider.center { justify-content: center; }
+
+  /* ===== ABOUT SECTION (Home) ===== */
+  .about-home { padding: 100px 80px; background: #fff; }
+  .about-home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
+  .about-left h2 { font-size: 44px; font-weight: 900; line-height: 1.15; color: var(--dark2); margin-bottom: 20px; }
+  .about-left h2 span { color: var(--blue); }
+  .about-left p { font-size: 16px; color: var(--text-muted); line-height: 1.8; margin-bottom: 16px; }
+  .btn-blue {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--blue); color: #fff; padding: 13px 26px; border-radius: 10px;
+    font-size: 15px; font-weight: 600; cursor: pointer; border: none;
+    margin-top: 20px; text-decoration: none; transition: background 0.2s;
+  }
+  .btn-blue:hover { background: var(--blue-dark); }
+  .feature-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .feature-card {
+    background: #f8fafc; border: 1px solid var(--border); border-radius: 16px;
+    padding: 28px 24px; transition: all 0.2s;
+  }
+  .feature-card:hover { box-shadow: 0 8px 32px rgba(37,99,235,0.1); }
+  .feature-card.highlighted {
+    background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+  }
+  .feature-card .icon-box {
+    width: 52px; height: 52px; border-radius: 14px; background: #E0EAFF;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; color: var(--blue); margin-bottom: 16px;
+  }
+  .feature-card h4 { font-size: 17px; font-weight: 700; color: var(--dark2); margin-bottom: 8px; }
+  .feature-card.highlighted h4 { color: var(--blue); }
+  .feature-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+  .feature-card .card-bar {
+    height: 3px; background: var(--blue); border-radius: 2px; margin-top: 16px;
+    width: 0; transition: width 0.4s;
+  }
+  .feature-card.highlighted .card-bar { width: 100%; }
+
+  /* ===== SERVICES SECTION ===== */
+  .services-section {
+    background: #0A0F1E; padding: 100px 80px; color: #fff;
+  }
+  .services-header { text-align: center; margin-bottom: 64px; }
+  .services-header h2 { font-size: 48px; font-weight: 900; color: #fff; max-width: 700px; margin: 0 auto 16px; }
+  .services-header p { font-size: 16px; color: rgba(255,255,255,0.6); max-width: 600px; margin: 0 auto; }
+  .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .service-card {
+    background: #131929; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px;
+    overflow: hidden; transition: all 0.3s;
+  }
+  .service-card:hover { transform: translateY(-4px); }
+  .service-card-img { width: 100%; height: 180px; object-fit: cover; display: block; }
+  .service-card-img-placeholder {
+    width: 100%; height: 180px;
+    background: linear-gradient(135deg, #1a2744, #1e3a5f);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .service-card-body { padding: 28px 24px; }
+  .service-icon-box {
+    width: 52px; height: 52px; border-radius: 14px; background: rgba(37,99,235,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; color: var(--blue-light); margin-bottom: 16px;
+  }
+  .service-card h3 { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+  .service-card p { font-size: 14px; color: rgba(255,255,255,0.55); line-height: 1.7; }
+  .service-arrow-btn {
+    width: 38px; height: 38px; border-radius: 50%; background: var(--blue);
+    display: flex; align-items: center; justify-content: center; color: #fff;
+    margin-top: 20px; cursor: pointer; font-size: 14px; transition: background 0.2s;
+  }
+  .service-arrow-btn:hover { background: var(--blue-dark); }
+  .view-all-link {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    color: var(--blue-light); font-size: 15px; font-weight: 600; margin-top: 48px;
+    cursor: pointer; text-decoration: none;
+  }
+  .view-all-link:hover { color: #fff; }
+
+  /* ===== WHY CHOOSE ===== */
+  .why-section { padding: 100px 80px; background: #fff; }
+  .why-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+  .why-image-wrap { position: relative; }
+  .why-image {
+    width: 100%; border-radius: 20px; overflow: hidden;
+    box-shadow: 0 24px 80px rgba(37,99,235,0.18);
+    border: 4px solid var(--blue);
+  }
+  .why-image img { width: 100%; display: block; height: 480px; object-fit: cover; }
+  .why-right h2 { font-size: 44px; font-weight: 900; color: var(--dark2); margin-bottom: 32px; line-height: 1.15; }
+  .why-right h2 span { color: var(--blue); }
+  .why-item { display: flex; gap: 16px; margin-bottom: 24px; align-items: flex-start; }
+  .why-check {
+    width: 24px; height: 24px; min-width: 24px; border-radius: 50%;
+    background: #EFF6FF; display: flex; align-items: center; justify-content: center;
+    margin-top: 2px;
+  }
+  .why-check i { font-size: 11px; color: var(--blue); }
+  .why-item h4 { font-size: 16px; font-weight: 700; color: var(--dark2); margin-bottom: 4px; }
+  .why-item p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
+  /* ===== PROJECTS SECTION ===== */
+  .projects-section { background: #060D1F; padding: 100px 80px; }
+  .projects-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 48px; }
+  .projects-header h2 { font-size: 48px; font-weight: 900; color: #fff; }
+  .projects-header h2 span { color: var(--blue-light); }
+  .btn-outline-white2 {
+    background: transparent; color: #fff; border: 2px solid rgba(255,255,255,0.3);
+    padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;
+    text-decoration: none;
+  }
+  .btn-outline-white2:hover { border-color: #fff; }
+  .projects-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .project-card { background: #fff; border-radius: 20px; overflow: hidden; transition: transform 0.3s; }
+  .project-card:hover { transform: translateY(-4px); }
+  .project-card-img { position: relative; height: 240px; overflow: hidden; }
+  .project-card-img img { width: 100%; height: 100%; object-fit: cover; }
+  .project-card-img-bg {
+    width: 100%; height: 240px;
+    background: linear-gradient(135deg, #1a2744, #0a1628);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 48px; font-weight: 900; color: rgba(37,99,235,0.3); letter-spacing: 4px;
+  }
+  .project-tag {
+    position: absolute; bottom: 16px; left: 16px;
+    background: var(--blue); color: #fff; padding: 5px 14px; border-radius: 50px;
+    font-size: 12px; font-weight: 600;
+  }
+  .project-card-body { padding: 24px 28px; }
+  .project-card-body h3 { font-size: 22px; font-weight: 800; color: var(--dark2); margin-bottom: 8px; }
+  .project-card-body p { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 16px; }
+  .project-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tag-pill {
+    background: #f1f5f9; color: var(--text-muted); padding: 4px 12px;
+    border-radius: 50px; font-size: 12px; font-weight: 600;
+  }
+  .tag-pill.blue { color: var(--blue); background: #EFF6FF; }
+
+  /* ===== BLOG SECTION ===== */
+  .blog-section { padding: 100px 80px; background: #fff; }
+  .blog-header { text-align: center; margin-bottom: 64px; }
+  .blog-header h2 { font-size: 48px; font-weight: 900; color: var(--dark2); }
+  .blog-header h2 span { color: var(--blue); }
+  .blog-header p { font-size: 16px; color: var(--text-muted); margin-top: 12px; max-width: 600px; margin-left: auto; margin-right: auto; }
+  .blog-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  .blog-card { border-radius: 16px; overflow: hidden; border: 1px solid var(--border); transition: all 0.2s; }
+  .blog-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.1); transform: translateY(-4px); }
+  .blog-card-img { position: relative; height: 200px; overflow: hidden; }
+  .blog-card-img img { width: 100%; height: 100%; object-fit: cover; }
+  .blog-tag {
+    position: absolute; top: 14px; left: 14px;
+    background: var(--blue); color: #fff; padding: 4px 12px;
+    border-radius: 50px; font-size: 12px; font-weight: 600;
+  }
+  .blog-card-body { padding: 20px 22px 24px; }
+  .blog-meta { display: flex; align-items: center; gap: 16px; font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+  .blog-meta span { display: flex; align-items: center; gap: 5px; }
+  .blog-card h3 { font-size: 18px; font-weight: 700; color: var(--dark2); margin-bottom: 10px; line-height: 1.4; }
+  .blog-card h3.blue { color: var(--blue); }
+  .blog-card p { font-size: 13px; color: var(--text-muted); line-height: 1.7; margin-bottom: 14px; }
+  .read-more {
+    display: inline-flex; align-items: center; gap: 6px; color: var(--blue);
+    font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none;
+  }
+  .blog-cta { text-align: center; margin-top: 56px; }
+  .btn-blue-outline {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--blue); color: #fff; padding: 14px 32px; border-radius: 10px;
+    font-size: 15px; font-weight: 600; cursor: pointer; border: none; text-decoration: none;
+    transition: background 0.2s;
+  }
+  .btn-blue-outline:hover { background: var(--blue-dark); }
+
+  /* ===== FOOTER ===== */
+  footer { background: #0A0F1E; padding: 72px 80px 0; }
+  .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1.2fr 1.2fr; gap: 48px; padding-bottom: 48px; }
+  .footer-brand { }
+  .footer-logo {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px; padding: 10px 18px; display: inline-flex; align-items: center; gap: 10px; margin-bottom: 20px;
+  }
+  .footer-logo span { color: #fff; font-size: 13px; font-weight: 800; letter-spacing: 1px; }
+  .footer-brand p { font-size: 14px; color: rgba(255,255,255,0.55); line-height: 1.75; margin-bottom: 24px; }
+  .social-icons { display: flex; gap: 10px; }
+  .social-icon {
+    width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.6);
+    font-size: 15px; cursor: pointer; transition: all 0.2s; text-decoration: none;
+  }
+  .social-icon:hover { background: var(--blue); color: #fff; }
+  .footer-col h4 { color: #fff; font-size: 16px; font-weight: 700; margin-bottom: 20px; }
+  .footer-col a {
+    display: block; color: rgba(255,255,255,0.55); font-size: 14px; margin-bottom: 12px;
+    text-decoration: none; cursor: pointer; transition: color 0.2s;
+  }
+  .footer-col a:hover { color: #fff; }
+  .footer-col a.hover-blue:hover { color: var(--blue-light); }
+  .footer-contact { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+  .contact-icon {
+    width: 36px; height: 36px; min-width: 36px; border-radius: 10px;
+    background: rgba(37,99,235,0.2); display: flex; align-items: center; justify-content: center;
+    color: var(--blue-light); font-size: 14px;
+  }
+  .footer-contact div { font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.6; }
+  .footer-bottom {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding: 20px 0; display: flex; align-items: center; justify-content: space-between;
+  }
+  .footer-bottom p { font-size: 13px; color: rgba(255,255,255,0.4); }
+  .footer-bottom-links { display: flex; gap: 24px; }
+  .footer-bottom-links a { font-size: 13px; color: rgba(255,255,255,0.4); text-decoration: none; cursor: pointer; }
+  .footer-bottom-links a:hover { color: #fff; }
+
+  /* page-hero now uses .page-carousel — see carousel styles above */
+
+  .about-story { padding: 100px 80px; }
+  .about-story-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+  .about-story h2 { font-size: 40px; font-weight: 900; color: var(--dark2); margin-bottom: 20px; }
+  .about-story h2 span { color: var(--blue); }
+  .about-story p { font-size: 16px; color: var(--text-muted); line-height: 1.8; margin-bottom: 16px; }
+  .stats-row { display: flex; gap: 40px; margin-top: 32px; padding-top: 32px; border-top: 1px solid var(--border); }
+  .stat { }
+  .stat-num { font-size: 40px; font-weight: 900; color: var(--blue); }
+  .stat-label { font-size: 13px; color: var(--text-muted); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .about-images { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .about-img {
+    border-radius: 16px; overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  }
+  .about-img img { width: 100%; height: 200px; object-fit: cover; display: block; }
+  .about-img-label {
+    background: rgba(0,0,0,0.7); color: #fff; padding: 10px 14px;
+    font-size: 13px; font-weight: 600; position: relative; margin-top: -40px;
+  }
+  .about-img-wrap { position: relative; }
+  .about-img-wrap .label-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+    padding: 20px 14px 10px; color: #fff; font-size: 13px; font-weight: 600;
+  }
+
+  /* Vision & Mission */
+  .vision-section { padding: 100px 80px; background: #f8fafc; }
+  .vision-header { text-align: center; margin-bottom: 64px; }
+  .vision-header h2 { font-size: 48px; font-weight: 900; color: var(--dark2); }
+  .vision-header h2 span { color: var(--blue); }
+  .vision-header p { font-size: 16px; color: var(--text-muted); margin-top: 12px; max-width: 700px; margin-left: auto; margin-right: auto; }
+  .vision-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .vision-card {
+    background: #fff; border: 1px solid var(--border); border-radius: 20px;
+    padding: 40px; position: relative; overflow: hidden;
+  }
+  .vision-card.active-card { }
+  .vision-card .num-bg {
+    position: absolute; top: 20px; right: 24px;
+    font-size: 80px; font-weight: 900; color: rgba(37,99,235,0.06); line-height: 1;
+  }
+  .vision-card-icon {
+    width: 60px; height: 60px; border-radius: 16px; background: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 24px; margin-bottom: 24px;
+  }
+  .vision-card h3 { font-size: 24px; font-weight: 800; color: var(--dark2); margin-bottom: 16px; }
+  .vision-card.active-card h3 { color: var(--blue); }
+  .vision-card p { font-size: 15px; color: var(--text-muted); line-height: 1.8; }
+  .vision-card .bottom-bar { height: 4px; background: var(--blue); border-radius: 2px; margin-top: 28px; }
+
+  /* Core Values */
+  .values-section { padding: 100px 80px; }
+  .values-header { text-align: center; margin-bottom: 64px; }
+  .values-header h2 { font-size: 48px; font-weight: 900; color: var(--dark2); }
+  .values-header h2 span { color: var(--blue); }
+  .values-header p { font-size: 16px; color: var(--text-muted); margin-top: 12px; }
+  .values-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .value-card {
+    border-radius: 18px; overflow: hidden; position: relative; min-height: 260px;
+    background: #0a0f1e;
+  }
+  .value-card-bg { position: absolute; inset: 0; object-fit: cover; width: 100%; height: 100%; opacity: 0.35; }
+  .value-card-overlay { position: absolute; inset: 0; background: rgba(10,15,30,0.65); }
+  .value-card-content { position: relative; z-index: 2; padding: 28px 24px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
+  .value-card-icon {
+    width: 48px; height: 48px; border-radius: 12px; background: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 20px; margin-bottom: 16px;
+  }
+  .value-card h4 { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .value-card p { font-size: 13px; color: rgba(255,255,255,0.65); line-height: 1.6; }
+  .values-dots { display: flex; justify-content: center; gap: 8px; margin-top: 32px; }
+  .v-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--blue); }
+  .v-dot.inactive { background: #e2e8f0; }
+
+  /* Team */
+  .team-section { padding: 100px 80px; background: #f8fafc; }
+  .team-header { text-align: center; margin-bottom: 64px; }
+  .team-header h2 { font-size: 48px; font-weight: 900; color: var(--dark2); }
+  .team-header h2 span { color: var(--blue); }
+  .team-header p { font-size: 16px; color: var(--text-muted); margin-top: 12px; }
+  .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .team-card {
+    background: #fff; border-radius: 20px; overflow: hidden;
+    border: 1px solid var(--border); transition: all 0.2s;
+  }
+  .team-card:hover { box-shadow: 0 12px 40px rgba(37,99,235,0.12); transform: translateY(-4px); }
+  .team-card-img {
+    height: 200px; background: #E2E8F0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); font-size: 13px;
+  }
+  .team-card-body { padding: 20px 22px 24px; text-align: center; }
+  .team-card h4 { font-size: 18px; font-weight: 800; color: var(--dark2); margin-bottom: 4px; }
+  .team-card .role { font-size: 14px; color: var(--blue); font-weight: 600; margin-bottom: 10px; }
+  .team-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+  /* Who We Serve */
+  .serve-section { padding: 100px 80px; }
+  .serve-header { text-align: center; margin-bottom: 64px; }
+  .serve-header h2 { font-size: 48px; font-weight: 900; color: var(--dark2); }
+  .serve-header h2 span { color: var(--blue); }
+  .serve-header p { font-size: 16px; color: var(--text-muted); margin-top: 12px; }
+  .serve-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; }
+  .serve-img { width: 100%; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.12); }
+  .serve-img img { width: 100%; display: block; }
+  .serve-items { display: flex; flex-direction: column; gap: 16px; }
+  .serve-item {
+    background: #f8fafc; border: 1px solid var(--border); border-radius: 16px;
+    padding: 22px 24px; display: flex; align-items: flex-start; gap: 20px;
+    transition: all 0.2s; cursor: pointer;
+  }
+  .serve-item:hover, .serve-item.active { background: #EFF6FF; }
+  .serve-num {
+    width: 42px; height: 42px; min-width: 42px; border-radius: 12px; background: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 16px; font-weight: 800;
+  }
+  .serve-item h4 { font-size: 16px; font-weight: 700; color: var(--dark2); margin-bottom: 4px; }
+  .serve-item p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+  /* Photo Gallery */
+  .gallery-section { padding: 0 80px 60px; }
+  .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .gallery-item { position: relative; border-radius: 16px; overflow: hidden; }
+  .gallery-item img { width: 100%; height: 220px; object-fit: cover; display: block; }
+  .gallery-item .label-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
+    padding: 30px 16px 14px;
+    color: #fff;
+  }
+  .gallery-item .label-overlay strong { display: block; font-size: 15px; font-weight: 700; }
+  .gallery-item .label-overlay span { font-size: 12px; opacity: 0.8; }
+
+  /* ===== SERVICE DETAIL SECTIONS ===== */
+  .svc-section { padding: 80px 80px; border-bottom: 1px solid var(--border); }
+  .svc-section:last-of-type { border-bottom: none; }
+  .svc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center; }
+  .svc-grid.reverse { direction: rtl; }
+  .svc-grid.reverse > * { direction: ltr; }
+  .svc-img-box {
+    border-radius: 20px; overflow: hidden;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.12);
+  }
+  .svc-img-box img { width: 100%; height: 420px; object-fit: cover; display: block; }
+  .svc-img-placeholder {
+    width: 100%; height: 420px;
+    background: linear-gradient(135deg, #0d1f4a 0%, #1a3a8f 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 56px; color: rgba(59,130,246,0.3);
+  }
+  .svc-icon-box {
+    width: 64px; height: 64px; border-radius: 18px; background: #EFF6FF;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; color: var(--blue); margin-bottom: 20px;
+  }
+  .svc-text h2 { font-size: 38px; font-weight: 900; color: var(--dark2); line-height: 1.2; margin-bottom: 16px; }
+  .svc-text p { font-size: 16px; color: var(--text-muted); line-height: 1.8; margin-bottom: 24px; }
+  .svc-checklist { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; margin-bottom: 28px; }
+  .svc-check-item { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text); }
+  .svc-check-item i { color: var(--blue); font-size: 14px; }
+
+  /* ===== PROJECTS PAGE ===== */
+  .proj-section { padding: 80px 80px; }
+  .proj-section-title { margin-bottom: 40px; }
+  .proj-section-title h2 { font-size: 36px; font-weight: 900; color: var(--dark2); }
+  .proj-section-title p { font-size: 16px; color: var(--text-muted); margin-top: 6px; }
+  .proj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .proj-card { background: #fff; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); transition: all 0.2s; }
+  .proj-card:hover { box-shadow: 0 16px 48px rgba(0,0,0,0.1); transform: translateY(-4px); }
+  .proj-card-img { position: relative; height: 240px; overflow: hidden; }
+  .proj-card-img img { width: 100%; height: 100%; object-fit: cover; }
+  .proj-card-img-placeholder {
+    width: 100%; height: 240px;
+    background: linear-gradient(135deg, #0d1f4a, #1a3a8f);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 52px; font-weight: 900; color: rgba(59,130,246,0.25); letter-spacing: 4px;
+  }
+  .proj-tag { position: absolute; bottom: 14px; left: 14px; background: var(--blue); color: #fff; padding: 5px 14px; border-radius: 50px; font-size: 12px; font-weight: 600; }
+  .proj-card-body { padding: 24px 28px; }
+  .proj-card-body h3 { font-size: 22px; font-weight: 800; color: var(--dark2); margin-bottom: 10px; }
+  .proj-card-body h3.blue { color: var(--blue); }
+  .proj-card-body p { font-size: 14px; color: var(--text-muted); line-height: 1.7; margin-bottom: 14px; }
+  .proj-problem { font-size: 13px; font-weight: 700; color: var(--dark2); margin-bottom: 4px; }
+  .proj-impact { font-size: 13px; font-weight: 700; color: var(--dark2); margin: 12px 0 4px; }
+  .proj-impact-text { font-size: 13px; color: var(--blue); margin-bottom: 14px; }
+  .proj-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .proj-pill { background: #f1f5f9; color: var(--text-muted); padding: 4px 12px; border-radius: 50px; font-size: 12px; font-weight: 500; }
+
+  /* ===== BLOG PAGE ===== */
+  .blog-filter { background: #f8fafc; padding: 24px 80px; border-bottom: 1px solid var(--border); }
+  .blog-filter-pills { display: flex; gap: 10px; flex-wrap: wrap; }
+  .filter-pill {
+    padding: 8px 18px; border-radius: 50px; font-size: 14px; font-weight: 500;
+    border: 1px solid var(--border); background: #fff; color: var(--text);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .filter-pill.active, .filter-pill:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .blog-page-grid { padding: 60px 80px; }
+  .blog-full-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  .blog-full-card { border-radius: 16px; overflow: hidden; border: 1px solid var(--border); transition: all 0.2s; }
+  .blog-full-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.1); transform: translateY(-4px); }
+  .blog-full-img { position: relative; height: 200px; overflow: hidden; }
+  .blog-full-img img { width: 100%; height: 100%; object-fit: cover; }
+  .blog-full-img-placeholder {
+    height: 200px;
+    background: linear-gradient(135deg, #0d1f4a, #1a3a8f);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; font-weight: 900; color: rgba(59,130,246,0.3); letter-spacing: 3px;
+  }
+  .blog-tag2 { position: absolute; top: 14px; left: 14px; background: var(--blue); color: #fff; padding: 4px 12px; border-radius: 50px; font-size: 12px; font-weight: 600; }
+  .blog-full-body { padding: 20px 22px 24px; }
+  .blog-full-meta { display: flex; gap: 14px; font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+  .blog-full-meta span { display: flex; align-items: center; gap: 5px; }
+  .blog-full-card h3 { font-size: 17px; font-weight: 700; color: var(--dark2); margin-bottom: 8px; line-height: 1.4; }
+  .blog-full-card h3.blue { color: var(--blue); }
+  .blog-full-card p { font-size: 13px; color: var(--text-muted); line-height: 1.7; margin-bottom: 14px; }
+  .blog-author { display: flex; align-items: center; justify-content: space-between; }
+  .blog-author-name { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); }
+  .load-more-wrap { text-align: center; margin-top: 48px; }
+  .btn-load-more {
+    background: transparent; border: 2px solid var(--border); color: var(--text);
+    padding: 14px 36px; border-radius: 10px; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-load-more:hover { border-color: var(--blue); color: var(--blue); }
+  /* ===== NEWSLETTER ===== */
+  .newsletter-section {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #060D1F 0%, #0F1E45 50%, #0A0F1E 100%);
+    padding: 100px 80px; text-align: center;
+  }
+  /* Glowing orbs */
+  .newsletter-section::before {
+    content: ''; position: absolute;
+    width: 500px; height: 500px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%);
+    top: -200px; left: -100px; pointer-events: none;
+  }
+  .newsletter-section::after {
+    content: ''; position: absolute;
+    width: 400px; height: 400px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
+    bottom: -150px; right: -80px; pointer-events: none;
+  }
+  .nl-inner { position: relative; z-index: 2; max-width: 680px; margin: 0 auto; }
+  .nl-icon-wrap {
+    width: 72px; height: 72px; border-radius: 20px; margin: 0 auto 24px;
+    background: linear-gradient(135deg, #2563EB, #1D4ED8);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; color: #fff;
+    box-shadow: 0 12px 40px rgba(37,99,235,0.4);
+  }
+  .newsletter-section h2 {
+    font-size: 48px; font-weight: 900; color: #fff; margin-bottom: 14px; line-height: 1.1;
+  }
+  .newsletter-section h2 span { color: var(--blue-light); }
+  .newsletter-section > .nl-inner > p {
+    font-size: 17px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.7; max-width: 520px; margin-left: auto; margin-right: auto;
+  }
+  .nl-perks {
+    display: flex; justify-content: center; gap: 24px; flex-wrap: wrap;
+    margin-bottom: 40px;
+  }
+  .nl-perk {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.65);
+  }
+  .nl-perk i { color: var(--blue-light); font-size: 14px; }
+  .nl-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(16px);
+    border-radius: 20px; padding: 32px 36px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+  }
+  .nl-fields { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
+  .nl-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .nl-input {
+    width: 100%; padding: 14px 18px; border: 1.5px solid rgba(255,255,255,0.12);
+    border-radius: 12px; font-size: 15px; font-family: 'Manrope', sans-serif;
+    color: #fff; background: rgba(255,255,255,0.08); outline: none;
+    transition: border-color 0.2s; box-sizing: border-box;
+  }
+  .nl-input::placeholder { color: rgba(255,255,255,0.3); }
+  .nl-input:focus { border-color: var(--blue-light); background: rgba(37,99,235,0.1); }
+  .nl-submit-btn {
+    width: 100%; padding: 15px; border: none; border-radius: 12px;
+    background: linear-gradient(135deg, #2563EB, #1D4ED8);
+    color: #fff; font-size: 16px; font-weight: 700; cursor: pointer;
+    font-family: 'Manrope', sans-serif; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    box-shadow: 0 8px 24px rgba(37,99,235,0.4);
+  }
+  .nl-submit-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(37,99,235,0.55); }
+  .nl-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .nl-msg { margin-top: 14px; font-size: 14px; color: rgba(255,255,255,0.8); display: none; text-align: center; line-height: 1.6; }
+  .nl-fine { font-size: 12px; color: rgba(255,255,255,0.2); margin-top: 16px; }
+  /* newsletter responsive */
+  @media (max-width: 900px) {
+    .newsletter-section { padding: 80px 20px; }
+    .nl-field-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .newsletter-section { padding: 60px 14px; }
+    .newsletter-section h2 { font-size: 30px; }
+    .nl-card { padding: 24px 18px; }
+    .nl-perks { gap: 14px; }
+  }
+
+  /* ===== CONTACT PAGE ===== */
+  .contact-info-section { padding: 80px 80px; background: #fff; }
+  .contact-info-header { text-align: center; margin-bottom: 56px; }
+  .contact-info-header h2 { font-size: 48px; font-weight: 900; color: var(--dark2); }
+  .contact-info-header h2 span { color: var(--blue); }
+  .contact-info-header p { font-size: 16px; color: var(--text-muted); margin-top: 10px; max-width: 600px; margin-left: auto; margin-right: auto; }
+  .contact-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 60px; }
+  .contact-card {
+    border: 1px solid var(--border); border-radius: 20px; padding: 36px 28px; text-align: center;
+    transition: all 0.2s;
+  }
+  .contact-card:hover { box-shadow: 0 8px 32px rgba(37,99,235,0.1); }
+  .contact-card-icon {
+    width: 64px; height: 64px; border-radius: 18px; background: #EFF6FF;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; color: var(--blue); margin: 0 auto 20px;
+  }
+  .contact-card h4 { font-size: 20px; font-weight: 800; color: var(--dark2); margin-bottom: 12px; }
+  .contact-card p { font-size: 15px; color: var(--text-muted); line-height: 1.7; }
+  .contact-form-card {
+    background: #fff; border-radius: 24px; padding: 56px 64px;
+    box-shadow: 0 8px 48px rgba(0,0,0,0.08); border: 1px solid var(--border);
+    max-width: 960px; margin: 0 auto;
+  }
+  .contact-form-card h2 { font-size: 38px; font-weight: 900; color: var(--dark2); text-align: center; margin-bottom: 8px; }
+  .contact-form-card h2 span { color: var(--blue); }
+  .contact-form-card > p { font-size: 15px; color: var(--text-muted); text-align: center; margin-bottom: 40px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+  .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+  .form-group label { font-size: 14px; font-weight: 600; color: var(--dark2); }
+  .form-group input, .form-group select, .form-group textarea {
+    padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 10px;
+    font-size: 15px; font-family: 'Manrope', sans-serif; color: var(--text);
+    outline: none; transition: border-color 0.2s; background: #fff;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+  }
+  .form-group textarea { resize: vertical; min-height: 120px; }
+  .form-submit { text-align: center; margin-top: 8px; }
+  .btn-send {
+    background: var(--blue); color: #fff; border: none; padding: 15px 40px;
+    border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 10px; transition: background 0.2s;
+  }
+  .btn-send:hover { background: var(--blue-dark); }
+  .map-section { background: #0A0F1E; height: 300px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
+  .map-section .map-pin { font-size: 48px; color: var(--blue); }
+  .map-section p { color: rgba(255,255,255,0.5); font-size: 14px; }
+
+  /* Responsive note */
+  @media (max-width: 900px) {
+    nav { padding: 0 20px; }
+    .hero-content { padding: 60px 24px; }
+    .hero h1 { font-size: 40px; }
+    .about-home, .services-section, .why-section, .projects-section, .blog-section,
+    .page-hero, .about-story, .vision-section, .values-section, .team-section, .serve-section,
+    .svc-section, .proj-section, .blog-page-grid, .blog-filter, .newsletter-section,
+    .contact-info-section, footer { padding-left: 24px; padding-right: 24px; }
+    .about-home-grid, .why-grid, .serve-grid, .about-story-grid, .svc-grid { grid-template-columns: 1fr; }
+    .svc-grid.reverse { direction: ltr; }
+    .services-grid, .values-grid, .team-grid, .proj-grid, .blog-full-grid { grid-template-columns: 1fr; }
+    .blog-grid, .contact-cards { grid-template-columns: 1fr; }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+    .contact-form-card { padding: 28px 20px; }
+    .form-row { grid-template-columns: 1fr; }
+  }
+
+
+  /* ── MODAL TOPBAR ── */
+  .modal-topbar {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(255,255,255,0.96); backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px; height: 62px;
+  }
+
+  /* ── MODAL READING COLUMN ── */
+  .modal-body {
+    max-width: 800px; margin: 0 auto; padding: 56px 40px 100px;
+  }
+
+  /* ── MODAL CONTENT — rich text styles ── */
+  #modal-content { font-size: 17px; color: #374151; line-height: 2; margin-bottom: 56px; overflow-wrap: break-word; word-break: break-word; }
+  #modal-content img { max-width: 100%; width: 100%; height: auto; border-radius: 12px; display: block; margin: 16px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+  #modal-content h2 { font-size: 24px; font-weight: 800; color: var(--dark2); margin: 28px 0 12px; line-height: 1.3; }
+  #modal-content h3 { font-size: 20px; font-weight: 700; color: var(--dark2); margin: 20px 0 10px; line-height: 1.4; }
+  #modal-content p  { margin-bottom: 14px; }
+  #modal-content ul, #modal-content ol { margin: 0 0 14px 22px; }
+  #modal-content li { margin-bottom: 6px; }
+  #modal-content blockquote { border-left: 4px solid var(--blue); padding: 12px 18px; background: #EFF6FF; border-radius: 0 10px 10px 0; margin: 18px 0; font-style: italic; color: var(--text-muted); }
+  #modal-content a  { color: var(--blue); text-decoration: underline; }
+  #modal-content strong { font-weight: 800; color: var(--dark2); }
+  #modal-content hr { border: none; border-top: 2px solid var(--border); margin: 28px 0; }
+
+  /* ── FULLSCREEN READER — mobile ── */
+  @media (max-width: 600px) {
+    .modal-topbar { padding: 0 14px; height: 56px; }
+    .modal-topbar button { font-size: 13px !important; padding: 7px 12px !important; }
+    .modal-body { padding: 28px 16px 72px; }
+    #modal-title { font-size: 24px !important; line-height: 1.25 !important; }
+    #modal-media { height: 38vh !important; min-height: 200px !important; }
+    #modal-content { font-size: 15px !important; line-height: 1.85 !important; }
+    #modal-content h2 { font-size: 19px; }
+    #modal-content h3 { font-size: 16px; }
+    #modal-content img { border-radius: 8px; }
+  }
+
+  /* ── Admin lock icon ── */
+  .nav-admin-lock {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(0,0,0,0.15); font-size: 14px; text-decoration: none;
+    transition: all 0.3s; cursor: pointer; margin-left: 4px;
+  }
+  .nav-admin-lock:hover { color: var(--blue); background: #EFF6FF; }
+
+  /* ── NAV HAMBURGER ── */
+  .mobile-menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.6rem;
+    cursor: pointer;
+    color: var(--dark2);
+    padding: 4px 6px;
+    line-height: 1;
+  }
+
+  @media (max-width: 900px) {
+    nav { padding: 0 1.5rem; }
+    .nav-links { display: none; }
+    .mobile-menu-btn { display: block; }
+    #nav-cta { display: none; }
+
+    .nav-links.open {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      background: rgba(255,255,255,0.98);
+      backdrop-filter: blur(10px);
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      z-index: 999;
+      animation: slideDown 0.3s ease;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    .nav-links.open a {
+      display: block;
+      padding: 0.9rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--dark2);
+      border-bottom: 1px solid var(--border);
+      text-decoration: none;
+    }
+    .nav-links.open a:last-child { border-bottom: none; }
+    .nav-links.open a:hover,
+    .nav-links.open a.active { color: var(--blue); background: #EFF6FF; }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .carousel { height: 70vh; min-height: 500px; }
+    .carousel-slide { height: 100%; }
+    .carousel-content { padding: 60px 28px 80px; max-width: 100%; }
+    .carousel-content h1 { font-size: 42px; }
+    .page-carousel { height: 45vh; min-height: 360px; }
+    .page-carousel .carousel-slide { height: 100%; }
+    .page-carousel .carousel-content { padding: 48px 28px; }
+    .page-carousel .carousel-content h1 { font-size: 36px; }
+    .about-home, .services-section, .why-section, .projects-section,
+    .blog-section, .about-story, .vision-section, .values-section,
+    .team-section, .serve-section, .svc-section, .proj-section,
+    .blog-page-grid, .blog-filter, .newsletter-section,
+    .contact-info-section, .gallery-section, footer {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+    .about-home-grid, .why-grid, .serve-grid, .about-story-grid,
+    .svc-grid, .svc-grid.reverse { grid-template-columns: 1fr; direction: ltr; }
+    .services-grid, .values-grid, .feature-cards { grid-template-columns: 1fr 1fr; }
+    .team-grid { grid-template-columns: 1fr 1fr 1fr; }
+    .proj-grid, .projects-grid, .blog-full-grid { grid-template-columns: 1fr 1fr; }
+    .blog-grid, .contact-cards { grid-template-columns: 1fr; }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+    .gallery-grid { grid-template-columns: 1fr 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .contact-form-card { padding: 28px 20px; }
+    .svc-img-box img, .svc-img-placeholder { height: 280px; }
+    .why-image img { height: 280px; }
+    .projects-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+    footer { padding-top: 48px; }
+    .footer-bottom { flex-direction: column; gap: 10px; text-align: center; }
+    .footer-bottom-links { justify-content: center; }
+    .blog-filter-pills { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 6px; }
+    .filter-pill { white-space: nowrap; flex-shrink: 0; }
+    .newsletter-form { flex-direction: column; }
+    .newsletter-form input { border-radius: 10px 10px 0 0; }
+    .newsletter-form button { border-radius: 0 0 10px 10px; }
+  }
+
+  @media (max-width: 600px) {
+    nav { height: 60px; }
+    .nav-logo img { height: 34px; }
+    .carousel { height: 100svh; min-height: 500px; }
+    .carousel-slide { height: 100%; }
+    .carousel-content { padding: 40px 18px 80px; }
+    .carousel-content h1 { font-size: 32px; line-height: 1.1; }
+    .carousel-content p { font-size: 14px; }
+    .badge { font-size: 12px; padding: 6px 12px; margin-bottom: 18px; }
+    .hero-btns { flex-direction: column; gap: 10px; margin-top: 24px; }
+    .hero-btns a { width: 100%; text-align: center; justify-content: center; }
+    .page-carousel .carousel-content h1 { font-size: 26px; }
+    .about-home, .why-section, .blog-section, .services-section,
+    .projects-section, .about-story, .vision-section, .values-section,
+    .team-section, .serve-section, .gallery-section, .svc-section,
+    .proj-section, .blog-page-grid, .newsletter-section,
+    .contact-info-section { padding: 48px 14px; }
+    .blog-filter { padding: 14px; }
+    footer { padding: 44px 14px 0; }
+    .services-grid, .values-grid, .feature-cards, .proj-grid,
+    .projects-grid, .blog-full-grid, .gallery-grid, .about-images,
+    .svc-checklist, .vision-cards { grid-template-columns: 1fr; }
+    .team-grid { grid-template-columns: 1fr 1fr; }
+    .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    .about-left h2, .why-right h2, .svc-text h2, .services-header h2,
+    .projects-header h2, .blog-header h2, .vision-header h2,
+    .values-header h2, .team-header h2, .serve-header h2,
+    .contact-info-header h2, .proj-section-title h2,
+    .newsletter-section h2, .contact-form-card h2 { font-size: 24px; }
+    .why-image img { height: 220px; }
+    .svc-img-box img, .svc-img-placeholder { height: 200px; }
+    .project-card-img img { height: 180px; object-fit: cover; }
+    .btn-outline-white2, .btn-send { width: 100%; justify-content: center; }
+    .contact-form-card { padding: 20px 14px; }
+    .form-group input, .form-group select,
+    .form-group textarea { font-size: 16px; }
+    .footer-bottom { flex-direction: column; gap: 8px; text-align: center; padding: 16px 0; }
+    .footer-bottom-links { justify-content: center; }
+  }
+
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ===== SERVICES DROPDOWN ===== */
+  .nav-dropdown { position: relative; }
+  .nav-dropdown > a { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+  .nav-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: transparent;
+    padding-top: 10px;
+    z-index: 2000;
+  }
+  .nav-dropdown-menu-inner {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(37,99,235,0.10), 0 2px 8px rgba(0,0,0,0.07);
+    min-width: 200px;
+    padding: 8px;
+  }
+  .nav-dropdown:hover .nav-dropdown-menu,
+  .nav-dropdown:focus-within .nav-dropdown-menu { display: block; }
+  .nav-dropdown-menu a {
+    display: block; padding: 10px 16px; border-radius: 9px;
+    font-size: 14px; font-weight: 500; color: var(--text);
+    text-decoration: none; transition: background 0.18s, color 0.18s;
+  }
+  .nav-dropdown-menu a:hover { background: #EFF6FF; color: var(--blue); }
+  .nav-dropdown-menu a.active { background: #EFF6FF; color: var(--blue); font-weight: 600; }
+  @media (max-width: 900px) {
+    .nav-dropdown-menu {
+      position: static; box-shadow: none; border: none;
+      border-radius: 0; padding: 0 0 0 16px; background: transparent; display: none;
+    }
+    .nav-dropdown.open .nav-dropdown-menu { display: block; }
+    .nav-dropdown-menu a { padding: 10px 20px; font-size: 0.97rem; border-bottom: 1px solid var(--border); }
+  }
+
+  </style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo" onclick="location.href='index.html'" style="cursor:pointer">
+    <img src="https://jassan-innovations-hub.vercel.app/assets/logo-CoQZjYGJ.jpg" alt="Jassan Logo" style="height:40px;width:auto;object-fit:contain;">
+  </div>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <div class="nav-dropdown">
+      <a >Services &#9660;</a>
+      <div class="nav-dropdown-menu"><div class="nav-dropdown-menu-inner">
+        <a href="services.html">Prime Aide</a>
+        <a href="gallery.html">Animation-Dot</a>
+        <a href="projects.html">Project Space</a>
+        <a href="sales.html">My Store</a>
+      </div></div>
+    </div>
+    <a href="blog.html" class="active" >Blog</a>
+    <a href="contact.html">Contact</a>
+    <a href="learn.html" >Learn</a>
+    <a href="portal.html">Portal</a>
+  </div>
+  <a class="nav-admin-lock" href="admin.html" title="Admin"><i class="fas fa-lock"></i></a>
+  <button class="mobile-menu-btn" id="menuBtn">&#9776;</button>
+  <a class="btn-primary" id="nav-cta" href="contact.html">Get Started</a>
+</nav>
+
+<!-- BLOG HERO CAROUSEL -->
+  <div class="carousel page-carousel" id="carousel-blog">
+    <div class="carousel-track" id="track-blog">
+      <div class="carousel-slide active">
+        <div class="carousel-slide-bg" style="background-image:url('https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=1600&q=80');"></div>
+        <div class="carousel-slide-overlay"></div>
+        <div class="carousel-content">
+          <div class="badge"><span class="badge-dot"></span> Blog & Insights</div>
+          <h1>Latest <span>News & Articles</span></h1>
+          <p>Stay updated with the latest trends in technology, STEM education, and insights from our team of experts.</p>
+        </div>
+      </div>
+      <div class="carousel-slide">
+        <div class="carousel-slide-bg" style="background-image:url('https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1600&q=80');"></div>
+        <div class="carousel-slide-overlay"></div>
+        <div class="carousel-content">
+          <div class="badge"><span class="badge-dot"></span> STEM Trends</div>
+          <h1>The Future of <span>Education</span><br>in Africa</h1>
+          <p>Read how hands-on technology training is transforming classrooms and creating the next generation of African innovators.</p>
+        </div>
+      </div>
+      <div class="carousel-slide">
+        <div class="carousel-slide-bg" style="background-image:url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1600&q=80');"></div>
+        <div class="carousel-slide-overlay"></div>
+        <div class="carousel-content">
+          <div class="badge"><span class="badge-dot"></span> Technology Insights</div>
+          <h1>IoT & <span>Automation</span><br>Trends 2025</h1>
+          <p>Discover how smart technology is reshaping industries, homes, and communities across Ghana and beyond.</p>
+        </div>
+      </div>
+    </div>
+    <button class="carousel-arrow prev" onclick="moveCarousel('blog', -1)"><i class="fas fa-chevron-left"></i></button>
+    <button class="carousel-arrow next" onclick="moveCarousel('blog', 1)"><i class="fas fa-chevron-right"></i></button>
+    <div class="carousel-dots" id="dots-blog">
+      <button class="carousel-dot active" onclick="goToSlide('blog', 0)"></button>
+      <button class="carousel-dot" onclick="goToSlide('blog', 1)"></button>
+      <button class="carousel-dot" onclick="goToSlide('blog', 2)"></button>
+    </div>
+    <div class="carousel-progress" id="progress-blog"></div>
+  </div>
+
+
+  <div class="blog-filter">
+    <div class="blog-filter-pills">
+      <span class="filter-pill active">All</span>
+      <span class="filter-pill">STEM Trends</span>
+      <span class="filter-pill">Robotics Tutorials</span>
+      <span class="filter-pill">AI & IoT</span>
+      <span class="filter-pill">Electrical Safety</span>
+      <span class="filter-pill">Student Success Stories</span>
+      <span class="filter-pill">Events & Competitions</span>
+    </div>
+  </div>
+
+  <!-- POST MODAL — FULLSCREEN READER -->
+  <div id="post-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:#fff;overflow-y:auto;">
+
+    <!-- Sticky top bar -->
+    <div class="modal-topbar">
+      <button onclick="closeModal()" style="display:inline-flex;align-items:center;gap:8px;background:none;border:1.5px solid var(--border);padding:8px 20px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Manrope',sans-serif;color:var(--text);transition:all 0.2s;" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)';">
+        <i class="fas fa-arrow-left"></i> Back to Blog
+      </button>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button id="modal-like-btn" onclick="reactPost('like')" style="display:inline-flex;align-items:center;gap:7px;padding:8px 18px;border-radius:10px;border:1.5px solid var(--border);background:#f8fafc;font-size:14px;font-weight:600;cursor:pointer;font-family:'Manrope',sans-serif;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--blue)';this.style.background='#eff6ff';" onmouseout="this.style.borderColor='var(--border)';this.style.background='#f8fafc';">
+          <i class="fas fa-thumbs-up" style="color:var(--blue);"></i> <span id="modal-likes">0</span>
+        </button>
+        <button id="modal-dislike-btn" onclick="reactPost('dislike')" style="display:inline-flex;align-items:center;gap:7px;padding:8px 18px;border-radius:10px;border:1.5px solid var(--border);background:#f8fafc;font-size:14px;font-weight:600;cursor:pointer;font-family:'Manrope',sans-serif;transition:all 0.2s;" onmouseover="this.style.borderColor='#cbd5e1';this.style.background='#f1f5f9';" onmouseout="this.style.borderColor='var(--border)';this.style.background='#f8fafc';">
+          <i class="fas fa-thumbs-down" style="color:var(--text-muted);"></i> <span id="modal-dislikes">0</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Hero media — full width -->
+    <div id="modal-media" style="width:100%;height:55vh;min-height:320px;overflow:hidden;background:#0a0f1e;line-height:0;"></div>
+
+    <!-- Reading column -->
+    <div class="modal-body">
+
+      <!-- Meta -->
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:22px;">
+        <span id="modal-cat" style="background:var(--blue);color:#fff;padding:4px 14px;border-radius:50px;font-size:12px;font-weight:700;letter-spacing:0.5px;"></span>
+        <span id="modal-date" style="font-size:13px;color:var(--text-muted);display:inline-flex;align-items:center;gap:5px;"></span>
+        <span id="modal-read" style="font-size:13px;color:var(--text-muted);display:inline-flex;align-items:center;gap:5px;"></span>
+      </div>
+
+      <!-- Title -->
+      <h1 id="modal-title" style="font-size:40px;font-weight:900;color:var(--dark2);line-height:1.18;margin-bottom:24px;"></h1>
+
+      <!-- Blue accent bar -->
+      <div style="width:56px;height:4px;background:var(--blue);border-radius:2px;margin-bottom:36px;"></div>
+
+      <!-- Body text -->
+      <div id="modal-content" style="font-size:17px;color:#374151;line-height:2;margin-bottom:56px;"></div>
+
+      <!-- Comments -->
+      <div style="border-top:2px solid var(--border);padding-top:44px;">
+        <h4 style="font-size:20px;font-weight:800;color:var(--dark2);margin-bottom:24px;">
+          <i class="fas fa-comments" style="color:var(--blue);margin-right:9px;"></i>Comments (<span id="modal-comment-count">0</span>)
+        </h4>
+        <div id="modal-comments" style="display:flex;flex-direction:column;gap:14px;margin-bottom:32px;"></div>
+
+        <!-- Comment form -->
+        <div style="background:#f8fafc;border:1px solid var(--border);border-radius:18px;padding:28px 28px 24px;">
+          <p style="font-size:15px;font-weight:700;color:var(--dark2);margin-bottom:16px;">
+            <i class="fas fa-pen-nib" style="color:var(--blue);margin-right:8px;"></i>Leave a Comment
+          </p>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <input id="comment-name" type="text" placeholder="Your name" style="padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'Manrope',sans-serif;outline:none;background:#fff;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--blue)';" onblur="this.style.borderColor='var(--border)';">
+            <textarea id="comment-text" rows="4" placeholder="Share your thoughts..." style="padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'Manrope',sans-serif;outline:none;resize:vertical;background:#fff;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--blue)';" onblur="this.style.borderColor='var(--border)';"></textarea>
+            <button onclick="submitComment()" style="align-self:flex-end;background:var(--blue);color:#fff;border:none;padding:12px 30px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif;transition:background 0.2s;display:inline-flex;align-items:center;gap:8px;" onmouseover="this.style.background='var(--blue-dark)';" onmouseout="this.style.background='var(--blue)';">
+              Post Comment <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="blog-page-grid">
+    <div id="blog-dynamic-grid" class="blog-full-grid">
+      <!-- Skeleton cards shown on first load -->
+      <div class="blog-full-card" style="pointer-events:none;">
+        <div style="height:200px;background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;"></div>
+        <div style="padding:20px 22px;"><div style="height:12px;background:#f1f5f9;border-radius:6px;margin-bottom:10px;width:60%;animation:shimmer 1.4s infinite;"></div><div style="height:18px;background:#f1f5f9;border-radius:6px;margin-bottom:10px;animation:shimmer 1.4s infinite;"></div><div style="height:13px;background:#f1f5f9;border-radius:6px;width:80%;animation:shimmer 1.4s infinite;"></div></div>
+      </div>
+      <div class="blog-full-card" style="pointer-events:none;">
+        <div style="height:200px;background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;"></div>
+        <div style="padding:20px 22px;"><div style="height:12px;background:#f1f5f9;border-radius:6px;margin-bottom:10px;width:60%;animation:shimmer 1.4s infinite;"></div><div style="height:18px;background:#f1f5f9;border-radius:6px;margin-bottom:10px;animation:shimmer 1.4s infinite;"></div><div style="height:13px;background:#f1f5f9;border-radius:6px;width:80%;animation:shimmer 1.4s infinite;"></div></div>
+      </div>
+      <div class="blog-full-card" style="pointer-events:none;">
+        <div style="height:200px;background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;"></div>
+        <div style="padding:20px 22px;"><div style="height:12px;background:#f1f5f9;border-radius:6px;margin-bottom:10px;width:60%;animation:shimmer 1.4s infinite;"></div><div style="height:18px;background:#f1f5f9;border-radius:6px;margin-bottom:10px;animation:shimmer 1.4s infinite;"></div><div style="height:13px;background:#f1f5f9;border-radius:6px;width:80%;animation:shimmer 1.4s infinite;"></div></div>
+      </div>
+    </div>
+    <div id="static-posts-section">
+      <div style="margin-top:48px;padding-top:48px;border-top:1px solid var(--border);">
+        <h3 style="font-size:22px;font-weight:800;color:var(--dark2);margin-bottom:28px;"><i class="fas fa-archive" style="color:var(--text-muted);margin-right:8px;"></i> Earlier Articles</h3>
+        <div class="blog-full-grid">
+          <div class="blog-full-card" onclick="openStaticPost('stem-africa')" style="cursor:pointer;">
+            <div class="blog-full-img"><img src="https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000224939.jpg"alt=""><span class="blog-tag2">STEM Trends</span></div>
+            <div class="blog-full-body">
+              <div class="blog-full-meta"><span><i class="fas fa-calendar-alt"></i> Jan 15, 2025</span><span><i class="fas fa-clock"></i> 5 min read</span></div>
+              <h3>The Future of STEM Education in Africa</h3>
+              <p>Exploring how hands-on STEM training is shaping the next generation of African innovators.</p>
+              <div class="blog-author"><div class="blog-author-name"><i class="fas fa-user-circle"></i> JTES Team</div><span class="read-more">Read more <i class="fas fa-arrow-right"></i></span></div>
+            </div>
+          </div>
+          <div class="blog-full-card" onclick="openStaticPost('arduino')" style="cursor:pointer;">
+            <div class="blog-full-img"><img src="https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000224882.jpg" alt=""><span class="blog-tag2">Robotics Tutorials</span></div>
+            <div class="blog-full-body">
+              <div class="blog-full-meta"><span><i class="fas fa-calendar-alt"></i> Jan 10, 2025</span><span><i class="fas fa-clock"></i> 8 min read</span></div>
+              <h3>Getting Started with Arduino</h3>
+              <p>A comprehensive introduction to Arduino and embedded systems programming for students and hobbyists.</p>
+              <div class="blog-author"><div class="blog-author-name"><i class="fas fa-user-circle"></i> JTES Team</div><span class="read-more">Read more <i class="fas fa-arrow-right"></i></span></div>
+            </div>
+          </div>
+          <div class="blog-full-card" onclick="openStaticPost('iot-smarthomes')" style="cursor:pointer;">
+            <div class="blog-full-img"><img src="https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/IMG_20260204_165248_345.jpg" alt=""><span class="blog-tag2">AI & IoT</span></div>
+            <div class="blog-full-body">
+              <div class="blog-full-meta"><span><i class="fas fa-calendar-alt"></i> Jan 5, 2025</span><span><i class="fas fa-clock"></i> 6 min read</span></div>
+              <h3 class="blue">How IoT is Revolutionising Smart Homes</h3>
+              <p>Discover how IoT devices are making homes more convenient and energy efficient across Ghana.</p>
+              <div class="blog-author"><div class="blog-author-name"><i class="fas fa-user-circle"></i> JTES Team</div><span class="read-more">Read more <i class="fas fa-arrow-right"></i></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="newsletter-section">
+    <div class="nl-inner">
+      <div class="nl-icon-wrap"><i class="fas fa-envelope-open-text"></i></div>
+      <h2>Stay Ahead with <span>JTES</span></h2>
+      <p>Join our exclusive community. Get event invites, new blog posts, STEM breakthroughs and tech insights from Ghana's leading technology team — straight to your inbox.</p>
+
+      <div class="nl-perks">
+        <div class="nl-perk"><i class="fas fa-calendar-star"></i> Exclusive Events</div>
+        <div class="nl-perk"><i class="fas fa-newspaper"></i> Latest Articles</div>
+        <div class="nl-perk"><i class="fas fa-bolt"></i> Tech Insights</div>
+        <div class="nl-perk"><i class="fas fa-trophy"></i> STEM News</div>
+      </div>
+
+      <div class="nl-card">
+        <div class="nl-fields">
+          <div class="nl-field-row">
+            <input class="nl-input" type="text" id="nl-name" placeholder="👤  Your name">
+            <input class="nl-input" type="email" id="nl-email" placeholder="✉️  Your email address">
+          </div>
+          <button class="nl-submit-btn" id="nl-btn" onclick="subscribeNewsletter()">
+            <i class="fas fa-paper-plane"></i> Subscribe Now — It's Free
+          </button>
+        </div>
+        <p class="nl-msg" id="nl-msg"></p>
+      </div>
+      <p class="nl-fine">🔒 Zero spam. Unsubscribe with one click, anytime.</p>
+    </div>
+  </div>
+
+
+<footer>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <svg width="28" height="28" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="#1E293B"/><path d="M10 28 L20 12 L30 28" stroke="#2563EB" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="20" r="3" fill="#fff"/></svg>
+          <span>JASSAN</span>
+        </div>
+        <p>Empowering Africa through innovative technology solutions, quality STEM education, and reliable electrical services.</p>
+<div class="social-icons">
+  <a class="social-icon" href="https://www.facebook.com/share/18faNx8Dv2/"><i class="fab fa-facebook-f"></i></a>
+  <a class="social-icon" href="https://youtube.com/@therobotseries?si=xlG2jzS2aUnC-pyV"><i class="fab fa-youtube"></i></a>
+  <a class="social-icon" href="#"><i class="fab fa-instagram"></i></a>
+  <a class="social-icon" href="https://www.linkedin.com/in/assan-james-201016230?utm_source=share_via&utm_content=profile&utm_medium=member_android"><i class="fab fa-linkedin-in"></i></a>
+  <a class="social-icon" href="https://wa.me/233548029027"><i class="fas fa-comment"></i></a>
+</div>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <a href="about.html">About Us</a>
+        <a href="services.html">Our Services</a>
+            <a href="gallery.html">Animation-Dot</a>
+        <a href="projects.html">Project Space</a>
+        <a href="blog.html">Blog</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <div class="footer-col">
+        <h4>Our Services</h4>
+        <a href="#">STEM & Robotics Education</a>
+        <a href="#">Research & Development</a>
+        <a href="#">Electrical Services</a>
+        <a href="#" class="hover-blue" style="color:var(--blue-light);">→ IoT & Smart Automation</a>
+        <a href="#">Curriculum Development</a>
+        <a href="#">Component Sales</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contact Us</h4>
+        <div class="footer-contact">
+          <div class="contact-icon"><i class="fas fa-phone"></i></div>
+          <div>0548029027<br>0203212915</div>
+        </div>
+        <div class="footer-contact">
+          <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+          <div><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3b515a48485a554f5e5853555457545c525e487b5c565a525715585456">[email&#160;protected]</a></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 JASSAN Technologies and Electrical Services. All Rights Reserved.</p>
+      <div class="footer-bottom-links">
+    <a href="admin.html" id="admin-link" title="" style="opacity:0;font-size:1px;color:transparent;user-select:none;position:absolute;">·</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
+
+
+<!-- ── FLOATING ADMIN BUTTON ── -->
+<div id="admin-pwd-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="background:#fff;border-radius:20px;padding:40px 32px;max-width:360px;width:90%;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,0.3);animation:popUp 0.3s cubic-bezier(0.34,1.56,0.64,1);">
+    <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--blue-dark));display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <i class="fas fa-lock" style="color:#fff;font-size:22px;"></i>
+    </div>
+    <h3 style="font-size:22px;font-weight:900;color:var(--dark2);margin-bottom:6px;">Admin Access</h3>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;">Enter your password to open the admin panel.</p>
+    <input type="password" id="float-pwd-input" placeholder="Enter password"
+      style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-family:'Manrope',sans-serif;outline:none;margin-bottom:10px;text-align:center;letter-spacing:4px;"
+      onkeydown="if(event.key==='Enter') checkAdminPwd()">
+    <p id="float-pwd-error" style="color:#ef4444;font-size:13px;margin-bottom:10px;display:none;"><i class="fas fa-exclamation-circle"></i> Incorrect password.</p>
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeAdminModal()" style="flex:1;padding:12px;border-radius:10px;border:1.5px solid var(--border);background:#f8fafc;font-size:14px;font-weight:600;cursor:pointer;font-family:'Manrope',sans-serif;">Cancel</button>
+      <button onclick="checkAdminPwd()" style="flex:1;padding:12px;border-radius:10px;border:none;background:var(--blue);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif;">Enter <i class="fas fa-arrow-right"></i></button>
+    </div>
+  </div>
+</div>
+
+<button id="float-admin-btn" onclick="openAdminModal()"
+  style="position:fixed;bottom:28px;right:28px;width:56px;height:56px;border-radius:50%;background:var(--blue);color:#fff;border:none;font-size:26px;cursor:pointer;z-index:999;box-shadow:0 8px 24px rgba(37,99,235,0.45);display:flex;align-items:center;justify-content:center;transition:all 0.2s;font-weight:300;"
+  title="Post">+</button>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></body>
+
+<script>
+
+
+// ===== PAGE NAVIGATION =====
+function showPage(name, anchor) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + name);
+  if (navEl) navEl.classList.add('active');
+  if (anchor) {
+    setTimeout(() => {
+      const el = document.getElementById(anchor);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  } else {
+    window.scrollTo({ top: 0 });
+  }
+  // Restart that page's carousel
+  restartCarousel(name);
+}
+
+// ===== CAROUSEL ENGINE =====
+var carousels = {};
+
+function initCarousel(id) {
+  var slides = document.querySelectorAll('#track-' + id + ' .carousel-slide');
+  if (!slides.length) return;
+  carousels[id] = { current: 0, total: slides.length, timer: null };
+  goToSlide(id, 0);
+  startAutoPlay(id);
+}
+
+function goToSlide(id, index) {
+  var c = carousels[id];
+  if (!c) return;
+  var slides = document.querySelectorAll('#track-' + id + ' .carousel-slide');
+  var dots   = document.querySelectorAll('#dots-' + id + ' .carousel-dot');
+  var track  = document.getElementById('track-' + id);
+  if (!track) return;
+
+  slides[c.current].classList.remove('active');
+  if (dots[c.current]) dots[c.current].classList.remove('active');
+
+  c.current = (index + c.total) % c.total;
+
+  slides[c.current].classList.add('active');
+  if (dots[c.current]) dots[c.current].classList.add('active');
+
+  // Use 100vw per slide — works on all screen sizes
+  // Measure the actual rendered slide width for pixel-perfect sliding
+  var slideW = slides[0].getBoundingClientRect().width || track.parentElement.clientWidth;
+  track.style.transform = 'translateX(-' + (c.current * slideW) + 'px)';
+
+  resetProgress(id);
+}
+
+function moveCarousel(id, dir) {
+  var c = carousels[id];
+  if (!c) return;
+  clearTimeout(c.timer);
+  goToSlide(id, c.current + dir);
+  startAutoPlay(id);
+}
+
+function startAutoPlay(id) {
+  var c = carousels[id];
+  if (!c) return;
+  clearTimeout(c.timer);
+  c.timer = setTimeout(function() {
+    goToSlide(id, c.current + 1);
+    startAutoPlay(id);
+  }, 5000);
+}
+
+function restartCarousel(id) {
+  var c = carousels[id];
+  if (!c) return;
+  goToSlide(id, 0);
+  startAutoPlay(id);
+}
+
+function resetProgress(id) {
+  var bar = document.getElementById('progress-' + id);
+  if (!bar) return;
+  bar.style.animation = 'none';
+  bar.offsetHeight;
+  bar.style.animation = 'progress-bar 5s linear forwards';
+}
+
+// ===== INIT ALL CAROUSELS =====
+document.addEventListener('DOMContentLoaded', () => {
+  ['home','about','services','projects','blog','contact'].forEach(id => initCarousel(id));
+
+  // Blog filter pills
+  document.querySelectorAll('.filter-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+    });
+  });
+
+  // Serve items
+  document.querySelectorAll('.serve-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.serve-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+
+  // Pause carousel on hover
+  document.querySelectorAll('.carousel').forEach(el => {
+    const id = el.id.replace('carousel-','');
+    el.addEventListener('mouseenter', () => { if(carousels[id]) clearTimeout(carousels[id].timer); });
+    el.addEventListener('mouseleave', () => startAutoPlay(id));
+  });
+});
+
+// ── FIREBASE CONFIG ──────────────────────────────────────
+var FB_DB_URL = 'https://jtes-website-default-rtdb.firebaseio.com';
+var allPosts      = [];
+var currentPostId = null;
+var currentFilter = 'All';
+
+// ── LOAD POSTS (Firebase Realtime DB — instant) ──────────
+function loadBlogPosts() {
+  // Show cached posts instantly while Firebase loads
+  var cached = localStorage.getItem('jtes_blog_cache');
+  if (cached) {
+    try { allPosts = JSON.parse(cached); renderBlogPosts(allPosts); } catch(e) {}
+  }
+
+  // Fetch posts AND public events in parallel
+  Promise.all([
+    fetch(FB_DB_URL + '/posts.json').then(function(r) { return r.json(); }),
+    fetch(FB_DB_URL + '/events.json').then(function(r) { return r.json(); })
+  ]).then(function(results) {
+    var postsData  = results[0];
+    var eventsData = results[1];
+
+    var posts = postsData ? Object.keys(postsData).map(function(k) {
+      return Object.assign({ id: k, _type: 'post' }, postsData[k]);
+    }) : [];
+
+    // Only include public events
+    var events = eventsData ? Object.keys(eventsData)
+      .map(function(k) { return Object.assign({ id: k, _type: 'event' }, eventsData[k]); })
+      .filter(function(e) { return e.visibility === 'public'; })
+      .map(function(e) {
+        // Map event fields to blog card fields
+        return {
+          id:          e.id,
+          _type:       'event',
+          title:       e.title,
+          summary:     e.description,
+          description: e.description,
+          category:    e.category || 'Event',
+          author:      'JTES Team',
+          readTime:    e.dateFull || 'Event',
+          mediaUrl:    e.mediaUrl,
+          mediaType:   'image',
+          date:        e.date,
+          likes:       e.likes    || 0,
+          dislikes:    e.dislikes || 0,
+          comments:    e.comments || [],
+          location:    e.location,
+          dateShort:   e.dateShort,
+          dateFull:    e.dateFull
+        };
+      }) : [];
+
+    var fresh = posts.concat(events)
+      .sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
+
+    allPosts = fresh;
+    renderBlogPosts(allPosts);
+    localStorage.setItem('jtes_blog_cache', JSON.stringify(fresh));
+  }).catch(function(e) {
+    if (!cached) {
+      document.getElementById('blog-dynamic-grid').innerHTML =
+        '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">Could not load posts. Please check your connection.</div>';
+    }
+  });
+}
+
+function renderBlogPosts(posts) {
+  var grid = document.getElementById('blog-dynamic-grid');
+  var staticSection = document.getElementById('static-posts-section');
+
+  if (!posts.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text-muted);"><i class="fas fa-newspaper" style="font-size:36px;color:#e2e8f0;display:block;margin-bottom:12px;"></i><p>No posts yet. Check back soon!</p></div>';
+    if (staticSection) staticSection.style.display = 'block';
+    return;
+  }
+
+  if (staticSection) staticSection.style.display = 'block';
+
+  grid.innerHTML = posts.map(function(p) {
+    var dateStr = new Date(p.date).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
+    var mediaHtml = p.mediaUrl
+      ? (p.mediaType === 'video'
+          ? '<video src="' + p.mediaUrl + '" style="width:100%;height:100%;object-fit:cover;" muted></video>'
+          : '<img src="' + p.mediaUrl + '" alt="' + p.title + '" style="width:100%;height:100%;object-fit:cover;">')
+      : '<div class="blog-full-img-placeholder">JTES</div>';
+
+    // Event cards get a special tag + date pill overlay
+    var tagHtml = p._type === 'event'
+      ? '<span class="blog-tag2" style="background:#f59e0b;">📅 ' + (p.dateShort || 'Event') + '</span>'
+      : '<span class="blog-tag2">' + (p.category || 'General') + '</span>';
+
+    var metaExtra = p._type === 'event' && p.location
+      ? '<span><i class="fas fa-map-marker-alt"></i> ' + p.location + '</span>'
+      : '<span><i class="fas fa-clock"></i> ' + (p.readTime || '5 min read') + '</span>';
+
+    return '<div class="blog-full-card" style="cursor:pointer;" onclick="openPost(\'' + p.id + '\')">' +
+      '<div class="blog-full-img">' + mediaHtml + tagHtml + '</div>' +
+      '<div class="blog-full-body">' +
+        '<div class="blog-full-meta">' +
+          '<span><i class="fas fa-calendar-alt"></i> ' + dateStr + '</span>' +
+          metaExtra +
+        '</div>' +
+        '<h3>' + p.title + '</h3>' +
+        '<p>' + p.summary.substring(0, 110) + (p.summary.length > 110 ? '...' : '') + '</p>' +
+        '<div class="blog-author">' +
+          '<div class="blog-author-name"><i class="fas fa-user-circle"></i> ' + (p.author || 'JTES Team') + '</div>' +
+          '<div style="display:flex;gap:12px;font-size:13px;color:var(--text-muted);">' +
+            '<span><i class="fas fa-thumbs-up" style="color:var(--blue);"></i> ' + (p.likes || 0) + '</span>' +
+            '<span><i class="fas fa-thumbs-down"></i> ' + (p.dislikes || 0) + '</span>' +
+            '<span><i class="fas fa-comment" style="color:var(--blue);"></i> ' + (p.comments ? (Array.isArray(p.comments) ? p.comments.length : Object.keys(p.comments).length) : 0) + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ── FILTER ───────────────────────────────────────────────
+document.querySelectorAll('.filter-pill').forEach(function(pill) {
+  pill.addEventListener('click', function() {
+    document.querySelectorAll('.filter-pill').forEach(function(p) { p.classList.remove('active'); });
+    pill.classList.add('active');
+    currentFilter = pill.textContent.trim();
+    var filtered = currentFilter === 'All' ? allPosts : allPosts.filter(function(p) { return p.category === currentFilter; });
+    renderBlogPosts(filtered);
+  });
+});
+
+// ── OPEN POST MODAL ──────────────────────────────────────
+function openPost(id) {
+  var post = allPosts.find(function(p) { return p.id === id; });
+  if (!post) return;
+  currentPostId = id;
+
+  // Media
+  var mediaDiv = document.getElementById('modal-media');
+  if (post.mediaUrl) {
+    mediaDiv.style.display = 'block';
+    mediaDiv.innerHTML = post.mediaType === 'video'
+      ? '<video src="' + post.mediaUrl + '" controls style="width:100%;height:100%;object-fit:cover;display:block;"></video>'
+      : '<img src="' + post.mediaUrl + '" style="width:100%;height:100%;object-fit:cover;display:block;" alt="' + post.title + '">';
+  } else {
+    mediaDiv.style.display = 'none';
+    mediaDiv.innerHTML = '';
+  }
+
+  document.getElementById('modal-cat').textContent    = post.category || 'General';
+  document.getElementById('modal-date').innerHTML     = '<i class="fas fa-calendar-alt"></i> ' + new Date(post.date).toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('modal-read').innerHTML = post._type === 'event'
+    ? '<i class="fas fa-map-marker-alt"></i> ' + (post.location || 'JTES, Kumasi')
+    : '<i class="fas fa-clock"></i> ' + (post.readTime || '5 min read');
+  document.getElementById('modal-title').textContent  = post.title;
+
+  if (post._type === 'event') {
+    var evtDetails = '';
+    if (post.dateFull && post.dateFull !== 'To be announced') evtDetails = '\n\n📅 ' + post.dateFull;
+    if (post.location) evtDetails += '\n📍 ' + post.location;
+    document.getElementById('modal-content').textContent = (post.summary || post.description || '') + evtDetails;
+  } else {
+    document.getElementById('modal-content').innerHTML = post.content || post.summary;
+  }
+  document.getElementById('modal-likes').textContent    = post.likes || 0;
+  document.getElementById('modal-dislikes').textContent = post.dislikes || 0;
+
+  // Normalise comments to array
+  var comments = normaliseComments(post.comments);
+  renderComments(comments);
+  var modal = document.getElementById('post-modal');
+  modal.style.display = 'block';
+  modal.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+
+// Convert Firebase object {key: comment} or array to plain array
+function normaliseComments(raw) {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  return Object.values(raw);
+}
+
+function closeModal() {
+  document.getElementById('post-modal').style.display = 'none';
+  document.body.style.overflow = '';
+  currentPostId = null;
+}
+
+// Escape key closes the fullscreen reader
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && document.getElementById('post-modal').style.display === 'block') closeModal();
+});
+
+// ── REACTIONS ────────────────────────────────────────────
+async function reactPost(type) {
+  if (!currentPostId) return;
+  var reacted = JSON.parse(localStorage.getItem('jtes_reacted') || '{}');
+  if (reacted[currentPostId]) return;
+
+  var field = type === 'like' ? 'likes' : 'dislikes';
+  var post  = allPosts.find(function(p) { return p.id === currentPostId; });
+  if (!post) return;
+  var newVal = (post[field] || 0) + 1;
+
+  try {
+    await fetch(FB_DB_URL + '/posts/' + currentPostId + '.json', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [field]: newVal })
+    });
+    document.getElementById('modal-' + field).textContent = newVal;
+    post[field] = newVal;
+    reacted[currentPostId] = type;
+    localStorage.setItem('jtes_reacted', JSON.stringify(reacted));
+    renderBlogPosts(currentFilter === 'All' ? allPosts : allPosts.filter(function(p) { return p.category === currentFilter; }));
+  } catch(e) { console.error('React error:', e); }
+}
+
+// ── COMMENTS ─────────────────────────────────────────────
+function renderComments(comments) {
+  var arr = normaliseComments(comments);
+  var container = document.getElementById('modal-comments');
+  document.getElementById('modal-comment-count').textContent = arr.length;
+  if (!arr.length) {
+    container.innerHTML = '<p style="color:var(--text-muted);font-size:14px;text-align:center;padding:16px 0;">No comments yet. Be the first to comment!</p>';
+    return;
+  }
+  // Store key→comment map for deletion
+  var post = allPosts.find(function(p) { return p.id === currentPostId; });
+  var rawComments = (post && post.comments && !Array.isArray(post.comments)) ? post.comments : null;
+
+  container.innerHTML = arr.map(function(c, i) {
+    // Find Firebase key if available
+    var fbKey = rawComments ? Object.keys(rawComments).find(function(k) { return rawComments[k].date === c.date && rawComments[k].name === c.name; }) : null;
+    var deleteBtn = fbKey
+      ? '<button onclick="deleteComment(\'' + fbKey + '\')" title="Delete comment" style="background:none;border:none;cursor:pointer;color:#cbd5e1;font-size:13px;padding:2px 6px;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.color=\'#ef4444\';this.style.background=\'#fee2e2\';" onmouseout="this.style.color=\'#cbd5e1\';this.style.background=\'none\';"><i class="fas fa-trash"></i></button>'
+      : '';
+    return '<div style="background:#f8fafc;border-radius:12px;padding:14px 16px;border:1px solid var(--border);">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
+        '<strong style="font-size:14px;color:var(--dark2);">' + c.name + '</strong>' +
+        '<div style="display:flex;align-items:center;gap:6px;">' +
+          '<span style="font-size:11px;color:var(--text-muted);">' + new Date(c.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) + '</span>' +
+          deleteBtn +
+        '</div>' +
+      '</div>' +
+      '<p style="font-size:13px;color:var(--text-muted);line-height:1.6;">' + c.text + '</p>' +
+    '</div>';
+  }).join('');
+}
+
+async function deleteComment(fbKey) {
+  if (!currentPostId || !confirm('Delete this comment?')) return;
+  var post = allPosts.find(function(p) { return p.id === currentPostId; });
+  if (!post) return;
+  var basePath = post._type === 'event'
+    ? FB_DB_URL + '/events/' + currentPostId + '/comments/' + fbKey + '.json'
+    : FB_DB_URL + '/posts/'  + currentPostId + '/comments/' + fbKey + '.json';
+  try {
+    await fetch(basePath, { method: 'DELETE' });
+    // Reload comments
+    var listPath = post._type === 'event'
+      ? FB_DB_URL + '/events/' + currentPostId + '/comments.json'
+      : FB_DB_URL + '/posts/'  + currentPostId + '/comments.json';
+    var r     = await fetch(listPath);
+    var cdata = await r.json();
+    post.comments = cdata || {};
+    renderComments(post.comments);
+    localStorage.setItem('jtes_blog_cache', JSON.stringify(allPosts));
+    renderBlogPosts(currentFilter === 'All' ? allPosts : allPosts.filter(function(p) { return p.category === currentFilter; }));
+  } catch(e) { console.error('Delete comment error:', e); alert('Failed to delete comment.'); }
+}
+
+async function submitComment() {
+  if (!currentPostId) return;
+  var name = document.getElementById('comment-name').value.trim();
+  var text = document.getElementById('comment-text').value.trim();
+  if (!name || !text) { alert('Please enter your name and comment.'); return; }
+
+  var post = allPosts.find(function(p) { return p.id === currentPostId; });
+  if (!post) return;
+
+  var newComment = { name: name, text: text, date: new Date().toISOString() };
+
+  // Use correct Firebase path depending on post type
+  var basePath = post._type === 'event'
+    ? FB_DB_URL + '/events/' + currentPostId + '/comments.json'
+    : FB_DB_URL + '/posts/'  + currentPostId + '/comments.json';
+
+  try {
+    await fetch(basePath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newComment)
+    });
+
+    // Reload comments from Firebase to get latest
+    var r    = await fetch(basePath);
+    var cdata = await r.json();
+    var comments = cdata ? cdata : {};  // keep as object so keys are preserved
+    post.comments = comments;
+
+    document.getElementById('comment-name').value = '';
+    document.getElementById('comment-text').value = '';
+    renderComments(comments);
+    localStorage.setItem('jtes_blog_cache', JSON.stringify(allPosts));
+    renderBlogPosts(currentFilter === 'All' ? allPosts : allPosts.filter(function(p) { return p.category === currentFilter; }));
+  } catch(e) { console.error('Comment error:', e); alert('Failed to post comment. Please try again.'); }
+}
+
+// ── FLOATING ADMIN BUTTON ──────────────────────────────
+function openAdminModal() {
+  var modal = document.getElementById('admin-pwd-modal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  setTimeout(function() { document.getElementById('float-pwd-input').focus(); }, 100);
+}
+function closeAdminModal() {
+  document.getElementById('admin-pwd-modal').style.display = 'none';
+  document.getElementById('float-pwd-input').value = '';
+  document.getElementById('float-pwd-error').style.display = 'none';
+  document.body.style.overflow = '';
+}
+function checkAdminPwd() {
+  var val = document.getElementById('float-pwd-input').value;
+  if (val === 'JTES@2025') {
+    window.location.href = 'admin.html';
+  } else {
+    document.getElementById('float-pwd-error').style.display = 'block';
+    document.getElementById('float-pwd-input').value = '';
+    document.getElementById('float-pwd-input').focus();
+  }
+}
+// hover effect on float btn
+var floatBtn = document.getElementById('float-admin-btn');
+if (floatBtn) {
+  floatBtn.addEventListener('mouseenter', function() { this.style.transform = 'scale(1.1)'; this.style.boxShadow = '0 12px 32px rgba(37,99,235,0.55)'; });
+  floatBtn.addEventListener('mouseleave', function() { this.style.transform = 'scale(1)'; this.style.boxShadow = '0 8px 24px rgba(37,99,235,0.45)'; });
+}
+
+
+// ── STATIC EARLIER ARTICLES ──────────────────────────────
+var staticArticles = {
+  'stem-africa': {
+    title: 'The Future of STEM Education in Africa',
+    category: 'STEM Trends',
+    date: 'Jan 15, 2025',
+    readTime: '5 min read',
+    author: 'JTES Team',
+    image: 'https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000224939.jpg',
+    likes: 24,
+    dislikes: 2,
+    content: `
+      <h2>A New Era for African Education</h2>
+      <p>Across Africa, a quiet revolution is taking place in classrooms, workshops, and community centres. Young people — once limited to rote learning and theory-heavy curricula — are now building robots, writing code, and designing electronic circuits. At the centre of this transformation is a growing commitment to hands-on STEM (Science, Technology, Engineering, and Mathematics) education.</p>
+
+      <p>JASSAN Technologies & Electrical Services (JTES) has been at the forefront of this movement in Ghana, delivering practical technology training to students from primary school through to tertiary institutions. But why does STEM education matter so urgently for Africa right now?</p>
+
+      <h2>The Skills Gap Challenge</h2>
+      <p>Africa has one of the youngest populations in the world — and that is both its greatest opportunity and its most pressing challenge. By 2050, one in four people on the planet will be African. If that generation enters adulthood without technical skills suited to a rapidly automating global economy, the consequences could be severe.</p>
+
+      <p>STEM education is not just about producing engineers and scientists. It cultivates <strong>critical thinking, problem-solving, and creativity</strong> — skills that are universally valuable across every sector of the economy. A student who learns to debug an Arduino sketch develops logical reasoning. A student who builds a solar-powered irrigation prototype understands systems thinking. These are the foundations of innovation.</p>
+
+      <blockquote>
+        "We are not just teaching electronics — we are teaching students how to think like engineers and solve problems that matter to their communities."
+        <br><strong>— JTES Instructor</strong>
+      </blockquote>
+
+      <h2>What Hands-On Learning Looks Like</h2>
+      <p>At JTES workshops, students don't just read about circuits — they build them. They don't just watch videos about robotics — they program and compete with robots they assembled themselves. This experiential approach produces deeper learning outcomes than passive instruction alone.</p>
+
+      <p>Key areas of focus in JTES's STEM programmes include:</p>
+      <ul>
+        <li><strong>Robotics and Automation</strong> — using platforms like Arduino and Raspberry Pi to build autonomous systems</li>
+        <li><strong>Electrical Installation & Safety</strong> — hands-on wiring, circuit analysis, and fault-finding</li>
+        <li><strong>IoT and Smart Technology</strong> — connecting sensors and actuators to the internet for real-world applications</li>
+        <li><strong>Coding and Embedded Systems</strong> — from block-based programming for beginners to C++ for advanced students</li>
+      </ul>
+
+      <h2>Looking Ahead</h2>
+      <p>The future of STEM in Africa is bright — but it requires sustained investment in both infrastructure and educators. Schools need well-equipped labs. Teachers need ongoing professional development. And students need to see that a career in technology is attainable and rewarding.</p>
+
+      <p>JTES is committed to expanding its reach across Ghana and beyond, partnering with schools, NGOs, and government agencies to embed STEM into the fabric of African education. Because when Africa's youth are empowered with 21st-century skills, the entire continent benefits.</p>
+    `
+  },
+  'arduino': {
+    title: 'Getting Started with Arduino',
+    category: 'Robotics Tutorials',
+    date: 'Jan 10, 2025',
+    readTime: '8 min read',
+    author: 'JTES Team',
+    image: 'https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000224882.jpg',
+    likes: 38,
+    dislikes: 1,
+    content: `
+      <h2>What Is Arduino?</h2>
+      <p>Arduino is an open-source electronics platform based on easy-to-use hardware and software. It consists of a microcontroller board and a development environment (the Arduino IDE) that lets you write, compile, and upload code to the board. It is the starting point for millions of makers, hobbyists, and students worldwide — and for good reason.</p>
+
+      <p>Arduino boards are cheap, robust, and supported by an enormous community. Whether you want to blink an LED, read a temperature sensor, control a motor, or build a full robotic arm, Arduino is the right tool to start with.</p>
+
+      <h2>What You Will Need</h2>
+      <ul>
+        <li><strong>An Arduino Uno board</strong> (the most common beginner board)</li>
+        <li><strong>A USB cable</strong> (Type A to Type B) to connect to your computer</li>
+        <li><strong>The Arduino IDE</strong> — free to download from arduino.cc</li>
+        <li><strong>A breadboard, jumper wires, and an LED</strong> for your first project</li>
+        <li><strong>A 220Ω resistor</strong> (to protect your LED from burning out)</li>
+      </ul>
+
+      <h2>Your First Sketch: Blink</h2>
+      <p>In Arduino, programs are called <strong>sketches</strong>. Every sketch has two core functions: <code>setup()</code>, which runs once when the board powers on, and <code>loop()</code>, which runs repeatedly forever after.</p>
+
+      <p>The classic first project is blinking the onboard LED on pin 13. Open the Arduino IDE, paste this code, and upload it:</p>
+
+      <blockquote>
+        void setup() { pinMode(13, OUTPUT); }<br>
+        void loop() { digitalWrite(13, HIGH); delay(1000); digitalWrite(13, LOW); delay(1000); }
+      </blockquote>
+
+      <p>Upload the sketch and watch pin 13's LED blink once every second. You have just written and deployed your first embedded program. Congratulations!</p>
+
+      <h2>Understanding the Code</h2>
+      <ul>
+        <li><strong>pinMode(13, OUTPUT)</strong> — configures pin 13 as an output (it will send voltage out rather than read voltage in)</li>
+        <li><strong>digitalWrite(13, HIGH)</strong> — sets pin 13 to 5V, turning the LED on</li>
+        <li><strong>delay(1000)</strong> — pauses execution for 1000 milliseconds (1 second)</li>
+        <li><strong>digitalWrite(13, LOW)</strong> — sets pin 13 to 0V, turning the LED off</li>
+      </ul>
+
+      <h2>What to Build Next</h2>
+      <p>Once you have the blink sketch working, the natural next steps are:</p>
+      <ul>
+        <li>Read a push button and only blink the LED when the button is pressed</li>
+        <li>Use a potentiometer to control how fast the LED blinks</li>
+        <li>Connect a DHT11 sensor and print temperature readings to the serial monitor</li>
+        <li>Drive a servo motor to sweep back and forth — the foundation of robotic arms</li>
+      </ul>
+
+      <h2>Join the JTES Robotics Programme</h2>
+      <p>JTES runs regular hands-on Arduino and robotics workshops for students of all ages across Ghana. If you are interested in joining, contact us through the form on our website or follow our social media channels for upcoming workshop dates. The best way to learn is by doing — and we provide every component you need.</p>
+    `
+  },
+  'iot-smarthomes': {
+    title: 'How IoT is Revolutionising Smart Homes',
+    category: 'AI & IoT',
+    date: 'Jan 5, 2025',
+    readTime: '6 min read',
+    author: 'JTES Team',
+    image: 'https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/IMG_20260204_165248_345.jpg',
+    likes: 31,
+    dislikes: 3,
+    content: `
+      <h2>The Smart Home Revolution</h2>
+      <p>Not long ago, the idea of controlling your home's lights, security cameras, and air conditioning from your smartphone seemed like science fiction. Today, it is an affordable reality — and it is rapidly taking hold across Ghana and the broader West African region.</p>
+
+      <p>The Internet of Things (IoT) is the network of physical devices — from light bulbs to refrigerators — that are embedded with sensors, software, and connectivity, enabling them to collect and exchange data over the internet. When applied to the home, IoT creates what we call a <strong>smart home</strong>: an environment that responds intelligently to the needs of its occupants.</p>
+
+      <h2>Key Smart Home Technologies</h2>
+      <p>The ecosystem of smart home devices is growing rapidly. Here are the most impactful categories:</p>
+
+      <ul>
+        <li><strong>Smart Lighting</strong> — LED bulbs that can be dimmed, colour-changed, and scheduled remotely. Systems like Philips Hue or simple ESP8266-based DIY builds let you automate your lighting to save energy and enhance comfort.</li>
+        <li><strong>Smart Security</strong> — IP cameras, motion sensors, and smart locks that send real-time alerts to your phone. Homeowners in Accra and Kumasi are increasingly adopting these systems for peace of mind.</li>
+        <li><strong>Smart Energy Management</strong> — Smart meters and plug sockets that monitor electricity consumption, helping households cut bills and reduce waste — a critical concern given Ghana's power reliability challenges.</li>
+        <li><strong>Voice Assistants & Hubs</strong> — Devices like Amazon Echo or locally built solutions that act as the central brain of a smart home, coordinating all connected devices via voice command or automation rules.</li>
+      </ul>
+
+      <h2>IoT and Energy Efficiency in Ghana</h2>
+      <p>One of the most practical applications of smart home technology in Ghana is energy management. Erratic power supply and rising electricity tariffs make energy efficiency not just an environmental goal but an economic necessity. Smart plugs and automated systems can switch off appliances when not in use, ensuring that electricity is not wasted — even when occupants forget to turn things off.</p>
+
+      <blockquote>
+        "A smart home is not a luxury — in Ghana's context, it is a practical tool for reducing energy waste and improving security at an affordable cost."
+        <br><strong>— JTES IoT Department</strong>
+      </blockquote>
+
+      <h2>Building Your Own Smart Home with JTES</h2>
+      <p>At JTES, we design and install custom IoT solutions for residential and commercial properties. Using platforms like ESP32, Raspberry Pi, and Home Assistant, we build systems tailored to your specific needs and budget. From a single smart security camera to a fully integrated smart home system, we handle the design, installation, and training.</p>
+
+      <h2>The Road Ahead</h2>
+      <p>As internet infrastructure continues to improve across Ghana and mobile data costs fall, IoT adoption is set to accelerate. The smart homes of tomorrow will be more proactive — anticipating needs before occupants even express them. JTES is investing in training the next generation of IoT engineers who will build and maintain these systems. The future is connected, and Ghana is ready for it.</p>
+    `
+  }
+};
+
+function openStaticPost(id) {
+  var post = staticArticles[id];
+  if (!post) return;
+
+  currentPostId = 'static-' + id;
+
+  // Media
+  var media = document.getElementById('modal-media');
+  media.innerHTML = '<img src="' + post.image + '" style="width:100%;height:100%;object-fit:cover;display:block;">';
+
+  // Meta
+  document.getElementById('modal-cat').textContent = post.category;
+  document.getElementById('modal-date').innerHTML = '<i class="fas fa-calendar-alt"></i> ' + post.date;
+  document.getElementById('modal-read').innerHTML = '<i class="fas fa-clock"></i> ' + post.readTime;
+
+  // Title & content
+  document.getElementById('modal-title').textContent = post.title;
+  document.getElementById('modal-content').innerHTML = post.content;
+
+  // Reactions
+  document.getElementById('modal-likes').textContent = post.likes;
+  document.getElementById('modal-dislikes').textContent = post.dislikes;
+
+  // Comments (static posts have no Firebase comments)
+  document.getElementById('modal-comment-count').textContent = '0';
+  document.getElementById('modal-comments').innerHTML = '<p style="font-size:14px;color:var(--text-muted);font-style:italic;">No comments yet — be the first to leave one!</p>';
+
+  // Show modal
+  var modal = document.getElementById('post-modal');
+  modal.style.display = 'block';
+  modal.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+
+loadBlogPosts();
+
+// ── MOBILE MENU
+var menuBtn  = document.getElementById('menuBtn');
+var navLinks = document.querySelector('.nav-links');
+if (menuBtn) {
+  menuBtn.addEventListener('click', function(e) { e.stopPropagation(); navLinks.classList.toggle('open'); });
+}
+document.querySelectorAll('.nav-links a').forEach(function(link) {
+    // Skip the Services dropdown trigger — it needs its own tap logic
+    if (link.closest('.nav-dropdown') && !link.closest('.nav-dropdown-menu')) return;
+    link.addEventListener('click', function() { navLinks.classList.remove('open'); });
+});
+document.addEventListener('click', function(e) {
+  if (navLinks && !navLinks.contains(e.target) && menuBtn && !menuBtn.contains(e.target)) {
+    navLinks.classList.remove('open');
+  }
+});
+// ── NEWSLETTER SIGNUP ─────────────────────────────────────
+var SUB_BIN_NL  = '69befda1c3097a1dd5480987';
+var SUB_KEY_NL  = '$2a$10$d8wjYi.E/IcAmu515faPoesz/PUitzug7E4FJwqt6TdyABnaNAwiq';
+var SUB_URL_NL  = 'https://api.jsonbin.io/v3/b/' + SUB_BIN_NL;
+
+async function subscribeNewsletter() {
+  var name  = (document.getElementById('nl-name')  || {}).value || '';
+  var email = (document.getElementById('nl-email') || {}).value || '';
+  var msg   = document.getElementById('nl-msg');
+  var btn   = document.getElementById('nl-btn');
+  name  = name.trim();
+  email = email.trim();
+
+  if (!email || !email.includes('@')) {
+    msg.style.display = 'block';
+    msg.textContent = '⚠ Please enter a valid email address.';
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Subscribing...'; }
+
+  try {
+    // Fetch existing subscribers
+    var res   = await fetch(SUB_URL_NL + '/latest', { headers: { 'X-Master-Key': SUB_KEY_NL } });
+    var data  = await res.json();
+    var subs  = data.record.subscribers || [];
+
+    // Check duplicate
+    if (subs.find(function(s) { return s.email === email; })) {
+      msg.style.display = 'block';
+      msg.textContent = '✅ You are already subscribed!';
+      if (btn) { btn.disabled = false; btn.textContent = 'Subscribe'; }
+      return;
+    }
+
+    subs.push({ name: name || 'Subscriber', email: email, date: new Date().toISOString() });
+
+    await fetch(SUB_URL_NL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': SUB_KEY_NL, 'X-Bin-Versioning': 'false' },
+      body: JSON.stringify({ subscribers: subs })
+    });
+
+    msg.style.display = 'block';
+    msg.innerHTML = "🎉 <strong style='color:#fff;'>Welcome aboard!</strong> You'll now receive exclusive updates from JTES.";
+    if (document.getElementById('nl-name'))  document.getElementById('nl-name').value  = '';
+    if (document.getElementById('nl-email')) document.getElementById('nl-email').value = '';
+
+  } catch(e) {
+    msg.style.display = 'block';
+    msg.textContent = '✗ Something went wrong. Please try again.';
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Subscribe'; }
+}
+
+
+// ── SERVICES DROPDOWN MOBILE TOGGLE
+document.querySelectorAll('.nav-dropdown > a').forEach(function(link) {
+  link.addEventListener('click', function(e) {
+    if (window.innerWidth <= 900) {
+      e.preventDefault();
+      e.stopPropagation(); // prevent the document click from closing the nav
+      var parent = link.closest('.nav-dropdown');
+      var isOpen = parent.classList.contains('open');
+      // Toggle the submenu
+      parent.classList.toggle('open');
+      // If we just CLOSED the dropdown via second tap, also close the whole nav
+      if (isOpen) {
+        navLinks.classList.remove('open');
+      }
+    }
+  });
+});
+
+</script>
+
+<!-- ===== FLOATING SHOP CTA ===== -->
+<style>
+  .jtes-shop-fab {
+    position: fixed; bottom: 28px; left: 28px; z-index: 9500;
+    display: flex; align-items: center; text-decoration: none; cursor: pointer;
+    animation: jtesFabIn 0.6s cubic-bezier(.34,1.56,.64,1) 0.5s both;
+  }
+  @keyframes jtesFabIn {
+    0% { transform: translateY(40px) scale(0.6); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .jtes-shop-fab-float {
+    display: flex; align-items: center; position: relative;
+    animation: jtesFabFloat 6.5s ease-in-out infinite;
+  }
+  @keyframes jtesFabFloat {
+    0%   { transform: translate(0px, 0px) rotate(0deg); }
+    20%  { transform: translate(12px, -16px) rotate(2deg); }
+    40%  { transform: translate(-8px, -26px) rotate(-2deg); }
+    60%  { transform: translate(-16px, -8px) rotate(1.5deg); }
+    80%  { transform: translate(7px, 9px) rotate(-1deg); }
+    100% { transform: translate(0px, 0px) rotate(0deg); }
+  }
+  .jtes-shop-fab:hover .jtes-shop-fab-float { animation-play-state: paused; }
+  .jtes-shop-fab-ring {
+    position: absolute; inset: 0; border-radius: 50px;
+    box-shadow: 0 0 0 0 rgba(37,99,235,0.55);
+    animation: jtesFabPulse 2.4s ease-out infinite; pointer-events: none;
+  }
+  @keyframes jtesFabPulse {
+    0% { box-shadow: 0 0 0 0 rgba(37,99,235,0.55); }
+    70% { box-shadow: 0 0 0 18px rgba(37,99,235,0); }
+    100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
+  }
+  .jtes-shop-fab-badge {
+    position: absolute; top: -7px; right: -6px; background: #EF4444; color: #fff;
+    font-family: 'Manrope', sans-serif; font-size: 9px; font-weight: 800; padding: 3px 7px;
+    border-radius: 50px; box-shadow: 0 2px 8px rgba(239,68,68,0.5); z-index: 2; letter-spacing: 0.3px;
+    animation: jtesFabBadgeBlink 1.8s ease-in-out infinite;
+  }
+  @keyframes jtesFabBadgeBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+  .jtes-shop-fab-inner {
+    position: relative; display: flex; align-items: center; gap: 10px; overflow: hidden;
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    color: #fff; border-radius: 50px; padding: 13px 22px 13px 13px;
+    box-shadow: 0 10px 32px rgba(37,99,235,0.45), inset 0 1px 0 rgba(255,255,255,0.25);
+    transition: transform 0.25s, box-shadow 0.25s;
+  }
+  .jtes-shop-fab:hover .jtes-shop-fab-inner {
+    transform: scale(1.05);
+    box-shadow: 0 16px 40px rgba(37,99,235,0.55), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .jtes-shop-fab-shine {
+    position: absolute; top: 0; left: -60%; width: 45%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.45), transparent);
+    transform: skewX(-20deg); animation: jtesFabShine 3s ease-in-out infinite;
+  }
+  @keyframes jtesFabShine { 0% { left: -60%; } 35% { left: 130%; } 100% { left: 130%; } }
+  .jtes-shop-fab-icon {
+    width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
+    position: relative; z-index: 1;
+  }
+  .jtes-shop-fab-text {
+    font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 13.5px; letter-spacing: 0.2px;
+    white-space: nowrap; position: relative; z-index: 1; line-height: 1.25;
+  }
+  .jtes-shop-fab-text small {
+    display: block; font-size: 10px; font-weight: 600; opacity: 0.85; letter-spacing: 0.3px;
+  }
+  @media (max-width: 560px) {
+    .jtes-shop-fab { bottom: 20px; left: 20px; }
+    .jtes-shop-fab-text { display: none; }
+    .jtes-shop-fab-inner { padding: 13px; }
+    .jtes-shop-fab-float { animation-name: jtesFabFloatSmall; }
+  }
+  @keyframes jtesFabFloatSmall {
+    0%   { transform: translate(0px, 0px); }
+    25%  { transform: translate(8px, -10px); }
+    50%  { transform: translate(-6px, -16px); }
+    75%  { transform: translate(-4px, 4px); }
+    100% { transform: translate(0px, 0px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .jtes-shop-fab, .jtes-shop-fab-float, .jtes-shop-fab-ring, .jtes-shop-fab-badge, .jtes-shop-fab-shine {
+      animation: none !important;
+    }
+  }
+</style>
+<a href="sales.html" class="jtes-shop-fab" aria-label="Shop JTES products">
+  <span class="jtes-shop-fab-float">
+    <span class="jtes-shop-fab-ring"></span>
+    <span class="jtes-shop-fab-badge">SALE</span>
+    <span class="jtes-shop-fab-inner">
+      <span class="jtes-shop-fab-shine"></span>
+      <span class="jtes-shop-fab-icon"><i class="fas fa-bag-shopping"></i></span>
+      <span class="jtes-shop-fab-text">Shop Now<small>Kits, tools &amp; components</small></span>
+    </span>
+  </span>
+</a>
+
+</body>
+</html>

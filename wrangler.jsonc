@@ -1,0 +1,9 @@
+{
+  "name": "jtes",
+  "compatibility_date": "2026-06-29",
+  "main": "_worker.js",
+  "assets": {
+    "directory": "./",
+    "binding": "ASSETS"
+  }
+}

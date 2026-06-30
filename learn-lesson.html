@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JTES Learn — Lesson</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<style>
+:root {
+  --blue:#2563EB;--blue-light:#3B82F6;--blue-dark:#1D4ED8;
+  --dark:#0A0F1E;--dark2:#0F172A;--navy:#1E3A8A;
+  --text:#1e293b;--text-muted:#64748b;--white:#fff;
+  --gray-light:#f8fafc;--border:#e2e8f0;
+  --green:#10b981;--amber:#f59e0b;--red:#ef4444;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Manrope',sans-serif;color:var(--text);background:var(--gray-light);overflow-x:hidden;}
+
+/* TOPBAR */
+.lesson-topbar{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  background:#fff;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:0;padding:0;height:64px;
+  box-shadow:0 1px 8px rgba(0,0,0,0.06); flex-direction:column; justify-content:center;
+}
+.topbar-row{ display:flex;align-items:center;gap:14px;padding:0 24px;width:100%;height:48px;}
+.topbar-back{display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;transition:color 0.2s;background:none;border:none;font-family:'Manrope',sans-serif;}
+.topbar-back:hover{color:var(--blue);}
+.topbar-divider{width:1px;height:28px;background:var(--border);flex-shrink:0;}
+.topbar-course{font-size:14px;font-weight:700;color:var(--dark2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.topbar-progress-wrap{display:flex;align-items:center;gap:10px;}
+.topbar-pct{font-size:13px;font-weight:800;color:var(--blue);min-width:32px;text-align:right;}
+.timer-badge{display:flex;align-items:center;gap:6px;background:#FEF3C7;color:#92400e;border:1px solid #FDE68A;padding:6px 14px;border-radius:8px;font-size:13px;font-weight:700;}
+.timer-badge.urgent{background:#FEE2E2;color:#991b1b;border-color:#FECACA;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+/* step dots bar */
+.topbar-steps{ width:100%;height:4px;display:flex;gap:2px;padding:0 24px;box-sizing:border-box;}
+.step-dot{ flex:1;height:4px;border-radius:2px;background:#e2e8f0;transition:background 0.3s;}
+.step-dot.done{background:var(--green);}
+.step-dot.active{background:var(--blue);}
+
+/* LAYOUT */
+.lesson-layout{display:flex;padding-top:64px;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{
+  width:300px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);
+  position:fixed;top:64px;bottom:0;left:0;overflow-y:auto;
+  transition:transform 0.3s;z-index:500;
+}
+.sidebar-header{padding:20px;border-bottom:1px solid var(--border);}
+.sidebar-header h3{font-size:15px;font-weight:800;color:var(--dark2);margin-bottom:4px;}
+.sidebar-header p{font-size:12px;color:var(--text-muted);}
+.module-group{border-bottom:1px solid #f1f5f9;}
+.module-title{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;font-size:13px;font-weight:800;color:var(--dark2);
+  cursor:pointer;transition:background 0.15s;background:#f8fafc;
+}
+.module-title:hover{background:#f1f5f9;}
+.module-lessons{display:none;}
+.module-lessons.open{display:block;}
+.lesson-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 20px 12px 28px;cursor:pointer;
+  transition:background 0.15s;border-left:3px solid transparent;
+  text-decoration:none;
+}
+.lesson-item:hover{background:#f8fafc;}
+.lesson-item.active{background:#EFF6FF;border-left-color:var(--blue);}
+.lesson-item.completed .li-icon{color:var(--green);}
+.lesson-item.locked .li-name,.lesson-item.locked .li-type{color:var(--text-muted);}
+.li-icon{font-size:14px;color:var(--text-muted);width:16px;text-align:center;flex-shrink:0;}
+.li-icon.active-icon{color:var(--blue);}
+.li-info{flex:1;min-width:0;}
+.li-name{font-size:13px;font-weight:600;color:var(--dark2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.li-type{font-size:11px;color:var(--text-muted);font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+.li-dur{font-size:11px;color:var(--text-muted);flex-shrink:0;}
+
+/* MAIN CONTENT */
+.lesson-content{margin-left:300px;flex:1;padding:32px;max-width:900px;}
+
+/* VIDEO */
+.video-wrap{background:#000;border-radius:16px;overflow:hidden;margin-bottom:28px;aspect-ratio:16/9;position:relative;}
+.video-wrap iframe,.video-wrap video{width:100%;height:100%;border:none;display:block;}
+.video-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0A0F1E,#1E3A8A);flex-direction:column;gap:12px;color:rgba(255,255,255,0.4);}
+.video-placeholder i{font-size:56px;}
+.video-placeholder p{font-size:14px;}
+
+/* LESSON HEADER */
+.lesson-header{margin-bottom:24px;}
+.lesson-type-badge{display:inline-flex;align-items:center;gap:6px;background:#EFF6FF;color:var(--blue);padding:5px 12px;border-radius:50px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.lesson-header h1{font-size:28px;font-weight:900;color:var(--dark2);margin-bottom:8px;line-height:1.2;}
+.lesson-header-meta{display:flex;gap:20px;font-size:13px;color:var(--text-muted);}
+.lesson-header-meta span{display:flex;align-items:center;gap:6px;}
+
+/* RICH CONTENT */
+.rich-content{background:#fff;border-radius:16px;border:1px solid var(--border);padding:32px;margin-bottom:24px;line-height:1.8;font-size:15px;}
+.rich-content h2{font-size:20px;font-weight:800;color:var(--dark2);margin:24px 0 12px;}
+.rich-content h3{font-size:17px;font-weight:700;color:var(--dark2);margin:20px 0 10px;}
+.rich-content p{margin-bottom:14px;color:var(--text);}
+.rich-content ul,.rich-content ol{padding-left:24px;margin-bottom:14px;}
+.rich-content li{margin-bottom:6px;color:var(--text);}
+.rich-content pre{border-radius:12px;overflow:auto;margin:16px 0;}
+.rich-content code:not(pre code){background:#f1f5f9;padding:2px 8px;border-radius:5px;font-size:13px;color:var(--blue-dark);}
+.rich-content img{max-width:100%;border-radius:10px;margin:12px 0;}
+.rich-content blockquote{border-left:4px solid var(--blue);padding:12px 20px;background:#f8fafc;border-radius:0 10px 10px 0;margin:16px 0;font-style:italic;color:var(--text-muted);}
+.callout{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:12px;padding:16px 20px;margin:16px 0;display:flex;gap:12px;}
+.callout i{color:var(--blue);margin-top:2px;flex-shrink:0;}
+.callout p{margin:0;font-size:14px;}
+
+/* QUIZ - SoloLearn style one-at-a-time */
+.quiz-card {
+  background:#fff; border-radius:20px; border:1px solid var(--border);
+  overflow:hidden; margin-bottom:24px;
+}
+.quiz-card-header {
+  background:linear-gradient(135deg,#0A0F1E,#1E3A8A); padding:20px 28px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.quiz-card-header-left { display:flex; flex-direction:column; gap:4px; }
+.quiz-qnum { font-size:12px; font-weight:700; color:rgba(255,255,255,0.6); text-transform:uppercase; letter-spacing:1px; }
+.quiz-qcount { font-size:18px; font-weight:900; color:#fff; }
+.quiz-progress-dots { display:flex; gap:6px; }
+.qp-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.25); transition:all 0.3s; }
+.qp-dot.answered { background:rgba(255,255,255,0.9); }
+.qp-dot.correct { background:var(--green); }
+.qp-dot.wrong { background:var(--red); }
+.quiz-card-body { padding:28px; }
+.quiz-question { font-size:18px; font-weight:800; color:var(--dark2); line-height:1.45; margin-bottom:24px; }
+.quiz-options { display:flex; flex-direction:column; gap:12px; }
+.quiz-option {
+  display:flex; align-items:center; gap:16px; padding:16px 20px;
+  border-radius:14px; border:2px solid var(--border); cursor:pointer;
+  transition:all 0.18s; background:#fff; font-size:15px; font-weight:600; color:var(--text);
+  text-align:left;
+}
+.quiz-option:hover:not(.answered-opt) { border-color:var(--blue); background:#f0f7ff; }
+.quiz-option.answered-opt { cursor:default; }
+.quiz-option.correct  { border-color:var(--green); background:#ecfdf5; color:#065f46; }
+.quiz-option.wrong    { border-color:var(--red);   background:#fef2f2; color:#991b1b; }
+.quiz-option.unselected-after { border-color:var(--border); background:#f8fafc; color:var(--text-muted); }
+.q-letter {
+  width:32px; height:32px; border-radius:50%; border:2px solid currentColor;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:800; flex-shrink:0; transition:all 0.18s;
+  color:var(--text-muted);
+}
+.quiz-option:hover:not(.answered-opt) .q-letter { border-color:var(--blue); color:var(--blue); }
+.quiz-option.correct .q-letter  { background:var(--green); border-color:var(--green); color:#fff; }
+.quiz-option.wrong   .q-letter  { background:var(--red);   border-color:var(--red);   color:#fff; }
+.q-icon { margin-left:auto; font-size:18px; display:none; }
+.quiz-option.correct .q-icon,
+.quiz-option.wrong   .q-icon { display:block; }
+
+/* FEEDBACK BANNER */
+.quiz-feedback {
+  margin-top:20px; padding:16px 20px; border-radius:12px;
+  font-size:14px; font-weight:600; display:none; align-items:flex-start; gap:12px;
+  animation:feedIn 0.25s ease;
+}
+@keyframes feedIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.quiz-feedback.show { display:flex; }
+.quiz-feedback.correct { background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; }
+.quiz-feedback.wrong   { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
+.quiz-feedback i { font-size:18px; flex-shrink:0; margin-top:1px; }
+.quiz-feedback-text { flex:1; line-height:1.5; }
+
+/* CONTINUE BUTTON */
+.quiz-continue {
+  width:100%; margin-top:16px; padding:14px; border-radius:12px;
+  font-size:15px; font-weight:700; cursor:pointer; border:none;
+  font-family:'Manrope',sans-serif; display:none; align-items:center; justify-content:center; gap:8px;
+  transition:all 0.2s;
+}
+.quiz-continue.show { display:flex; }
+.quiz-continue.correct { background:var(--green); color:#fff; }
+.quiz-continue.correct:hover { background:#059669; }
+.quiz-continue.wrong { background:var(--blue); color:#fff; }
+.quiz-continue.wrong:hover { background:var(--blue-dark); }
+
+/* TIMER BAR */
+.quiz-timer-bar { height:3px; background:rgba(255,255,255,0.15); margin-top:14px; border-radius:2px; overflow:hidden; }
+.quiz-timer-fill { height:100%; background:#fff; border-radius:2px; transition:width 1s linear; }
+
+/* RESULTS */
+.results-wrap{text-align:center;padding:48px 32px;}
+.results-score{font-size:72px;font-weight:900;line-height:1;margin-bottom:8px;}
+.results-score.pass{color:var(--green);}
+.results-score.fail{color:var(--red);}
+.results-label{font-size:18px;color:var(--text-muted);font-weight:600;margin-bottom:24px;}
+.results-stats{display:flex;gap:24px;justify-content:center;margin-bottom:32px;}
+.results-stat{background:#f8fafc;border-radius:12px;padding:16px 24px;text-align:center;}
+.results-stat .num{font-size:22px;font-weight:800;color:var(--dark2);}
+.results-stat .lbl{font-size:12px;color:var(--text-muted);font-weight:600;}
+.results-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+
+/* NAV LESSON BTNS */
+.lesson-nav{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+.btn-lesson{display:flex;align-items:center;gap:8px;padding:12px 24px;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:'Manrope',sans-serif;transition:all 0.2s;}
+.btn-lesson.prev{background:#f1f5f9;color:var(--text);}
+.btn-lesson.prev:hover{background:#e2e8f0;}
+.btn-lesson.next{background:var(--blue);color:#fff;}
+.btn-lesson.next:hover{background:var(--blue-dark);}
+.btn-lesson.complete{background:var(--green);color:#fff;}
+.btn-lesson.complete:hover{background:#059669;}
+.btn-lesson:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* CONFETTI */
+.confetti-piece{position:fixed;width:8px;height:8px;border-radius:2px;pointer-events:none;animation:confettiFall 3s ease-in forwards;}
+@keyframes confettiFall{0%{transform:translateY(-100px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+/* MOBILE SIDEBAR */
+.sidebar-toggle{display:none;position:fixed;bottom:24px;right:24px;z-index:600;width:52px;height:52px;border-radius:50%;background:var(--blue);color:#fff;border:none;font-size:20px;cursor:pointer;box-shadow:0 4px 20px rgba(37,99,235,0.4);}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .lesson-content{margin-left:0;padding:20px 16px;}
+  .lesson-topbar{padding:0 16px;}
+  .topbar-bar{display:none;}
+  .sidebar-toggle{display:flex;align-items:center;justify-content:center;}
+  .lesson-header h1{font-size:22px;}
+  .topbar-course{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="lesson-topbar">
+  <div class="topbar-row">
+    <button class="topbar-back" onclick="history.back()"><i class="fas fa-arrow-left"></i> Back</button>
+    <div class="topbar-divider"></div>
+    <div class="topbar-course" id="topCourseTitle">Loading...</div>
+    <div class="topbar-progress-wrap">
+      <div class="timer-badge" id="timerBadge" style="display:none"><i class="fas fa-clock"></i> <span id="timerDisplay">--:--</span></div>
+      <span class="topbar-pct" id="topPct">0%</span>
+    </div>
+  </div>
+  <div class="topbar-steps" id="topbarSteps"></div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h3 id="sidebarCourseTitle">Course</h3>
+    <p id="sidebarSubtitle">Loading modules...</p>
+  </div>
+  <div id="sidebarModules"></div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="lesson-content" id="lessonContent">
+  <div style="text-align:center;padding:80px 0;color:var(--text-muted);">
+    <i class="fas fa-spinner fa-spin" style="font-size:32px;margin-bottom:16px;display:block;"></i>
+    Loading lesson...
+  </div>
+</div>
+
+<button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()"><i class="fas fa-list"></i></button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════
+var JSONBIN_KEY  = '$2a$10$d8wjYi.E/IcAmu515faPoesz/PUitzug7E4FJwqt6TdyABnaNAwiq';
+var COURSES_BIN  = '69fe3335250b1311c322005e';
+var PROGRESS_BIN = '69fe33e4250b1311c322042b';
+// JSONBin v3: reads use X-Master-Key; writes need BOTH X-Master-Key AND X-Access-Key
+var HEADERS_READ  = {'Content-Type':'application/json','X-Master-Key':JSONBIN_KEY};
+var HEADERS_WRITE = {'Content-Type':'application/json','X-Master-Key':JSONBIN_KEY,'X-Access-Key':JSONBIN_KEY};
+
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+var currentUser = null, courseData = null, allProgress = [];
+var currentModuleIdx = 0, currentLessonIdx = 0;
+var quizState = {};
+var timerInterval = null;
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async function() {
+  var savedUser = sessionStorage.getItem('jtes_learn_user');
+  if (savedUser) currentUser = JSON.parse(savedUser);
+  var params = new URLSearchParams(window.location.search);
+  var courseId = params.get('course');
+  if (!courseId) { window.location.href='learn.html'; return; }
+  await Promise.all([loadCourse(courseId), loadProgress()]);
+  if (!courseData) {
+    document.getElementById('lessonContent').innerHTML =
+      '<div style="text-align:center;padding:80px 32px;">'
+      +'<i class="fas fa-exclamation-triangle" style="font-size:48px;color:var(--amber);margin-bottom:16px;display:block;"></i>'
+      +'<h2 style="font-size:22px;font-weight:800;color:var(--dark2);margin-bottom:12px;">Course Not Found</h2>'
+      +'<p style="color:var(--text-muted);margin-bottom:24px;">This course (ID: <code>'+courseId+'</code>) was not found in the database. Make sure it has been created in the Admin panel.</p>'
+      +'<a href="learn.html" style="display:inline-flex;align-items:center;gap:8px;background:var(--blue);color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;"><i class="fas fa-arrow-left"></i> Back to Courses</a>'
+      +'</div>';
+    return;
+  }
+  document.getElementById('topCourseTitle').textContent = courseData.title;
+  document.getElementById('sidebarCourseTitle').textContent = courseData.title;
+  buildSidebar();
+  // resume progress
+  var prog = getUserProgress(courseId);
+  var lastLesson = prog && prog.lastLesson;
+  if (lastLesson) {
+    var found = findLesson(lastLesson);
+    if (found) { currentModuleIdx=found.m; currentLessonIdx=found.l; }
+  }
+  loadLesson(currentModuleIdx, currentLessonIdx);
+  updateTopProgress();
+});
+
+// ═══════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════
+async function loadBin(id, label) {
+  if (!id) { console.warn('loadBin: no ID for', label); return null; }
+  try {
+    var r = await fetch('https://api.jsonbin.io/v3/b/'+id+'/latest', {headers:HEADERS_READ});
+    var d = await r.json();
+    if (!r.ok) { console.error('loadBin ['+label+'] HTTP '+r.status+':', d.message||d); return null; }
+    return d.record;
+  } catch(e) { console.error('loadBin ['+label+'] error:', e); return null; }
+}
+async function saveBin(id, data, label) {
+  if (!id) { console.warn('saveBin: no ID for', label); return false; }
+  try {
+    var r = await fetch('https://api.jsonbin.io/v3/b/'+id, {method:'PUT', headers:HEADERS_WRITE, body:JSON.stringify(data)});
+    var d = await r.json();
+    if (!r.ok) { console.error('saveBin ['+label+'] HTTP '+r.status+':', d.message||d); return false; }
+    return true;
+  } catch(e) { console.error('saveBin ['+label+'] error:', e); return false; }
+}
+async function loadCourse(id) {
+  var d = await loadBin(COURSES_BIN, 'courses');
+  var courses = (d && Array.isArray(d.courses)) ? d.courses : [];
+  courseData = courses.find(function(c){return c.id===id;}) || null;
+  if (!courseData) console.error('Course "'+id+'" not found in bin. Available IDs:', courses.map(function(c){return c.id;}));
+}
+async function loadProgress() {
+  var d = await loadBin(PROGRESS_BIN, 'progress');
+  allProgress = (d && Array.isArray(d.progress)) ? d.progress : [];
+}
+async function saveProgress() {
+  return await saveBin(PROGRESS_BIN, {progress:allProgress}, 'progress');
+}
+function getUserProgress(courseId) {
+  return allProgress.find(function(p){return p.userId===currentUser.id&&p.courseId===courseId;});
+}
+function ensureProgress(courseId) {
+  var p = getUserProgress(courseId);
+  if (!p) { p={userId:currentUser.id,courseId:courseId,completedLessons:[],points:0,quizScores:{},lastLesson:null}; allProgress.push(p); }
+  return p;
+}
+
+// ═══════════════════════════════════════════════════
+//  SIDEBAR
+// ═══════════════════════════════════════════════════
+function buildSidebar() {
+  var modules = courseData.modules || [];
+  var total = modules.reduce(function(s,m){return s+m.lessons.length;},0);
+  document.getElementById('sidebarSubtitle').textContent = modules.length+' modules • '+total+' lessons';
+  document.getElementById('sidebarModules').innerHTML = modules.map(function(mod,mi){
+    return '<div class="module-group">'
+      +'<div class="module-title" onclick="toggleModule('+mi+')">'
+      +'<span><i class="fas fa-folder" style="margin-right:8px;color:var(--blue);font-size:12px;"></i>'+mod.title+'</span>'
+      +'<i class="fas fa-chevron-down" style="font-size:11px;transition:transform 0.2s;" id="mod-chevron-'+mi+'"></i>'
+      +'</div>'
+      +'<div class="module-lessons" id="mod-lessons-'+mi+'">'
+      + mod.lessons.map(function(les,li){
+          var prog = getUserProgress(courseData.id);
+          var done = prog && (prog.completedLessons||[]).includes(les.id);
+          var isActive = mi===currentModuleIdx && li===currentLessonIdx;
+          var icon = done ? 'fa-check-circle' : (les.type==='quiz'?'fa-question-circle':(les.type==='video'?'fa-play-circle':'fa-file-alt'));
+          return '<div class="lesson-item'+(isActive?' active':'')+(done?' completed':'')
+            +'" id="li-'+mi+'-'+li+'" onclick="goToLesson('+mi+','+li+')">'
+            +'<i class="fas '+icon+' li-icon'+(isActive?' active-icon':'')+'"></i>'
+            +'<div class="li-info"><div class="li-name">'+les.title+'</div><div class="li-type">'+les.type+'</div></div>'
+            +'<span class="li-dur">'+(les.duration||'')+'</span>'
+            +'</div>';
+      }).join('')
+      +'</div>'
+      +'</div>';
+  }).join('');
+  // open first module
+  toggleModule(0, true);
+}
+function toggleModule(idx, forceOpen) {
+  var el = document.getElementById('mod-lessons-'+idx);
+  var chev = document.getElementById('mod-chevron-'+idx);
+  if (!el) return;
+  var open = el.classList.contains('open');
+  if (forceOpen || !open) { el.classList.add('open'); chev.style.transform='rotate(180deg)'; }
+  else { el.classList.remove('open'); chev.style.transform=''; }
+}
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+// ═══════════════════════════════════════════════════
+//  LESSON NAVIGATION
+// ═══════════════════════════════════════════════════
+function findLesson(lessonId) {
+  var modules = courseData.modules||[];
+  for(var m=0;m<modules.length;m++) {
+    for(var l=0;l<modules[m].lessons.length;l++) {
+      if(modules[m].lessons[l].id===lessonId) return{m:m,l:l};
+    }
+  }
+  return null;
+}
+function goToLesson(mi,li) {
+  currentModuleIdx=mi; currentLessonIdx=li;
+  loadLesson(mi,li);
+  if (window.innerWidth<=768) document.getElementById('sidebar').classList.remove('open');
+}
+function loadLesson(mi,li) {
+  clearTimer();
+  var modules = courseData.modules||[];
+  if (!modules[mi]||!modules[mi].lessons[li]) return;
+  var lesson = modules[mi].lessons[li];
+  // update sidebar active
+  document.querySelectorAll('.lesson-item').forEach(function(el){el.classList.remove('active');var ic=el.querySelector('.li-icon');if(ic)ic.classList.remove('active-icon');});
+  var activeItem = document.getElementById('li-'+mi+'-'+li);
+  if(activeItem){activeItem.classList.add('active');var ic=activeItem.querySelector('.li-icon');if(ic)ic.classList.add('active-icon');}
+  // save last lesson
+  if(currentUser) {
+    var prog = ensureProgress(courseData.id);
+    prog.lastLesson = lesson.id;
+    saveProgress();
+  }
+  currentModuleIdx=mi; currentLessonIdx=li;
+  var isFirst = mi===0&&li===0;
+  var totalLessons=0,lessonNum=0;
+  (courseData.modules||[]).forEach(function(m,idx){m.lessons.forEach(function(l,jdx){totalLessons++;if(idx<mi||(idx===mi&&jdx<=li))lessonNum++;});});
+  var isLast=lessonNum===totalLessons;
+  var prevHtml = isFirst
+    ? '<span></span>'
+    : '<button class="btn-lesson prev" onclick="prevLesson()"><i class="fas fa-arrow-left"></i> Previous</button>';
+  var nextHtml = isLast
+    ? '<button class="btn-lesson complete" onclick="completeCourse()"><i class="fas fa-flag-checkered"></i> Complete Course</button>'
+    : '<button class="btn-lesson next" onclick="nextLesson()">Next <i class="fas fa-arrow-right"></i></button>';
+  var typeIcon = lesson.type==='quiz'?'fa-question-circle':(lesson.type==='video'?'fa-play-circle':'fa-file-alt');
+  var headerHtml = '<div class="lesson-header">'
+    +'<div class="lesson-type-badge"><i class="fas '+typeIcon+'"></i> '+lesson.type+'</div>'
+    +'<h1>'+lesson.title+'</h1>'
+    +'<div class="lesson-header-meta">'
+    +(lesson.duration?'<span><i class="fas fa-clock"></i> '+lesson.duration+'</span>':'')
+    +(lesson.points?'<span><i class="fas fa-star"></i> '+lesson.points+' points</span>':'')
+    +'</div>'
+    +'</div>';
+  var videoHtml = '';
+  if (lesson.videoUrl) {
+    var embedUrl = getYouTubeEmbed(lesson.videoUrl) || lesson.videoUrl;
+    var isYt = !!getYouTubeEmbed(lesson.videoUrl);
+    videoHtml = '<div class="video-wrap">'
+      + (isYt
+        ? '<iframe src="'+embedUrl+'" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>'
+        : '<video src="'+embedUrl+'" controls></video>')
+      +'</div>';
+  }
+  var bodyHtml = '';
+  if (lesson.type==='quiz') {
+    bodyHtml = renderQuiz(lesson);
+  } else {
+    var content = lesson.content || '<p>No content available for this lesson yet.</p>';
+    bodyHtml = '<div class="rich-content">'+content+'</div>';
+  }
+  document.getElementById('lessonContent').innerHTML =
+    headerHtml + videoHtml + bodyHtml
+    +'<div class="lesson-nav">'+prevHtml+nextHtml+'</div>';
+  Prism.highlightAll();
+  if(lesson.type==='quiz'&&lesson.timeLimit) startTimer(lesson.timeLimit*60);
+  updateTopProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function getYouTubeEmbed(url) {
+  var m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+  return m ? 'https://www.youtube.com/embed/'+m[1]+'?rel=0' : null;
+}
+function awardLessonPoints(mi, li) {
+  if (!currentUser) return;
+  var lesson = courseData.modules[mi].lessons[li];
+  if (lesson.type === 'quiz') return; // quiz handles its own points
+  var prog = ensureProgress(courseData.id);
+  if (!prog.completedLessons.includes(lesson.id)) {
+    prog.completedLessons.push(lesson.id);
+    prog.points = (prog.points || 0) + (lesson.points || 0);
+    saveProgress();
+    updateTopProgress();
+    buildSidebar();
+    if (lesson.points) showXpToast(lesson.points);
+  }
+}
+function showXpToast(pts) {
+  var el = document.createElement('div');
+  el.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;'
+    +'padding:10px 22px;border-radius:50px;font-size:15px;font-weight:800;z-index:9999;'
+    +'box-shadow:0 4px 20px rgba(16,185,129,0.4);animation:xpPop 2.2s ease forwards;pointer-events:none;';
+  el.innerHTML = '+' + pts + ' XP <i class="fas fa-star"></i>';
+  if (!document.getElementById('xpPopStyle')) {
+    var s = document.createElement('style');
+    s.id = 'xpPopStyle';
+    s.textContent = '@keyframes xpPop{0%{opacity:0;transform:translateX(-50%) translateY(10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-16px)}}';
+    document.head.appendChild(s);
+  }
+  document.body.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 2200);
+}
+function prevLesson() {
+  var li=currentLessonIdx,mi=currentModuleIdx;
+  if(li>0){goToLesson(mi,li-1);}
+  else if(mi>0){var prevMod=courseData.modules[mi-1];goToLesson(mi-1,prevMod.lessons.length-1);}
+}
+function nextLesson() {
+  awardLessonPoints(currentModuleIdx, currentLessonIdx);
+  var li=currentLessonIdx,mi=currentModuleIdx;
+  var mod=courseData.modules[mi];
+  if(li<mod.lessons.length-1){goToLesson(mi,li+1);}
+  else if(mi<courseData.modules.length-1){goToLesson(mi+1,0);}
+}
+function completeCourse() {
+  awardLessonPoints(currentModuleIdx, currentLessonIdx);
+  var prog = ensureProgress(courseData.id);
+  (courseData.modules||[]).forEach(function(m){m.lessons.forEach(function(l){if(!prog.completedLessons.includes(l.id))prog.completedLessons.push(l.id);});});
+  saveProgress();
+  confetti();
+  document.getElementById('lessonContent').innerHTML =
+    '<div style="text-align:center;padding:80px 32px;">'
+    +'<div style="font-size:80px;margin-bottom:20px;">🎉</div>'
+    +'<h1 style="font-size:32px;font-weight:900;color:var(--dark2);margin-bottom:12px;">Course Completed!</h1>'
+    +'<p style="font-size:16px;color:var(--text-muted);margin-bottom:32px;">Congratulations on finishing <strong>'+courseData.title+'</strong>.</p>'
+    +'<a href="learn.html" style="display:inline-flex;align-items:center;gap:8px;background:var(--blue);color:#fff;padding:14px 28px;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;">Back to Courses <i class="fas fa-arrow-right"></i></a>'
+    +'</div>';
+}
+function updateTopProgress() {
+  if(!courseData) return;
+  var prog = getUserProgress(courseData.id);
+  var completed = prog ? (prog.completedLessons||[]).length : 0;
+  var allLessons = [];
+  (courseData.modules||[]).forEach(function(m){m.lessons.forEach(function(l){allLessons.push(l.id);});});
+  var total = allLessons.length;
+  var pct = total ? Math.round(completed/total*100) : 0;
+  document.getElementById('topPct').textContent = pct+'%';
+  // step dots
+  var dots = document.getElementById('topbarSteps');
+  var lessonNum = 0;
+  (courseData.modules||[]).forEach(function(m,mi){m.lessons.forEach(function(l,li){if(mi<currentModuleIdx||(mi===currentModuleIdx&&li<=currentLessonIdx))lessonNum++;});});
+  dots.innerHTML = allLessons.map(function(lid,i){
+    var done = prog&&(prog.completedLessons||[]).includes(lid);
+    var active = i===lessonNum-1;
+    return '<div class="step-dot'+(done?' done':(active?' active':''))+'"></div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  QUIZ ENGINE — SoloLearn style (one question at a time, instant tap feedback)
+// ═══════════════════════════════════════════════════
+function renderQuiz(lesson) {
+  var questions = lesson.questions || [];
+  if (!questions.length) return '<div class="rich-content"><p>No questions for this quiz.</p></div>';
+  quizState = {
+    questions: questions, current: 0, answers: [],
+    score: 0, lessonId: lesson.id, points: lesson.points || 0
+  };
+  return buildQuizCard();
+}
+
+function buildQuizCard() {
+  var qs = quizState;
+  var q  = qs.questions[qs.current];
+  var letters = ['A','B','C','D','E'];
+  var dots = qs.questions.map(function(x,i){
+    var a = qs.answers[i];
+    var cls = a === undefined ? '' : (a.correct ? ' correct' : ' wrong');
+    return '<div class="qp-dot'+(i===qs.current?' answered':cls)+'"></div>';
+  }).join('');
+  var opts = q.options.map(function(opt, i){
+    return '<button class="quiz-option" onclick="selectQuizOption('+i+')">'
+      +'<span class="q-letter">'+letters[i]+'</span>'
+      +'<span style="flex:1">'+opt+'</span>'
+      +'<i class="fas q-icon"></i>'
+      +'</button>';
+  }).join('');
+  return '<div class="quiz-card">'
+    +'<div class="quiz-card-header">'
+    +  '<div class="quiz-card-header-left">'
+    +    '<div class="quiz-qnum">Question '+(qs.current+1)+' of '+qs.questions.length+'</div>'
+    +  '</div>'
+    +  '<div class="quiz-progress-dots">'+dots+'</div>'
+    +'</div>'
+    +'<div id="quizTimerBarWrap" style="'+(quizState._hasTimer?'':'display:none')+'"><div class="quiz-timer-bar"><div class="quiz-timer-fill" id="quizTimerFill" style="width:100%"></div></div></div>'
+    +'<div class="quiz-card-body">'
+    +  '<div class="quiz-question">'+q.question+'</div>'
+    +  '<div class="quiz-options" id="quizOptions">'+opts+'</div>'
+    +  '<div class="quiz-feedback" id="quizFeedback"></div>'
+    +  '<button class="quiz-continue" id="quizContinue" onclick="quizContinue()"></button>'
+    +'</div>'
+    +'</div>';
+}
+
+function selectQuizOption(i) {
+  var qs = quizState;
+  // already answered
+  if (qs.answers[qs.current] !== undefined) return;
+  var q = qs.questions[qs.current];
+  var correct = (i === q.correct);
+  qs.answers[qs.current] = {chosen: i, correct: correct};
+  if (correct) qs.score++;
+
+  // style all options
+  var opts = document.querySelectorAll('.quiz-option');
+  opts.forEach(function(btn, j){
+    btn.classList.add('answered-opt');
+    if (j === q.correct) {
+      btn.classList.add('correct');
+      btn.querySelector('.q-icon').className = 'fas fa-check-circle q-icon';
+    } else if (j === i && !correct) {
+      btn.classList.add('wrong');
+      btn.querySelector('.q-icon').className = 'fas fa-times-circle q-icon';
+    } else {
+      btn.classList.add('unselected-after');
+    }
+  });
+
+  // feedback banner
+  var fb = document.getElementById('quizFeedback');
+  fb.className = 'quiz-feedback show ' + (correct ? 'correct' : 'wrong');
+  fb.innerHTML = correct
+    ? '<i class="fas fa-check-circle"></i><div class="quiz-feedback-text"><strong>Correct!</strong> ' + (q.explanation || 'Well done.') + '</div>'
+    : '<i class="fas fa-times-circle"></i><div class="quiz-feedback-text"><strong>Incorrect.</strong> ' + (q.explanation || 'The correct answer is: <strong>'+q.options[q.correct]+'</strong>') + '</div>';
+
+  // continue button
+  var cont = document.getElementById('quizContinue');
+  var isLast = (qs.current === qs.questions.length - 1);
+  cont.className = 'quiz-continue show ' + (correct ? 'correct' : 'wrong');
+  cont.innerHTML = isLast
+    ? (correct ? '<i class="fas fa-flag-checkered"></i> Finish Quiz' : '<i class="fas fa-flag-checkered"></i> See Results')
+    : (correct ? 'Continue <i class="fas fa-arrow-right"></i>' : 'Continue <i class="fas fa-arrow-right"></i>');
+}
+
+function quizContinue() {
+  var qs = quizState;
+  var isLast = (qs.current === qs.questions.length - 1);
+  if (isLast) { submitQuiz(); return; }
+  qs.current++;
+  // re-render the quiz card in place
+  var card = document.querySelector('.quiz-card');
+  if (card) { var tmp = document.createElement('div'); tmp.innerHTML = buildQuizCard(); card.replaceWith(tmp.firstChild); }
+}
+
+function submitQuiz() {
+  var qs = quizState;
+  var pct = Math.round(qs.score / qs.questions.length * 100);
+  var pass = pct >= 60;
+  var earned = pass ? Math.round(qs.points * (pct / 100)) : 0;
+  var prog = ensureProgress(courseData.id);
+  prog.quizScores = prog.quizScores || {};
+  var prev = prog.quizScores[qs.lessonId] || 0;
+  prog.quizScores[qs.lessonId] = Math.max(prev, pct);
+  if (pass && !prog.completedLessons.includes(qs.lessonId)) {
+    prog.completedLessons.push(qs.lessonId);
+    prog.points = (prog.points || 0) + earned;
+  }
+  saveProgress();
+  updateTopProgress();
+  if (pass) confetti();
+  var card = document.querySelector('.quiz-card') || document.getElementById('lessonContent');
+  var resultsHtml =
+    '<div class="quiz-card">'
+    +'<div class="quiz-card-header"><div class="quiz-card-header-left"><div class="quiz-qnum">Quiz Complete</div></div></div>'
+    +'<div class="quiz-card-body" style="text-align:center;padding:40px 28px;">'
+    +'<div style="font-size:64px;font-weight:900;color:'+(pass?'var(--green)':'var(--red)')+';">'+pct+'%</div>'
+    +'<div style="font-size:18px;font-weight:700;color:var(--dark2);margin:12px 0 8px;">'+(pass?'🎉 Passed!':'Keep practicing!')+'</div>'
+    +'<div style="display:flex;gap:20px;justify-content:center;margin:20px 0 28px;">'
+    +'<div style="background:#f8fafc;border-radius:12px;padding:14px 22px;"><div style="font-size:22px;font-weight:900;color:var(--dark2);">'+qs.score+'/'+qs.questions.length+'</div><div style="font-size:12px;color:var(--text-muted);font-weight:600;">Correct</div></div>'
+    +'<div style="background:#f8fafc;border-radius:12px;padding:14px 22px;"><div style="font-size:22px;font-weight:900;color:var(--blue);">+'+earned+'</div><div style="font-size:12px;color:var(--text-muted);font-weight:600;">XP Earned</div></div>'
+    +'</div>'
+    +'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">'
+    +(pass?'<button onclick="nextLesson()" style="background:var(--green);color:#fff;border:none;padding:13px 24px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Next Lesson <i class="fas fa-arrow-right"></i></button>':'')
+    +'<button onclick="loadLesson(currentModuleIdx,currentLessonIdx)" style="background:#f1f5f9;color:var(--text);border:none;padding:13px 24px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;"><i class="fas fa-redo"></i> Retry</button>'
+    +'</div>'
+    +'</div></div>';
+  var existing = document.querySelector('.quiz-card');
+  if (existing) { var tmp = document.createElement('div'); tmp.innerHTML = resultsHtml; existing.replaceWith(tmp.firstChild); }
+}
+
+// ═══════════════════════════════════════════════════
+//  TIMER
+// ═══════════════════════════════════════════════════
+function startTimer(seconds) {
+  var badge = document.getElementById('timerBadge');
+  badge.style.display='flex';
+  var remaining=seconds;
+  var fill=document.getElementById('quizTimerFill');
+  clearTimer();
+  function tick() {
+    var m=Math.floor(remaining/60),s=remaining%60;
+    document.getElementById('timerDisplay').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+    if(fill) fill.style.width=(remaining/seconds*100)+'%';
+    if(remaining<=30) badge.classList.add('urgent');
+    if(remaining<=0){clearTimer();submitQuiz();}
+    remaining--;
+  }
+  tick();
+  timerInterval=setInterval(tick,1000);
+}
+function clearTimer(){clearInterval(timerInterval);timerInterval=null;var b=document.getElementById('timerBadge');if(b)b.style.display='none';}
+
+// ═══════════════════════════════════════════════════
+//  CONFETTI
+// ═══════════════════════════════════════════════════
+function confetti() {
+  var colors=['#2563EB','#10b981','#f59e0b','#ef4444','#8b5cf6','#fff'];
+  for(var i=0;i<80;i++){
+    var el=document.createElement('div');
+    el.className='confetti-piece';
+    el.style.cssText='left:'+Math.random()*100+'vw;top:-20px;background:'+colors[Math.floor(Math.random()*colors.length)]+';transform:rotate('+Math.random()*360+'deg);animation-duration:'+(2+Math.random()*2)+'s;animation-delay:'+(Math.random()*1)+'s;';
+    document.body.appendChild(el);
+    setTimeout(function(e){e.remove();},4000,el);
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  DEMO DATA
+// ═══════════════════════════════════════════════════
+function getDemoCourses() { return [getDemoCourseDetail()]; }
+function getDemoCourseDetail() {
+  return {
+    id:'c1', title:'Introduction to Electronics',
+    modules: [
+      {
+        title:'Module 1: Fundamentals',
+        lessons:[
+          {id:'l1',title:'What is Electricity?',type:'video',duration:'8 min',points:10,
+           videoUrl:'https://www.youtube.com/watch?v=mc979OhitAg',
+           content:'<h2>Understanding Electricity</h2><p>Electricity is the flow of electrons through a conductor. In this lesson we explore the basic concepts that make modern electronics possible.</p><div class="callout"><i class="fas fa-lightbulb"></i><p><strong>Key concept:</strong> Electric current is measured in Amperes (A), voltage in Volts (V), and resistance in Ohms (Ω).</p></div><h3>Ohm\'s Law</h3><p>The relationship between voltage, current, and resistance is described by Ohm\'s Law:</p><pre><code class="language-python">V = I * R  # Voltage = Current * Resistance\nI = V / R  # Current = Voltage / Resistance\nR = V / I  # Resistance = Voltage / Current</code></pre><p>This fundamental equation is the foundation of circuit analysis.</p>'},
+          {id:'l2',title:'Basic Components Quiz',type:'quiz',duration:'5 min',points:20,timeLimit:3,
+           questions:[
+             {question:'What does a resistor do in a circuit?',options:['Stores energy','Opposes current flow','Amplifies signals','Converts AC to DC'],correct:1,explanation:'A resistor opposes the flow of electric current, converting electrical energy into heat.'},
+             {question:'What is the unit of electrical resistance?',options:['Volt','Ampere','Ohm','Watt'],correct:2,explanation:'Resistance is measured in Ohms (Ω), named after Georg Simon Ohm.'},
+             {question:'Which component stores electrical charge?',options:['Resistor','Inductor','Capacitor','Diode'],correct:2,explanation:'A capacitor stores electrical energy in an electric field.'},
+             {question:'What does LED stand for?',options:['Light Emitting Diode','Low Energy Device','Light Energy Driver','Linear Electrical Device'],correct:0,explanation:'LED stands for Light Emitting Diode — a semiconductor that emits light when current flows through it.'},
+           ]},
+        ]
+      },
+      {
+        title:'Module 2: Circuits',
+        lessons:[
+          {id:'l3',title:'Series & Parallel Circuits',type:'reading',duration:'12 min',points:15,
+           content:'<h2>Series Circuits</h2><p>In a series circuit, components are connected end-to-end so current flows through each component in sequence.</p><ul><li>Same current through all components</li><li>Total voltage is sum of individual voltages</li><li>Total resistance = R₁ + R₂ + R₃...</li></ul><h2>Parallel Circuits</h2><p>In parallel circuits, components share the same voltage across them but current is divided.</p><blockquote>In a parallel circuit, adding more branches decreases the total resistance — more pathways for current to flow.</blockquote>'},
+          {id:'l4',title:'Circuit Mastery Quiz',type:'quiz',duration:'8 min',points:30,timeLimit:5,
+           questions:[
+             {question:'In a series circuit with 3 resistors (10Ω, 20Ω, 30Ω), what is the total resistance?',options:['20Ω','60Ω','6.7Ω','10Ω'],correct:1,explanation:'In series, total resistance = 10+20+30 = 60Ω.'},
+             {question:'What happens to total resistance when you add more resistors in parallel?',options:['It increases','It stays the same','It decreases','It doubles'],correct:2,explanation:'Adding parallel paths gives current more routes to flow, reducing total resistance.'},
+           ]},
+        ]
+      }
+    ]
+  };
+}
+</script>
+
+<!-- ===== FLOATING SHOP CTA ===== -->
+<style>
+  .jtes-shop-fab {
+    position: fixed; bottom: 28px; left: 28px; z-index: 9500;
+    display: flex; align-items: center; text-decoration: none; cursor: pointer;
+    animation: jtesFabIn 0.6s cubic-bezier(.34,1.56,.64,1) 0.5s both;
+  }
+  @keyframes jtesFabIn {
+    0% { transform: translateY(40px) scale(0.6); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .jtes-shop-fab-float {
+    display: flex; align-items: center; position: relative;
+    animation: jtesFabFloat 6.5s ease-in-out infinite;
+  }
+  @keyframes jtesFabFloat {
+    0%   { transform: translate(0px, 0px) rotate(0deg); }
+    20%  { transform: translate(12px, -16px) rotate(2deg); }
+    40%  { transform: translate(-8px, -26px) rotate(-2deg); }
+    60%  { transform: translate(-16px, -8px) rotate(1.5deg); }
+    80%  { transform: translate(7px, 9px) rotate(-1deg); }
+    100% { transform: translate(0px, 0px) rotate(0deg); }
+  }
+  .jtes-shop-fab:hover .jtes-shop-fab-float { animation-play-state: paused; }
+  .jtes-shop-fab-ring {
+    position: absolute; inset: 0; border-radius: 50px;
+    box-shadow: 0 0 0 0 rgba(37,99,235,0.55);
+    animation: jtesFabPulse 2.4s ease-out infinite; pointer-events: none;
+  }
+  @keyframes jtesFabPulse {
+    0% { box-shadow: 0 0 0 0 rgba(37,99,235,0.55); }
+    70% { box-shadow: 0 0 0 18px rgba(37,99,235,0); }
+    100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
+  }
+  .jtes-shop-fab-badge {
+    position: absolute; top: -7px; right: -6px; background: #EF4444; color: #fff;
+    font-family: 'Manrope', sans-serif; font-size: 9px; font-weight: 800; padding: 3px 7px;
+    border-radius: 50px; box-shadow: 0 2px 8px rgba(239,68,68,0.5); z-index: 2; letter-spacing: 0.3px;
+    animation: jtesFabBadgeBlink 1.8s ease-in-out infinite;
+  }
+  @keyframes jtesFabBadgeBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+  .jtes-shop-fab-inner {
+    position: relative; display: flex; align-items: center; gap: 10px; overflow: hidden;
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    color: #fff; border-radius: 50px; padding: 13px 22px 13px 13px;
+    box-shadow: 0 10px 32px rgba(37,99,235,0.45), inset 0 1px 0 rgba(255,255,255,0.25);
+    transition: transform 0.25s, box-shadow 0.25s;
+  }
+  .jtes-shop-fab:hover .jtes-shop-fab-inner {
+    transform: scale(1.05);
+    box-shadow: 0 16px 40px rgba(37,99,235,0.55), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .jtes-shop-fab-shine {
+    position: absolute; top: 0; left: -60%; width: 45%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.45), transparent);
+    transform: skewX(-20deg); animation: jtesFabShine 3s ease-in-out infinite;
+  }
+  @keyframes jtesFabShine { 0% { left: -60%; } 35% { left: 130%; } 100% { left: 130%; } }
+  .jtes-shop-fab-icon {
+    width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
+    position: relative; z-index: 1;
+  }
+  .jtes-shop-fab-text {
+    font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 13.5px; letter-spacing: 0.2px;
+    white-space: nowrap; position: relative; z-index: 1; line-height: 1.25;
+  }
+  .jtes-shop-fab-text small {
+    display: block; font-size: 10px; font-weight: 600; opacity: 0.85; letter-spacing: 0.3px;
+  }
+  @media (max-width: 560px) {
+    .jtes-shop-fab { bottom: 20px; left: 20px; }
+    .jtes-shop-fab-text { display: none; }
+    .jtes-shop-fab-inner { padding: 13px; }
+    .jtes-shop-fab-float { animation-name: jtesFabFloatSmall; }
+  }
+  @keyframes jtesFabFloatSmall {
+    0%   { transform: translate(0px, 0px); }
+    25%  { transform: translate(8px, -10px); }
+    50%  { transform: translate(-6px, -16px); }
+    75%  { transform: translate(-4px, 4px); }
+    100% { transform: translate(0px, 0px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .jtes-shop-fab, .jtes-shop-fab-float, .jtes-shop-fab-ring, .jtes-shop-fab-badge, .jtes-shop-fab-shine {
+      animation: none !important;
+    }
+  }
+</style>
+<a href="sales.html" class="jtes-shop-fab" aria-label="Shop JTES products">
+  <span class="jtes-shop-fab-float">
+    <span class="jtes-shop-fab-ring"></span>
+    <span class="jtes-shop-fab-badge">SALE</span>
+    <span class="jtes-shop-fab-inner">
+      <span class="jtes-shop-fab-shine"></span>
+      <span class="jtes-shop-fab-icon"><i class="fas fa-bag-shopping"></i></span>
+      <span class="jtes-shop-fab-text">Shop Now<small>Kits, tools &amp; components</small></span>
+    </span>
+  </span>
+</a>
+
+</body>
+</html>
