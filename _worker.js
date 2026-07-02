@@ -256,7 +256,7 @@ async function handleDebugComposio(request, env) {
   if (!env.COMPOSIO_API_KEY) {
     return jsonResponse({ error: 'Missing COMPOSIO_API_KEY' }, 500);
   }
-  const res = await fetch('https://backend.composio.dev/api/v1/connectedAccounts?toolkit=googledrive&limit=20', {
+  const res = await fetch('https://backend.composio.dev/api/v3/connected_accounts?toolkit=googledrive&limit=20', {
     headers: { 'x-api-key': env.COMPOSIO_API_KEY, 'Content-Type': 'application/json' }
   });
   const data = await res.json();
