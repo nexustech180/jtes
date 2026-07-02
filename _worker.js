@@ -101,7 +101,7 @@ async function handleDriveUpload(request, env) {
       method: 'POST',
       headers: { 'x-api-key': env.COMPOSIO_API_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        entity_id: env.COMPOSIO_ENTITY_ID || 'default',
+        entity_id: env.COMPOSIO_ENTITY_ID || 'pg-test-d637f137-c0cc-49ba-a207-3d4d6a37397e',
         arguments: uploadArgs
       })
     });
@@ -159,7 +159,7 @@ async function handleDriveList(request, env) {
       method: 'POST',
       headers: { 'x-api-key': env.COMPOSIO_API_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        entity_id: env.COMPOSIO_ENTITY_ID || 'default',
+        entity_id: env.COMPOSIO_ENTITY_ID || 'pg-test-d637f137-c0cc-49ba-a207-3d4d6a37397e',
         arguments: {
           q: qParts.join(' and '),
           pageSize: 100,
@@ -217,7 +217,7 @@ async function setFilePublic(fileId, env) {
     method: 'POST',
     headers: { 'x-api-key': env.COMPOSIO_API_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      entityId: env.COMPOSIO_ENTITY_ID || 'default',
+      entityId: env.COMPOSIO_ENTITY_ID || 'pg-test-d637f137-c0cc-49ba-a207-3d4d6a37397e',
       endpoint: `https://www.googleapis.com/drive/v3/files/${fileId}/permissions`,
       method: 'POST',
       body: { role: 'reader', type: 'anyone' }
@@ -256,11 +256,12 @@ async function handleDebugComposio(request, env) {
   if (!env.COMPOSIO_API_KEY) {
     return jsonResponse({ error: 'Missing COMPOSIO_API_KEY' }, 500);
   }
-  const res = await fetch('https://backend.composio.dev/api/v3/connected_accounts?toolkit=googledrive&limit=20', {
+  const accountId = env.COMPOSIO_CONNECTED_ACCOUNT_ID || 'ca_4PfensM4N3iK';
+  const res = await fetch(`https://backend.composio.dev/api/v3/connected_accounts/${accountId}`, {
     headers: { 'x-api-key': env.COMPOSIO_API_KEY, 'Content-Type': 'application/json' }
   });
   const data = await res.json();
-  return jsonResponse({ status: res.status, accounts: data });
+  return jsonResponse({ status: res.status, account: data });
 }
 
 function arrayBufferToBase64(buffer) {
