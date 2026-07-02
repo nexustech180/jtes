@@ -48,7 +48,10 @@
 const EXECUTE_URL = 'https://backend.composio.dev/api/v3/tools/execute/GOOGLEDRIVE_UPLOAD_FILE';
 const FIND_FILE_URL = 'https://backend.composio.dev/api/v3/tools/execute/GOOGLEDRIVE_FIND_FILE';
 const SHARE_TOOL_URL = 'https://backend.composio.dev/api/v3/tools/execute/GOOGLEDRIVE_ADD_FILE_SHARING_PREFERENCE';
+const CREATE_PERMISSION_URL = 'https://backend.composio.dev/api/v3/tools/execute/GOOGLEDRIVE_CREATE_PERMISSION';
 const PROXY_URL = 'https://backend.composio.dev/api/v3/tools/execute/proxy';
+const DEFAULT_ENTITY_ID = 'pg-test-d637f137-c0cc-49ba-a207-3d4d6a37397e';
+const DEFAULT_CONNECTED_ACCOUNT_ID = 'ca_4PfensM4N3iK';
 
 export default {
   async fetch(request, env, ctx) {
@@ -124,6 +127,7 @@ async function handleDriveUpload(request, env) {
         url: `https://drive.google.com/file/d/${fileId}/view`,
         fileId,
         warning: 'File uploaded but setting public sharing failed — you may need to share it manually.',
+        reason: shareResult.reason,
         details: shareResult.details
       });
     }
@@ -204,49 +208,88 @@ async function handleDriveShare(request, env) {
 
   const shareResult = await setFilePublic(fileId, env);
   if (!shareResult.ok) {
-    return jsonResponse({ error: 'Could not set sharing on that file.', details: shareResult.details }, 502);
+    return jsonResponse({ error: 'Could not set sharing on that file.', reason: shareResult.reason, details: shareResult.details }, 502);
   }
 
   return jsonResponse({ name: name || '', url: `https://drive.google.com/file/d/${fileId}/view`, fileId });
 }
 
-// Make a Drive file viewable by anyone with the link. Primary path: Composio's
-// GOOGLEDRIVE_ADD_FILE_SHARING_PREFERENCE tool, executed the same way as the
-// upload/find tools (those work with entity_id, so this will too). Fallback:
-// a direct Drive API call through Composio's proxy — which requires
-// connected_account_id, not entityId, to resolve the stored OAuth token.
+// Make a Drive file viewable by anyone with the link. Composio has renamed its
+// sharing tool across toolkit versions (ADD_FILE_SHARING_PREFERENCE is
+// deprecated in favor of CREATE_PERMISSION), so try both, then fall back to a
+// direct Drive API call through Composio's proxy — which resolves the stored
+// OAuth token via connected_account_id, not entityId. On failure, return every
+// attempt's response plus a human-readable `reason` so the admin UI can show
+// what actually went wrong (e.g. "you don't own this file").
 async function setFilePublic(fileId, env) {
-  const shareRes = await fetch(SHARE_TOOL_URL, {
-    method: 'POST',
-    headers: { 'x-api-key': env.COMPOSIO_API_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      entity_id: env.COMPOSIO_ENTITY_ID || 'pg-test-d637f137-c0cc-49ba-a207-3d4d6a37397e',
-      arguments: { file_id: fileId, role: 'reader', type: 'anyone' }
-    })
-  });
-  const shareResult = await shareRes.json().catch(() => ({}));
-  if (shareRes.ok && shareResult?.successful !== false && !shareResult?.error) {
-    return { ok: true };
+  const entityId = env.COMPOSIO_ENTITY_ID || DEFAULT_ENTITY_ID;
+  const attempts = {};
+
+  const toolCalls = [
+    { key: 'addSharingPreference', url: SHARE_TOOL_URL, args: { file_id: fileId, role: 'reader', type: 'anyone' } },
+    { key: 'createPermission', url: CREATE_PERMISSION_URL, args: { fileId: fileId, role: 'reader', type: 'anyone' } }
+  ];
+  for (const call of toolCalls) {
+    try {
+      const res = await fetch(call.url, {
+        method: 'POST',
+        headers: { 'x-api-key': env.COMPOSIO_API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entity_id: entityId, arguments: call.args })
+      });
+      const result = await res.json().catch(() => ({}));
+      if (res.ok && result?.successful !== false && !result?.error) return { ok: true };
+      attempts[call.key] = result;
+    } catch (err) {
+      attempts[call.key] = String(err);
+    }
   }
 
-  if (!env.COMPOSIO_CONNECTED_ACCOUNT_ID) {
-    return { ok: false, details: shareResult };
-  }
-  const permRes = await fetch(PROXY_URL, {
-    method: 'POST',
-    headers: { 'x-api-key': env.COMPOSIO_API_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      connected_account_id: env.COMPOSIO_CONNECTED_ACCOUNT_ID,
-      endpoint: `https://www.googleapis.com/drive/v3/files/${fileId}/permissions`,
+  try {
+    const permRes = await fetch(PROXY_URL, {
       method: 'POST',
-      body: { role: 'reader', type: 'anyone' }
-    })
-  });
-  if (!permRes.ok) {
-    const details = await permRes.json().catch(() => ({}));
-    return { ok: false, details: { toolAttempt: shareResult, proxyAttempt: details } };
+      headers: { 'x-api-key': env.COMPOSIO_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        connected_account_id: env.COMPOSIO_CONNECTED_ACCOUNT_ID || DEFAULT_CONNECTED_ACCOUNT_ID,
+        endpoint: `https://www.googleapis.com/drive/v3/files/${fileId}/permissions`,
+        method: 'POST',
+        body: { role: 'reader', type: 'anyone' }
+      })
+    });
+    const permResult = await permRes.json().catch(() => ({}));
+    const proxiedStatus = permResult?.data?.status_code ?? permResult?.data?.statusCode;
+    if (permRes.ok && permResult?.successful !== false && !permResult?.error && !(proxiedStatus >= 400)) {
+      return { ok: true };
+    }
+    attempts.proxy = permResult;
+  } catch (err) {
+    attempts.proxy = String(err);
   }
-  return { ok: true };
+
+  return { ok: false, details: attempts, reason: readableShareError(attempts) };
+}
+
+// Pull the most useful human-readable message out of the pile of attempt
+// responses (Composio wraps errors differently per endpoint, and Google's own
+// errors are nested under data/error.message).
+function readableShareError(attempts) {
+  const messages = [];
+  for (const key of Object.keys(attempts)) {
+    const msg = extractErrorMessage(attempts[key]);
+    if (msg && messages.indexOf(msg) === -1) messages.push(msg);
+  }
+  return messages.join(' | ').slice(0, 400);
+}
+
+function extractErrorMessage(value) {
+  if (!value) return '';
+  if (typeof value === 'string') return value.slice(0, 200);
+  const err = value.error ?? value.data?.error ?? value.data?.body?.error;
+  if (typeof err === 'string') return err.slice(0, 200);
+  if (err && typeof err === 'object') {
+    return String(err.message || err.reason || JSON.stringify(err)).slice(0, 200);
+  }
+  if (value.message) return String(value.message).slice(0, 200);
+  return '';
 }
 
 // Composio's response envelope wasn't fully confirmed for GOOGLEDRIVE_FIND_FILE —

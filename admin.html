@@ -3606,7 +3606,9 @@ function useDriveFile(idx) {
     if (!result.ok || !result.data.url) {
       statusEl.textContent = '';
       console.error('Drive share error:', result.data);
-      showToast((result.data && result.data.error) || 'Could not share that file.', 'error');
+      var msg = (result.data && result.data.error) || 'Could not share that file.';
+      if (result.data && result.data.reason) msg += ' — ' + result.data.reason;
+      showToast(msg, 'error');
       return;
     }
     var type = guessFileTypeFromMime(file.mimeType, file.name);
