@@ -47,6 +47,7 @@
 
 const EXECUTE_URL = 'https://backend.composio.dev/api/v3/tools/execute/GOOGLEDRIVE_UPLOAD_FILE';
 const FIND_FILE_URL = 'https://backend.composio.dev/api/v3/tools/execute/GOOGLEDRIVE_FIND_FILE';
+const SHARE_TOOL_URL = 'https://backend.composio.dev/api/v3/tools/execute/GOOGLEDRIVE_ADD_FILE_SHARING_PREFERENCE';
 const PROXY_URL = 'https://backend.composio.dev/api/v3/tools/execute/proxy';
 
 export default {
@@ -209,15 +210,33 @@ async function handleDriveShare(request, env) {
   return jsonResponse({ name: name || '', url: `https://drive.google.com/file/d/${fileId}/view`, fileId });
 }
 
-// Make a Drive file viewable by anyone with the link, via a direct Drive API
-// call proxied through Composio (Composio injects the stored OAuth token; we
-// never see it).
+// Make a Drive file viewable by anyone with the link. Primary path: Composio's
+// GOOGLEDRIVE_ADD_FILE_SHARING_PREFERENCE tool, executed the same way as the
+// upload/find tools (those work with entity_id, so this will too). Fallback:
+// a direct Drive API call through Composio's proxy — which requires
+// connected_account_id, not entityId, to resolve the stored OAuth token.
 async function setFilePublic(fileId, env) {
+  const shareRes = await fetch(SHARE_TOOL_URL, {
+    method: 'POST',
+    headers: { 'x-api-key': env.COMPOSIO_API_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      entity_id: env.COMPOSIO_ENTITY_ID || 'pg-test-d637f137-c0cc-49ba-a207-3d4d6a37397e',
+      arguments: { file_id: fileId, role: 'reader', type: 'anyone' }
+    })
+  });
+  const shareResult = await shareRes.json().catch(() => ({}));
+  if (shareRes.ok && shareResult?.successful !== false && !shareResult?.error) {
+    return { ok: true };
+  }
+
+  if (!env.COMPOSIO_CONNECTED_ACCOUNT_ID) {
+    return { ok: false, details: shareResult };
+  }
   const permRes = await fetch(PROXY_URL, {
     method: 'POST',
     headers: { 'x-api-key': env.COMPOSIO_API_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      entityId: env.COMPOSIO_ENTITY_ID || 'pg-test-d637f137-c0cc-49ba-a207-3d4d6a37397e',
+      connected_account_id: env.COMPOSIO_CONNECTED_ACCOUNT_ID,
       endpoint: `https://www.googleapis.com/drive/v3/files/${fileId}/permissions`,
       method: 'POST',
       body: { role: 'reader', type: 'anyone' }
@@ -225,7 +244,7 @@ async function setFilePublic(fileId, env) {
   });
   if (!permRes.ok) {
     const details = await permRes.json().catch(() => ({}));
-    return { ok: false, details };
+    return { ok: false, details: { toolAttempt: shareResult, proxyAttempt: details } };
   }
   return { ok: true };
 }
