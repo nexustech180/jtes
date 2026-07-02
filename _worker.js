@@ -69,6 +69,9 @@ export default {
     if (url.pathname === '/api/debug-composio' && request.method === 'GET') {
       return handleDebugComposio(request, env);
     }
+    if (url.pathname === '/api/debug-share' && request.method === 'GET') {
+      return handleDebugShare(request, env);
+    }
 
     // Everything else: serve the static site as normal.
     return env.ASSETS.fetch(request);
@@ -314,6 +317,55 @@ function findFileId(result) {
   );
 }
 
+// Browser-friendly debugging for the share flow: open
+//   /api/debug-share?q=<search term>   (shares the first matching file)
+// or
+//   /api/debug-share?fileId=<drive file id>
+// in a normal browser tab and it prints the full response from every share
+// attempt as readable JSON — no dev tools needed. Note: if an attempt
+// succeeds, the file really is set to "anyone with link can view".
+async function handleDebugShare(request, env) {
+  if (!env.COMPOSIO_API_KEY) {
+    return jsonResponse({ error: 'Server is missing COMPOSIO_API_KEY env var.' }, 500);
+  }
+
+  const url = new URL(request.url);
+  let fileId = url.searchParams.get('fileId');
+  let fileName = '';
+
+  if (!fileId) {
+    const q = (url.searchParams.get('q') || '').trim();
+    const qParts = ["trashed = false", "mimeType != 'application/vnd.google-apps.folder'"];
+    if (q) qParts.push("name contains '" + q.replace(/'/g, "\\'") + "'");
+    const listRes = await fetch(FIND_FILE_URL, {
+      method: 'POST',
+      headers: { 'x-api-key': env.COMPOSIO_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        entity_id: env.COMPOSIO_ENTITY_ID || DEFAULT_ENTITY_ID,
+        arguments: { q: qParts.join(' and '), pageSize: 5, orderBy: 'modifiedTime desc' }
+      })
+    });
+    const listResult = await listRes.json().catch(() => ({}));
+    const files = findFileList(listResult);
+    if (!files || !files.length) {
+      return prettyJsonResponse({ debugVersion: 3, step: 'find-file', error: 'No file found for that search.', listStatus: listRes.status, listResult }, 200);
+    }
+    fileId = files[0].id;
+    fileName = files[0].name;
+  }
+
+  const result = await setFilePublic(fileId, env);
+  return prettyJsonResponse({
+    debugVersion: 3,
+    fileId,
+    fileName,
+    shared: result.ok,
+    url: result.ok ? `https://drive.google.com/file/d/${fileId}/view` : undefined,
+    reason: result.reason,
+    attempts: result.details
+  }, 200);
+}
+
 async function handleDebugComposio(request, env) {
   if (!env.COMPOSIO_API_KEY) {
     return jsonResponse({ error: 'Missing COMPOSIO_API_KEY' }, 500);
@@ -338,6 +390,14 @@ function arrayBufferToBase64(buffer) {
 
 function jsonResponse(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+// Pretty-printed so the debug endpoints are readable straight in a browser tab.
+function prettyJsonResponse(obj, status = 200) {
+  return new Response(JSON.stringify(obj, null, 2), {
     status,
     headers: { 'Content-Type': 'application/json' }
   });
