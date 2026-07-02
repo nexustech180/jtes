@@ -62,6 +62,9 @@ export default {
     if (url.pathname === '/api/drive-share' && request.method === 'POST') {
       return handleDriveShare(request, env);
     }
+    if (url.pathname === '/api/debug-composio' && request.method === 'GET') {
+      return handleDebugComposio(request, env);
+    }
 
     // Everything else: serve the static site as normal.
     return env.ASSETS.fetch(request);
@@ -247,6 +250,17 @@ function findFileId(result) {
     result?.id ||
     null
   );
+}
+
+async function handleDebugComposio(request, env) {
+  if (!env.COMPOSIO_API_KEY) {
+    return jsonResponse({ error: 'Missing COMPOSIO_API_KEY' }, 500);
+  }
+  const res = await fetch('https://backend.composio.dev/api/v1/connectedAccounts?toolkit=googledrive&limit=20', {
+    headers: { 'x-api-key': env.COMPOSIO_API_KEY, 'Content-Type': 'application/json' }
+  });
+  const data = await res.json();
+  return jsonResponse({ status: res.status, accounts: data });
 }
 
 function arrayBufferToBase64(buffer) {
