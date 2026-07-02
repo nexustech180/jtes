@@ -69,8 +69,8 @@ export default {
 };
 
 async function handleDriveUpload(request, env) {
-  if (!env.COMPOSIO_API_KEY || !env.COMPOSIO_CONNECTED_ACCOUNT_ID) {
-    return jsonResponse({ error: 'Server is missing COMPOSIO_API_KEY / COMPOSIO_CONNECTED_ACCOUNT_ID env vars.' }, 500);
+  if (!env.COMPOSIO_API_KEY) {
+    return jsonResponse({ error: 'Server is missing COMPOSIO_API_KEY env var.' }, 500);
   }
 
   let file;
@@ -98,7 +98,6 @@ async function handleDriveUpload(request, env) {
       method: 'POST',
       headers: { 'x-api-key': env.COMPOSIO_API_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        connected_account_id: env.COMPOSIO_CONNECTED_ACCOUNT_ID,
         entity_id: env.COMPOSIO_ENTITY_ID || 'default',
         arguments: uploadArgs
       })
@@ -139,8 +138,8 @@ async function handleDriveUpload(request, env) {
 // "Pick from Drive" tab so the admin doesn't have to re-upload a file
 // that's already sitting in their Drive.
 async function handleDriveList(request, env) {
-  if (!env.COMPOSIO_API_KEY || !env.COMPOSIO_CONNECTED_ACCOUNT_ID) {
-    return jsonResponse({ error: 'Server is missing COMPOSIO_API_KEY / COMPOSIO_CONNECTED_ACCOUNT_ID env vars.' }, 500);
+  if (!env.COMPOSIO_API_KEY) {
+    return jsonResponse({ error: 'Server is missing COMPOSIO_API_KEY env var.' }, 500);
   }
 
   let query = '';
@@ -157,7 +156,6 @@ async function handleDriveList(request, env) {
       method: 'POST',
       headers: { 'x-api-key': env.COMPOSIO_API_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        connected_account_id: env.COMPOSIO_CONNECTED_ACCOUNT_ID,
         entity_id: env.COMPOSIO_ENTITY_ID || 'default',
         arguments: {
           q: qParts.join(' and '),
@@ -186,8 +184,8 @@ async function handleDriveList(request, env) {
 // Set an existing Drive file (picked via /api/drive-list) to "anyone with link
 // can view" and return its share URL.
 async function handleDriveShare(request, env) {
-  if (!env.COMPOSIO_API_KEY || !env.COMPOSIO_CONNECTED_ACCOUNT_ID) {
-    return jsonResponse({ error: 'Server is missing COMPOSIO_API_KEY / COMPOSIO_CONNECTED_ACCOUNT_ID env vars.' }, 500);
+  if (!env.COMPOSIO_API_KEY) {
+    return jsonResponse({ error: 'Server is missing COMPOSIO_API_KEY env var.' }, 500);
   }
 
   let fileId, name;
@@ -216,7 +214,6 @@ async function setFilePublic(fileId, env) {
     method: 'POST',
     headers: { 'x-api-key': env.COMPOSIO_API_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      connectedAccountId: env.COMPOSIO_CONNECTED_ACCOUNT_ID,
       entityId: env.COMPOSIO_ENTITY_ID || 'default',
       endpoint: `https://www.googleapis.com/drive/v3/files/${fileId}/permissions`,
       method: 'POST',
