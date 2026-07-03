@@ -494,9 +494,35 @@ body { font-family: 'Manrope', sans-serif; background: #f8fafc; color: var(--tex
 .portal-docs-pane-heading i { color: var(--blue); }
 
 @media (max-width: 900px) {
-  .portal-docs-layout { grid-template-columns: 1fr; }
-  .portal-docs-sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+  /* Single column: the whole screen scrolls as one page instead of two
+     independently-scrolling desktop panes. */
+  .portal-docs-layout { grid-template-columns: 1fr; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .portal-docs-sidebar, .portal-docs-pane { overflow: visible; max-height: none; }
+  .portal-docs-sidebar { border-right: none; border-top: 1px solid var(--border); }
   .portal-docs-pane-inner { padding: 28px 20px 60px; }
+  /* Documents first (the content is the star, like article.html's canvas),
+     project-progress form below it. */
+  .portal-docs-pane { order: -1; }
+}
+
+/* ── Mobile: mirror article.html's Docs-style compact topbar ── */
+@media (max-width: 768px) {
+  .portal-docs-topbar { height: 52px; padding: 0 10px; background: #f1f3f4; border-bottom: 1px solid #dadce0; }
+  .portal-docs-topbar-left { gap: 8px; min-width: 0; }
+  .portal-docs-back { width: 36px; height: 36px; background: none; border: none; color: #3c4043; font-size: 16px; }
+  .portal-docs-back:hover { background: #dadce0; }
+  .portal-docs-brand { font-size: 13px; color: #3c4043; font-weight: 600; letter-spacing: 0; }
+  .portal-docs-badge { display: none; }
+  .portal-docs-account-name { color: #5f6368; font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .portal-progress-save-status { display: none; }
+  .btn-save-progress { padding: 8px 14px; font-size: 13px; border-radius: 8px; flex-shrink: 0; }
+
+  .portal-docs-sidebar { padding: 22px 20px 40px; }
+  .portal-docs-pane-inner { padding: 24px 16px 8px; }
+  .portal-docs-pane-heading { font-size: 20px; }
+
+  .portal-add-doc-tabs { flex-wrap: wrap; }
+  .portal-add-doc-grid { grid-template-columns: 1fr; }
 }
 
 .portal-add-doc-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
