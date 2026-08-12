@@ -374,7 +374,7 @@
   <div class="carousel-progress" id="progress-contact"></div>
 </div>
 
-<section class="contact-info-section">
+<section class="contact-info-section" id="contact-info-section">
   <div class="contact-info-header">
     <div class="section-badge" style="margin:0 auto 16px;display:inline-flex;"><span class="dot"></span> CONTACT US</div>
     <h2>Get in <span>Touch</span></h2>
@@ -445,12 +445,12 @@
   </div>
 </section>
 
-<div class="map-section">
+<div class="map-section" id="map-section">
   <div class="map-pin"><i class="fas fa-map-marker-alt"></i></div>
   <p>Ghana, Kumasi-Lake-Road, Kumasi</p>
 </div>
 
-  <div class="newsletter-section">
+  <div class="newsletter-section" id="newsletter-preview">
     <div class="nl-inner">
       <div class="nl-icon-wrap"><i class="fas fa-envelope-open-text"></i></div>
       <h2>Stay Ahead with <span>JTES</span></h2>
@@ -609,8 +609,512 @@ function closePopup() {
   document.body.style.overflow = '';
 }
 
+// ═══════════════════════════════════════════
+//  CONTACT PAGE CONTENT + VISUAL EDIT MODE (?edit=1)
+//  Same pattern as index.html/about.html/services.html: siteContent/contact
+//  drives rendering (data null → keep hardcoded HTML for visitors), every
+//  bound element carries data-cms-path/data-cms-mode, edit mode makes
+//  text/images directly clickable and card lists add/remove-able.
+// ═══════════════════════════════════════════
+var CMS_FB_URL = 'https://jtes-website-default-rtdb.firebaseio.com';
+var pageContentDraft = null;
+function cmsText(v) { return v == null ? '' : v; }
+function cmsSetVisible(el, visible) { if (el) el.style.display = (visible === false) ? 'none' : ''; }
+function isEditMode() { return new URLSearchParams(window.location.search).get('edit') === '1'; }
+
+var CONTACT_DEFAULTS = {
+  sectionOrder: ['hero', 'info', 'map', 'newsletter'],
+  sections: {
+    hero: {
+      visible: true,
+      slides: [
+        { badge: 'Contact Us', headingHtml: "Let's Build <span>Together</span>", body: "Have a project in mind or want to learn more about our services? We'd love to hear from you.", bgImage: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1600&q=80' },
+        { badge: 'Get a Quote', headingHtml: 'Start Your <span>Project</span><br>With Us', body: "Whether it's STEM training, electrical services, or IoT automation — we'll tailor the perfect solution for you.", bgImage: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=80' },
+        { badge: 'Partnership', headingHtml: 'Partner With<br><span>Africa\'s</span> Tech Leader', body: 'Join the growing network of schools, businesses, and institutions building the future with JASSAN Technologies.', bgImage: 'https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=1600&q=80' }
+      ]
+    },
+    info: {
+      visible: true, badge: 'CONTACT US', headingHtml: 'Get in <span>Touch</span>',
+      body: "Reach out to us through any of the following channels or fill out the contact form below. We're based in Kumasi, Ghana and here to help bring your vision to life.",
+      cards: [
+        { icon: 'fas fa-phone', title: 'Phone', body: '0548029027<br>0203212915' },
+        { icon: 'fas fa-envelope', title: 'Email', body: 'jassantechnologies@gmail.com' },
+        { icon: 'fas fa-clock', title: 'Business Hours', body: 'Mon - Fri: 8:00 AM - 5:00 PM<br>Sat: 9:00 AM - 2:00 PM' }
+      ],
+      formHeadingHtml: 'Send Us a <span>Message</span>',
+      formSubtext: "Fill out the form below and we'll get back to you within 24 hours."
+    },
+    map: { visible: true, text: 'Ghana, Kumasi-Lake-Road, Kumasi' },
+    newsletter: {
+      visible: true, headingHtml: 'Stay Ahead with <span>JTES</span>',
+      body: "Join our exclusive community. Get event invites, new blog posts, STEM breakthroughs and tech insights from Ghana's leading technology team — straight to your inbox.",
+      perks: [
+        { icon: 'fas fa-calendar-star', label: 'Exclusive Events' },
+        { icon: 'fas fa-newspaper', label: 'Latest Articles' },
+        { icon: 'fas fa-bolt', label: 'Tech Insights' },
+        { icon: 'fas fa-trophy', label: 'STEM News' }
+      ],
+      fineprint: '🔒 Zero spam. Unsubscribe with one click, anytime.'
+    }
+  }
+};
+
+function applyPageContent(data) {
+  var s = data.sections || {};
+  if (s.hero) renderContactHero(s.hero);
+  if (s.info) renderContactInfo(s.info);
+  if (s.map) renderContactMap(s.map);
+  if (s.newsletter) renderContactNewsletter(s.newsletter);
+  if (data.sectionOrder) reorderPageSections(data.sectionOrder, CMS_SECTION_ID_MAP);
+}
+
+async function loadPageContent() {
+  try {
+    var res = await fetch(CMS_FB_URL + '/siteContent/contact.json');
+    var data = await res.json();
+    if (!data) {
+      if (isEditMode()) { pageContentDraft = JSON.parse(JSON.stringify(CONTACT_DEFAULTS)); applyPageContent(pageContentDraft); }
+      return;
+    }
+    pageContentDraft = data;
+    applyPageContent(data);
+  } catch (e) {
+    console.error('Failed to load contact-page content, keeping built-in defaults:', e);
+    if (isEditMode()) { pageContentDraft = JSON.parse(JSON.stringify(CONTACT_DEFAULTS)); applyPageContent(pageContentDraft); }
+  }
+}
+
+function renderContactHero(hero) {
+  var wrap = document.getElementById('carousel-contact');
+  cmsSetVisible(wrap, hero.visible);
+  if (hero.visible === false || !hero.slides || !hero.slides.length) return;
+  var track = document.getElementById('track-contact');
+  var dots  = document.getElementById('dots-contact');
+  track.innerHTML = hero.slides.map(function(s, i) {
+    var base = 'sections.hero.slides[' + i + ']';
+    return '<div class="carousel-slide' + (i === 0 ? ' active' : '') + '">' +
+      '<div class="carousel-slide-bg" data-cms-path="' + base + '.bgImage" data-cms-mode="bgimage" style="background-image:url(\'' + cmsText(s.bgImage) + '\');"></div>' +
+      '<div class="carousel-slide-overlay"></div>' +
+      '<div class="carousel-content">' +
+        '<div class="badge"><span class="badge-dot"></span> <span data-cms-path="' + base + '.badge">' + cmsText(s.badge) + '</span></div>' +
+        '<h1 data-cms-path="' + base + '.headingHtml" data-cms-mode="html">' + cmsText(s.headingHtml) + '</h1>' +
+        '<p data-cms-path="' + base + '.body">' + cmsText(s.body) + '</p>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  dots.innerHTML = hero.slides.map(function(_, i) {
+    return '<button class="carousel-dot' + (i === 0 ? ' active' : '') + '" onclick="goToSlide(\'contact\', ' + i + ')"></button>';
+  }).join('');
+}
+
+function renderContactInfo(s) {
+  var section = document.getElementById('contact-info-section');
+  cmsSetVisible(section, s.visible);
+  if (s.visible === false) return;
+  var badge = section.querySelector('.contact-info-header .section-badge');
+  if (badge) badge.innerHTML = '<span class="dot"></span> <span data-cms-path="sections.info.badge">' + cmsText(s.badge) + '</span>';
+  var heading = section.querySelector('.contact-info-header h2');
+  if (heading) { heading.innerHTML = cmsText(s.headingHtml); heading.setAttribute('data-cms-path', 'sections.info.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
+  var body = section.querySelector('.contact-info-header > p');
+  if (body) { body.textContent = cmsText(s.body); body.setAttribute('data-cms-path', 'sections.info.body'); }
+  var grid = section.querySelector('.contact-cards');
+  if (grid && s.cards) {
+    grid.innerHTML = s.cards.map(function(c, i) {
+      var base = 'sections.info.cards[' + i + ']';
+      return '<div class="contact-card"><div class="contact-card-icon"><i class="' + cmsText(c.icon) + '"></i></div>' +
+        '<h4 data-cms-path="' + base + '.title">' + cmsText(c.title) + '</h4>' +
+        '<p data-cms-path="' + base + '.body" data-cms-mode="html">' + cmsText(c.body) + '</p></div>';
+    }).join('');
+  }
+  var formHeading = section.querySelector('.contact-form-card h2');
+  if (formHeading) { formHeading.innerHTML = cmsText(s.formHeadingHtml); formHeading.setAttribute('data-cms-path', 'sections.info.formHeadingHtml'); formHeading.setAttribute('data-cms-mode', 'html'); }
+  var formSubtext = section.querySelector('.contact-form-card > p');
+  if (formSubtext) { formSubtext.textContent = cmsText(s.formSubtext); formSubtext.setAttribute('data-cms-path', 'sections.info.formSubtext'); }
+}
+
+function renderContactMap(s) {
+  var section = document.getElementById('map-section');
+  cmsSetVisible(section, s.visible);
+  if (s.visible === false) return;
+  var text = section.querySelector('p');
+  if (text) { text.textContent = cmsText(s.text); text.setAttribute('data-cms-path', 'sections.map.text'); }
+}
+
+function renderContactNewsletter(s) {
+  var section = document.getElementById('newsletter-preview');
+  cmsSetVisible(section, s.visible);
+  if (s.visible === false) return;
+  var heading = section.querySelector('h2');
+  if (heading) { heading.innerHTML = cmsText(s.headingHtml); heading.setAttribute('data-cms-path', 'sections.newsletter.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
+  var body = section.querySelector('.nl-inner > p');
+  if (body) { body.textContent = cmsText(s.body); body.setAttribute('data-cms-path', 'sections.newsletter.body'); }
+  var perksWrap = section.querySelector('.nl-perks');
+  if (perksWrap && s.perks) {
+    perksWrap.innerHTML = s.perks.map(function(p, i) {
+      return '<div class="nl-perk"><i class="' + cmsText(p.icon) + '"></i> <span data-cms-path="sections.newsletter.perks[' + i + '].label">' + cmsText(p.label) + '</span></div>';
+    }).join('');
+  }
+  var fine = section.querySelector('.nl-fine');
+  if (fine) { if (s.fineprint) fine.textContent = s.fineprint; fine.setAttribute('data-cms-path', 'sections.newsletter.fineprint'); }
+}
+
+function reorderPageSections(order, idMap) {
+  var footer = document.querySelector('footer');
+  if (!footer) return;
+  order.forEach(function(key) {
+    var id = idMap[key];
+    var el = id && document.getElementById(id);
+    if (el) footer.parentNode.insertBefore(el, footer);
+  });
+}
+
+// ═══════════════════════════════════════════
+//  VISUAL EDIT MODE — generic engine, identical to index.html's/about.html's/services.html's.
+// ═══════════════════════════════════════════
+var EDIT_ADMIN_PASS = 'JTES@2025';
+var CMS_CLD_CLOUD = 'dx8ziypwz';
+var CMS_CLD_PRESET = 'JASSAN';
+var cmsDirty = false;
+
+var CMS_SECTION_ID_MAP = {
+  hero: 'carousel-contact', info: 'contact-info-section', map: 'map-section', newsletter: 'newsletter-preview'
+};
+var CMS_SECTION_LABELS = {
+  hero: 'Hero', info: 'Contact Info & Form', map: 'Map', newsletter: 'Newsletter'
+};
+var CMS_TEMPLATES = {
+  heroSlide: { badge: 'New badge', headingHtml: 'New Heading', body: 'Add a description here.', bgImage: 'https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=1600&q=80' },
+  contactCard: { icon: 'fas fa-star', title: 'New Item', body: 'Description here.' },
+  perk: { icon: 'fas fa-star', label: 'New Perk' }
+};
+
+function cmsGetByPath(obj, path) {
+  var parts = path.replace(/\[(\d+)\]/g, '.$1').split('.');
+  var cur = obj;
+  for (var i = 0; i < parts.length; i++) { if (cur == null) return undefined; cur = cur[parts[i]]; }
+  return cur;
+}
+function cmsSetByPath(obj, path, value) {
+  var parts = path.replace(/\[(\d+)\]/g, '.$1').split('.');
+  var cur = obj;
+  for (var i = 0; i < parts.length - 1; i++) {
+    var key = parts[i];
+    if (cur[key] == null) cur[key] = /^\d+$/.test(parts[i + 1]) ? [] : {};
+    cur = cur[key];
+  }
+  cur[parts[parts.length - 1]] = value;
+}
+function markDirty() {
+  cmsDirty = true;
+  var el = document.getElementById('cms-dirty-indicator');
+  if (el) el.style.display = 'inline';
+}
+function injectEditModeStyles() {
+  var style = document.createElement('style');
+  style.textContent =
+    '.cms-editable-text{outline:2px dashed transparent;outline-offset:3px;cursor:text;transition:outline-color .15s,background-color .15s;border-radius:4px;}' +
+    '.cms-editable-text:hover{outline-color:rgba(37,99,235,0.55);}' +
+    '.cms-editable-text.cms-focused{outline-color:#2563EB;outline-style:solid;background-color:rgba(37,99,235,0.06);}' +
+    '.cms-image-edit-btn{opacity:0.92;}.cms-image-edit-btn:hover{background:#2563EB !important;opacity:1;}' +
+    '.cms-section-toolbar button:hover{color:#3B82F6;}';
+  document.head.appendChild(style);
+}
+function enableTextEditing(root) {
+  (root || document).querySelectorAll('[data-cms-path]').forEach(function(el) {
+    if (el.tagName === 'IMG' || el.getAttribute('data-cms-mode') === 'bgimage') return;
+    if (el.classList.contains('cms-editable-text')) return;
+    el.contentEditable = 'true';
+    el.spellcheck = false;
+    el.classList.add('cms-editable-text');
+    el.addEventListener('focus', function() { el.classList.add('cms-focused'); });
+    el.addEventListener('blur', function() {
+      el.classList.remove('cms-focused');
+      var path = el.getAttribute('data-cms-path');
+      var mode = el.getAttribute('data-cms-mode');
+      var value = mode === 'html' ? el.innerHTML : el.textContent;
+      cmsSetByPath(pageContentDraft, path, value);
+      markDirty();
+    });
+    if (el.tagName !== 'P') {
+      el.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } });
+    }
+  });
+}
+function cmsShowToast(msg) {
+  var el = document.createElement('div');
+  el.style.cssText = 'position:fixed;top:80px;right:20px;z-index:10000;background:#0A0F1E;color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;font-family:Manrope,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,0.3);';
+  el.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + msg;
+  document.body.appendChild(el);
+  return el;
+}
+function cmsResolveToast(el, msg, success) {
+  el.innerHTML = '<i class="fas fa-' + (success ? 'check-circle' : 'exclamation-circle') + '"></i> ' + msg;
+  el.style.background = success ? '#16a34a' : '#dc2626';
+  setTimeout(function() { el.remove(); }, 2500);
+}
+async function cmsUploadImage(file) {
+  var fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CMS_CLD_PRESET);
+  var res = await fetch('https://api.cloudinary.com/v1_1/' + CMS_CLD_CLOUD + '/upload', { method: 'POST', body: fd });
+  var data = await res.json();
+  if (!data.secure_url) throw new Error('Upload did not return a URL');
+  return data.secure_url;
+}
+function cmsPickImage(el) {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async function() {
+    if (!input.files[0]) return;
+    var toast = cmsShowToast('Uploading image…');
+    try {
+      var url = await cmsUploadImage(input.files[0]);
+      var path = el.getAttribute('data-cms-path');
+      var mode = el.getAttribute('data-cms-mode');
+      cmsSetByPath(pageContentDraft, path, url);
+      if (mode === 'bgimage') { el.style.backgroundImage = "url('" + url + "')"; }
+      else { el.src = url; }
+      markDirty();
+      cmsResolveToast(toast, 'Image updated', true);
+    } catch (e) {
+      console.error(e);
+      cmsResolveToast(toast, 'Upload failed', false);
+    }
+  };
+  input.click();
+}
+function enableImageEditing(root) {
+  (root || document).querySelectorAll('[data-cms-path]').forEach(function(el) {
+    var isImg = el.tagName === 'IMG';
+    var isBg  = el.getAttribute('data-cms-mode') === 'bgimage';
+    if (!isImg && !isBg) return;
+    var posEl = isImg ? el.parentElement : el;
+    if (!posEl || posEl.querySelector('.cms-image-edit-btn')) return;
+    if (getComputedStyle(posEl).position === 'static') posEl.style.position = 'relative';
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'cms-image-edit-btn';
+    btn.innerHTML = '<i class="fas fa-camera"></i> Change Image';
+    btn.style.cssText = 'position:absolute;left:8px;bottom:8px;z-index:5;background:rgba(10,15,30,0.85);color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:Manrope,sans-serif;';
+    btn.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); cmsPickImage(el); });
+    posEl.appendChild(btn);
+  });
+}
+function cmsEnableListEditing(containerSelector, sectionKey, listKey, cardSelector, templateKey, addLabel, rerenderFn) {
+  var container = document.querySelector(containerSelector);
+  if (!container) return;
+  container.querySelectorAll(cardSelector).forEach(function(card, i) {
+    if (getComputedStyle(card).position === 'static') card.style.position = 'relative';
+    var rm = document.createElement('button');
+    rm.type = 'button';
+    rm.title = 'Remove';
+    rm.innerHTML = '<i class="fas fa-times"></i>';
+    rm.style.cssText = 'position:absolute;top:-10px;right:-10px;z-index:6;width:26px;height:26px;border-radius:50%;background:#dc2626;color:#fff;border:2px solid #fff;cursor:pointer;font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,0.25);';
+    rm.addEventListener('click', function(e) {
+      e.preventDefault(); e.stopPropagation();
+      if (!confirm('Remove this?')) return;
+      pageContentDraft.sections[sectionKey][listKey].splice(i, 1);
+      markDirty();
+      rerenderFn();
+    });
+    card.appendChild(rm);
+  });
+  var addBtn = document.createElement('button');
+  addBtn.type = 'button';
+  addBtn.innerHTML = '<i class="fas fa-plus"></i> ' + addLabel;
+  addBtn.style.cssText = 'display:inline-flex;align-items:center;gap:8px;background:#eff6ff;color:#2563EB;border:2px dashed #2563EB;border-radius:12px;padding:14px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;margin-top:14px;';
+  addBtn.addEventListener('click', function() {
+    pageContentDraft.sections[sectionKey][listKey].push(JSON.parse(JSON.stringify(CMS_TEMPLATES[templateKey])));
+    markDirty();
+    rerenderFn();
+  });
+  container.appendChild(addBtn);
+}
+function cmsForceVisibleInEditMode() {
+  Object.keys(CMS_SECTION_ID_MAP).forEach(function(key) {
+    var el = document.getElementById(CMS_SECTION_ID_MAP[key]);
+    if (!el) return;
+    var hidden = pageContentDraft.sections[key] && pageContentDraft.sections[key].visible === false;
+    el.style.display = '';
+    el.style.opacity = hidden ? '0.35' : '';
+    el.style.outline = hidden ? '3px dashed #ef4444' : '';
+    el.style.outlineOffset = hidden ? '-3px' : '';
+  });
+}
+function cmsMoveSection(key, dir) {
+  var order = pageContentDraft.sectionOrder;
+  var idx = order.indexOf(key);
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= order.length) return;
+  var tmp = order[idx]; order[idx] = order[newIdx]; order[newIdx] = tmp;
+  reorderPageSections(order, CMS_SECTION_ID_MAP);
+  markDirty();
+}
+function cmsToggleSectionVisible(key) {
+  var section = pageContentDraft.sections[key];
+  section.visible = section.visible === false ? true : false;
+  cmsForceVisibleInEditMode();
+  markDirty();
+}
+function enableSectionControls() {
+  (pageContentDraft.sectionOrder || Object.keys(CMS_SECTION_ID_MAP)).forEach(function(key) {
+    var el = document.getElementById(CMS_SECTION_ID_MAP[key]);
+    if (!el) return;
+    var bar = document.createElement('div');
+    bar.className = 'cms-section-toolbar';
+    bar.style.cssText = 'display:flex;align-items:center;gap:10px;background:#0A0F1E;color:#fff;padding:8px 16px;font-size:12px;font-weight:700;font-family:Manrope,sans-serif;';
+    bar.innerHTML =
+      '<span><i class="fas fa-grip-lines"></i> ' + CMS_SECTION_LABELS[key] + ' section</span>' +
+      '<button type="button" data-act="up" title="Move section up" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px 6px;"><i class="fas fa-arrow-up"></i> Move Up</button>' +
+      '<button type="button" data-act="down" title="Move section down" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px 6px;"><i class="fas fa-arrow-down"></i> Move Down</button>' +
+      '<button type="button" data-act="hide" title="Show or hide this section" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px 6px;"><i class="fas fa-eye-slash"></i> Show/Hide</button>' +
+      (key === 'hero' ? '<button type="button" data-act="addslide" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px 6px;"><i class="fas fa-plus"></i> Add Slide</button>' : '');
+    bar.querySelector('[data-act="up"]').onclick = function() { cmsMoveSection(key, -1); };
+    bar.querySelector('[data-act="down"]').onclick = function() { cmsMoveSection(key, 1); };
+    bar.querySelector('[data-act="hide"]').onclick = function() { cmsToggleSectionVisible(key); };
+    if (key === 'hero') bar.querySelector('[data-act="addslide"]').onclick = cmsAddHeroSlide;
+    el.insertBefore(bar, el.firstChild);
+  });
+}
+function cmsAttachHeroSlideRemoveButtons() {
+  document.querySelectorAll('#track-contact .carousel-slide').forEach(function(slide, i) {
+    var content = slide.querySelector('.carousel-content');
+    if (!content || content.querySelector('.cms-remove-slide-btn')) return;
+    if (getComputedStyle(slide).position === 'static') slide.style.position = 'relative';
+    var rm = document.createElement('button');
+    rm.type = 'button';
+    rm.className = 'cms-remove-slide-btn';
+    rm.innerHTML = '<i class="fas fa-times"></i> Remove Slide';
+    rm.style.cssText = 'position:absolute;top:0;right:0;z-index:6;background:#dc2626;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;';
+    rm.addEventListener('click', function(e) {
+      e.preventDefault(); e.stopPropagation();
+      if (pageContentDraft.sections.hero.slides.length <= 1) { alert('Keep at least one slide.'); return; }
+      if (!confirm('Remove this slide?')) return;
+      pageContentDraft.sections.hero.slides.splice(i, 1);
+      markDirty();
+      cmsRefreshHero();
+    });
+    content.appendChild(rm);
+  });
+}
+function cmsRefreshHero() {
+  renderContactHero(pageContentDraft.sections.hero);
+  var root = document.getElementById('carousel-contact');
+  enableTextEditing(root);
+  enableImageEditing(root);
+  cmsAttachHeroSlideRemoveButtons();
+  initCarousel('contact');
+}
+function cmsAddHeroSlide() {
+  pageContentDraft.sections.hero.slides.push(JSON.parse(JSON.stringify(CMS_TEMPLATES.heroSlide)));
+  markDirty();
+  cmsRefreshHero();
+}
+function cmsRefreshInfo() {
+  renderContactInfo(pageContentDraft.sections.info);
+  var root = document.getElementById('contact-info-section');
+  enableTextEditing(root); enableImageEditing(root);
+  cmsEnableListEditing('.contact-cards', 'info', 'cards', '.contact-card', 'contactCard', 'Add Card', cmsRefreshInfo);
+}
+function cmsRefreshNewsletter() {
+  renderContactNewsletter(pageContentDraft.sections.newsletter);
+  var root = document.getElementById('newsletter-preview');
+  enableTextEditing(root); enableImageEditing(root);
+  cmsEnableListEditing('.nl-perks', 'newsletter', 'perks', '.nl-perk', 'perk', 'Add Perk', cmsRefreshNewsletter);
+}
+function buildEditModeChrome() {
+  var bar = document.createElement('div');
+  bar.id = 'cms-edit-bar';
+  bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#0A0F1E;color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 -4px 20px rgba(0,0,0,0.3);font-family:Manrope,sans-serif;';
+  bar.innerHTML =
+    '<div style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;"><i class="fas fa-pen" style="color:#3B82F6;"></i> Editing this page — click any text or image to change it.' +
+    '<span id="cms-dirty-indicator" style="display:none;color:#f59e0b;">● Unsaved changes</span></div>' +
+    '<div style="display:flex;gap:10px;">' +
+      '<button type="button" id="cms-exit-btn" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:8px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;font-family:Manrope,sans-serif;">Exit</button>' +
+      '<button type="button" id="cms-save-btn" style="background:#2563EB;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;"><i class="fas fa-save"></i> Save Changes</button>' +
+    '</div>';
+  document.body.appendChild(bar);
+  document.body.style.paddingBottom = '76px';
+  document.getElementById('cms-exit-btn').onclick = function() {
+    if (cmsDirty && !confirm('Discard unsaved changes?')) return;
+    window.location.href = window.location.pathname;
+  };
+  document.getElementById('cms-save-btn').onclick = cmsSavePageContent;
+}
+async function cmsSavePageContent() {
+  var btn = document.getElementById('cms-save-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+  try {
+    var res = await fetch(CMS_FB_URL + '/siteContent/contact.json', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pageContentDraft)
+    });
+    if (!res.ok) throw new Error('Save failed with status ' + res.status);
+    cmsDirty = false;
+    var dirtyEl = document.getElementById('cms-dirty-indicator');
+    if (dirtyEl) dirtyEl.style.display = 'none';
+    btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+    setTimeout(function() { btn.innerHTML = '<i class="fas fa-save"></i> Save Changes'; btn.disabled = false; }, 1800);
+  } catch (e) {
+    console.error(e);
+    btn.innerHTML = '<i class="fas fa-exclamation-circle"></i> Save failed — try again';
+    btn.disabled = false;
+    setTimeout(function() { btn.innerHTML = '<i class="fas fa-save"></i> Save Changes'; }, 2200);
+  }
+}
+function showEditAuthGate(onSuccess) {
+  var overlay = document.createElement('div');
+  overlay.id = 'cms-auth-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10001;background:linear-gradient(135deg,#0A0F1E 0%,#1E3A8A 100%);display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.innerHTML =
+    '<div style="background:#fff;border-radius:20px;padding:40px 32px;max-width:380px;width:100%;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,0.3);font-family:Manrope,sans-serif;">' +
+      '<div style="width:56px;height:56px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;"><i class="fas fa-pen" style="font-size:22px;color:#2563EB;"></i></div>' +
+      '<h2 style="font-size:22px;font-weight:900;color:#0F172A;margin-bottom:6px;">Edit This Page</h2>' +
+      '<p style="font-size:14px;color:#64748b;margin-bottom:24px;">Enter the admin password to start editing.</p>' +
+      '<input type="password" id="cms-auth-pass" placeholder="Password" style="width:100%;padding:13px 16px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:16px;text-align:center;margin-bottom:12px;font-family:Manrope,sans-serif;box-sizing:border-box;">' +
+      '<p id="cms-auth-error" style="display:none;color:#ef4444;font-size:13px;margin-bottom:12px;">Incorrect password.</p>' +
+      '<button type="button" id="cms-auth-submit" style="width:100%;background:#2563EB;color:#fff;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Continue</button>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  var input = document.getElementById('cms-auth-pass');
+  input.focus();
+  function attempt() {
+    if (input.value === EDIT_ADMIN_PASS) {
+      sessionStorage.setItem('jtes_edit_auth', input.value);
+      overlay.remove();
+      onSuccess();
+    } else {
+      document.getElementById('cms-auth-error').style.display = 'block';
+      input.value = '';
+      input.focus();
+    }
+  }
+  document.getElementById('cms-auth-submit').onclick = attempt;
+  input.addEventListener('keydown', function(e) { if (e.key === 'Enter') attempt(); });
+}
+function startEditMode() {
+  if (!pageContentDraft) return;
+  injectEditModeStyles();
+  buildEditModeChrome();
+  enableTextEditing();
+  enableImageEditing();
+  enableSectionControls();
+  cmsForceVisibleInEditMode();
+  cmsAttachHeroSlideRemoveButtons();
+  cmsEnableListEditing('.contact-cards', 'info', 'cards', '.contact-card', 'contactCard', 'Add Card', cmsRefreshInfo);
+  cmsEnableListEditing('.nl-perks', 'newsletter', 'perks', '.nl-perk', 'perk', 'Add Perk', cmsRefreshNewsletter);
+}
+function initEditModeIfRequested() {
+  if (!isEditMode()) return;
+  if (sessionStorage.getItem('jtes_edit_auth') === EDIT_ADMIN_PASS) startEditMode();
+  else showEditAuthGate(startEditMode);
+}
+
 // ===== INIT =====
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+  await loadPageContent();
+  initEditModeIfRequested();
   initCarousel('contact');
 
   document.querySelectorAll('.carousel').forEach(function(el) {
@@ -623,7 +1127,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (popup) popup.addEventListener('click', function(e) { if (e.target === this) closePopup(); });
 
   // ===== EMAILJS =====
-  emailjs.init('vWuux6AIkMKqJ1Cz5');
+  try { emailjs.init('vWuux6AIkMKqJ1Cz5'); } catch (e) { console.error('EmailJS failed to load:', e); }
 
   var form = document.getElementById('contact-form');
   var btn  = document.getElementById('send-btn');
