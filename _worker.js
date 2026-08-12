@@ -32,9 +32,27 @@
 //                                      connected account; defaults to 'default',
 //                                      which is correct unless you set up your
 //                                      own multi-user entity IDs in Composio)
+//      ADMIN_API_TOKEN               (type: Secret — required. A random shared
+//                                      value. admin.html sends it as the
+//                                      X-Admin-Token header on every /api/drive-*
+//                                      request; requests without a match are
+//                                      rejected with 401 before touching Composio.
+//                                      Generate one with e.g. `openssl rand -hex 32`.
+//                                      NOTE: because admin.html is a static page,
+//                                      this token ships in its JS source just like
+//                                      ADMIN_PASS already does — it stops
+//                                      anonymous/automated hits on this URL, not a
+//                                      determined attacker reading the page source.
+//                                      Real protection requires a real backend;
+//                                      see the platform rebuild plan.)
 //
 // 3. wrangler.jsonc (in this same repo root) tells Cloudflare to use this file as
 //    the Worker's entry point and to serve everything else as static assets.
+//
+// 4. This Worker now serves admin.html/article.html on a *different* site
+//    (see ADMIN_ORIGIN below) than the one this file is deployed on. Update
+//    ADMIN_ORIGIN to that site's real URL once it's deployed — CORS is
+//    scoped to exactly that one origin, not a wildcard.
 //
 // ── HEADS UP ──
 // Composio's exact response shapes for GOOGLEDRIVE_UPLOAD_FILE and
@@ -53,18 +71,41 @@ const PROXY_URL = 'https://backend.composio.dev/api/v3/tools/execute/proxy';
 const DEFAULT_ENTITY_ID = 'pg-test-d637f137-c0cc-49ba-a207-3d4d6a37397e';
 const DEFAULT_CONNECTED_ACCOUNT_ID = 'ca_4PfensM4N3iK';
 
+// admin.html/article.html now live on their own site, not this one — see
+// jtes_admin. TODO: replace with that site's real deployed URL once it's live.
+const ADMIN_ORIGIN = 'https://admin.jtes.example';
+
+const DRIVE_API_PATHS = ['/api/drive-upload', '/api/drive-list', '/api/drive-share'];
+
+function corsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': ADMIN_ORIGIN,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Token',
+    'Vary': 'Origin'
+  };
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const isDriveApi = DRIVE_API_PATHS.includes(url.pathname);
 
-    if (url.pathname === '/api/drive-upload' && request.method === 'POST') {
-      return handleDriveUpload(request, env);
+    // Preflight for the cross-origin POSTs admin.html now makes.
+    if (isDriveApi && request.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: corsHeaders() });
     }
-    if (url.pathname === '/api/drive-list' && request.method === 'POST') {
-      return handleDriveList(request, env);
-    }
-    if (url.pathname === '/api/drive-share' && request.method === 'POST') {
-      return handleDriveShare(request, env);
+
+    if (isDriveApi && request.method === 'POST') {
+      if (!env.ADMIN_API_TOKEN) {
+        return jsonResponse({ error: 'Server is missing ADMIN_API_TOKEN env var.' }, 500);
+      }
+      if (request.headers.get('X-Admin-Token') !== env.ADMIN_API_TOKEN) {
+        return jsonResponse({ error: 'Missing or invalid X-Admin-Token header.' }, 401);
+      }
+      if (url.pathname === '/api/drive-upload') return handleDriveUpload(request, env);
+      if (url.pathname === '/api/drive-list') return handleDriveList(request, env);
+      if (url.pathname === '/api/drive-share') return handleDriveShare(request, env);
     }
     if (url.pathname === '/api/debug-composio' && request.method === 'GET') {
       return handleDebugComposio(request, env);
@@ -391,7 +432,7 @@ function arrayBufferToBase64(buffer) {
 function jsonResponse(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
-    headers: { 'Content-Type': 'application/json' }
+    headers: Object.assign({ 'Content-Type': 'application/json' }, corsHeaders())
   });
 }
 
