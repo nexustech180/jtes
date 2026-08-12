@@ -496,24 +496,10 @@ body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--t
 </head>
 <body>
 
-<!-- ── LOGIN ── -->
-<div id="login-screen">
-  <div class="login-box">
-    <div class="login-logo">
-      <img src="https://jassan-innovations-hub.vercel.app/assets/logo-CoQZjYGJ.jpg" alt="JTES">
-    </div>
-    <h2>Article Editor</h2>
-    <p class="login-sub">JTES Admin Access Required</p>
-    <div class="login-field">
-      <label>Password</label>
-      <input type="password" id="login-pass" placeholder="Enter admin password" onkeydown="if(event.key==='Enter') doLogin()">
-    </div>
-    <button class="btn-login" onclick="doLogin()"><i class="fas fa-pen-nib"></i> Open Editor</button>
-    <p id="login-error"><i class="fas fa-exclamation-circle"></i> Incorrect password. Try again.</p>
-  </div>
-</div>
-
-<!-- ── MAIN EDITOR ── -->
+<!-- ── MAIN EDITOR ──
+     No standalone login here. The Article Editor is only reachable from an
+     already-authenticated admin.html session (single sign-on via the shared
+     jtes_auth session key); see the DOMContentLoaded guard below. -->
 <div id="editor-app">
 
   <!-- TOPBAR -->
@@ -899,13 +885,15 @@ var editingPostId = null;
 document.addEventListener('DOMContentLoaded', function() {
   var saved = sessionStorage.getItem('jtes_auth');
   if (saved && saved === ADMIN_PASS) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('editor-app').style.display   = 'flex';
+    document.getElementById('editor-app').style.display = 'flex';
     if (editingPostId) {
       loadPostForEditing(editingPostId);
     } else {
       document.getElementById('editor-content').focus();
     }
+  } else {
+    // No local login gate — bounce to the single admin login instead.
+    window.location.replace('admin.html');
   }
 });
 
@@ -953,29 +941,13 @@ async function loadPostForEditing(id) {
 }
 
 // ═══ AUTH ═══
-function doLogin() {
-  var pass = document.getElementById('login-pass').value;
-  if (pass === ADMIN_PASS) {
-    sessionStorage.setItem('jtes_auth', pass);
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('editor-app').style.display   = 'flex';
-    if (editingPostId) {
-      loadPostForEditing(editingPostId);
-    } else {
-      document.getElementById('editor-content').focus();
-    }
-  } else {
-    document.getElementById('login-error').style.display = 'block';
-    document.getElementById('login-pass').value = '';
-    document.getElementById('login-pass').focus();
-  }
-}
+// Single sign-on only: this page never collects a password itself. Signing
+// out here clears the same jtes_auth session admin.html reads, so it also
+// signs the admin out of admin.html — that's intentional, not a bug.
 function doLogout() {
   if (!confirm('Leave the editor? Unsaved changes will be lost.')) return;
   sessionStorage.removeItem('jtes_auth');
-  document.getElementById('editor-app').style.display   = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('login-pass').value = '';
+  window.location.href = 'admin.html';
 }
 
 // ═══ TITLE AUTO-RESIZE ═══
