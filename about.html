@@ -1001,7 +1001,7 @@
   </div>
 
   <!-- STORY / STATS -->
-  <section class="about-story">
+  <section class="about-story" id="about-story-section">
     <div class="about-story-grid">
       <div>
         <div class="section-badge"><span class="dot"></span> OUR STORY</div>
@@ -1029,7 +1029,7 @@
   </section>
 
   <!-- VISION & MISSION -->
-  <section class="vision-section">
+  <section class="vision-section" id="vision-section">
     <div class="vision-header">
       <div class="section-badge" style="margin:0 auto 16px;display:inline-flex;"><span class="dot"></span> OUR DIRECTION</div>
       <h2>Vision & <span>Mission</span></h2>
@@ -1054,7 +1054,7 @@
   </section>
 
   <!-- GALLERY -->
-  <section class="gallery-section">
+  <section class="gallery-section" id="gallery-section">
     <div class="gallery-grid">
       <div class="gallery-item">
         <img src="https://images.unsplash.com/photo-1606761568499-6d2451b23c66?w=600&q=75" alt="STEM Training">
@@ -1072,7 +1072,7 @@
   </section>
 
   <!-- CORE VALUES -->
-  <section class="values-section">
+  <section class="values-section" id="values-section">
     <div class="values-header">
       <div class="section-badge" style="margin:0 auto 16px;display:inline-flex;"><span class="dot"></span> WHAT DRIVES US</div>
       <h2>Our Core <span>Values</span></h2>
@@ -1123,7 +1123,7 @@
   </section>
 
   <!-- TEAM -->
-  <section class="team-section">
+  <section class="team-section" id="team-section">
     <div class="team-header">
       <div class="section-badge" style="margin:0 auto 16px;display:inline-flex;"><span class="dot"></span> OUR PEOPLE</div>
       <h2>Meet Our <span>Team</span></h2>
@@ -1199,7 +1199,7 @@
   </section>
 
   <!-- WHO WE SERVE -->
-  <section class="serve-section">
+  <section class="serve-section" id="serve-section">
     <div class="serve-header">
       <div class="section-badge" style="margin:0 auto 16px;display:inline-flex;"><span class="dot"></span> WHO WE SERVE</div>
       <h2>Supporting Growth <span>Across Sectors</span></h2>
@@ -1244,7 +1244,7 @@
   </section>
 
   <!-- FOOTER (About) -->
-  <div class="newsletter-section">
+  <div class="newsletter-section" id="newsletter-preview">
     <div class="nl-inner">
       <div class="nl-icon-wrap"><i class="fas fa-envelope-open-text"></i></div>
       <h2>Stay Ahead with <span>JTES</span></h2>
@@ -1417,8 +1417,703 @@ function resetProgress(id) {
   bar.style.animation = 'progress-bar 5s linear forwards';
 }
 
+// ═══════════════════════════════════════════
+//  ABOUT PAGE CONTENT + VISUAL EDIT MODE (?edit=1)
+//  Same pattern as index.html: siteContent/about drives rendering (data
+//  null → keep hardcoded HTML for visitors), every bound element
+//  carries data-cms-path/data-cms-mode, edit mode makes text/images
+//  directly clickable and card lists add/remove-able. See index.html
+//  for the fuller design notes — kept terser here since it's the same
+//  system, just a different page's content shape.
+// ═══════════════════════════════════════════
+var CMS_FB_URL = 'https://jtes-website-default-rtdb.firebaseio.com';
+var pageContentDraft = null;
+function cmsText(v) { return v == null ? '' : v; }
+function cmsSetVisible(el, visible) { if (el) el.style.display = (visible === false) ? 'none' : ''; }
+function isEditMode() { return new URLSearchParams(window.location.search).get('edit') === '1'; }
+
+var ABOUT_DEFAULTS = {
+  sectionOrder: ['hero','story','vision','gallery','values','team','serve','newsletter'],
+  sections: {
+    hero: {
+      visible: true,
+      slides: [
+        { badge: 'About JTES', headingHtml: 'Pioneering <span>African<br>Technology</span> Excellence', body: 'JASSAN Technologies and Electrical Services is dedicated to advancing technology education and engineering solutions across Ghana and Africa.', bgImage: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=1600&q=80' },
+        { badge: 'Our Story', headingHtml: '4+ Years of <span>Transforming</span><br>Tech Education', body: "From a small workshop to serving 499+ students and 49+ projects — our journey is driven by a passion for Africa's technological future.", bgImage: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=80' },
+        { badge: 'Our Mission', headingHtml: 'Empowering <span>Communities</span><br>Through Technology', body: 'We bridge the gap between theoretical knowledge and real-world application, creating the engineers and innovators of tomorrow.', bgImage: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1600&q=80' }
+      ]
+    },
+    story: {
+      visible: true, badge: 'OUR STORY', headingHtml: 'Bridging <span>Knowledge & Practice</span>',
+      paragraphs: [
+        'JASSAN Technologies and Electrical Services (JTES) is an innovation-driven technology company dedicated to advancing electrical, electronic, and digital solutions through research, education, and real-world application.',
+        'We specialize in STEM and STEAM education, robotics, AI, IoT, advanced electrical systems and critical thinking skills development — serving schools, universities, companies, industries, government institutions, NGOs and individual innovators across Ghana.'
+      ],
+      stats: [{ num: '4+', label: 'Years' }, { num: '499+', label: 'Students' }, { num: '49+', label: 'Projects' }],
+      images: [
+        { image: 'https://images.unsplash.com/photo-1606761568499-6d2451b23c66?w=600&q=75', label: 'STEM Training' },
+        { image: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=600&q=75', label: 'Engineering' }
+      ]
+    },
+    vision: {
+      visible: true, badge: 'OUR DIRECTION', headingHtml: 'Vision & <span>Mission</span>',
+      body: "We exist to be Africa's trusted technology partner—combining practical education with innovative engineering solutions that transform communities and industries.",
+      cards: [
+        { icon: 'fas fa-eye', title: 'Our Vision', body: 'To become a leading African technology company empowering individuals, institutions, and industries through innovative engineering, education, and smart technological solutions.' },
+        { icon: 'fas fa-bullseye', title: 'Our Mission', body: 'To bridge classroom technology fundamentals with mega applications and industrial-scale solutions through hands-on STEM education, advanced research, reliable electrical services, and innovative automation systems.' }
+      ]
+    },
+    gallery: {
+      visible: true,
+      items: [
+        { image: 'https://images.unsplash.com/photo-1606761568499-6d2451b23c66?w=600&q=75', title: 'STEM Training', subtitle: 'Practical robotics & hands-on learning' },
+        { image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=75', title: 'Innovation', subtitle: 'Collaborative research & development' },
+        { image: 'https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=600&q=75', title: 'Engineering', subtitle: 'Professional electrical services' }
+      ]
+    },
+    values: {
+      visible: true, badge: 'WHAT DRIVES US', headingHtml: 'Our Core <span>Values</span>', body: 'The principles that shape how we teach, build, and partner every day.',
+      cards: [
+        { image: 'https://images.unsplash.com/photo-1541746972996-4e0b0f43e02a?w=400&q=70', icon: 'fas fa-award', title: 'Excellence', body: 'We strive for the highest standards in everything we do.' },
+        { image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&q=70', icon: 'fas fa-users', title: 'Collaboration', body: 'Working together with clients and partners to achieve shared goals.' },
+        { image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&q=70', icon: 'fas fa-globe', title: 'Innovation', body: 'Constantly pushing boundaries to deliver cutting-edge solutions.' },
+        { image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=400&q=70', icon: 'fas fa-graduation-cap', title: 'Education', body: 'Committed to developing the next generation of tech leaders.' }
+      ]
+    },
+    team: {
+      visible: true, badge: 'OUR PEOPLE', headingHtml: 'Meet Our <span>Team</span>', body: 'The people driving technology education and engineering excellence at JTES.',
+      members: [
+        { image: 'https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000224918.jpg', name: 'Team Member One', role: 'Lead Engineer', body: 'Oversees the design and implementation of innovative engineering solutions.' },
+        { image: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&h=400&fit=crop&crop=face', name: 'Team Member Two', role: 'Training Coordinator', body: 'Leads the development of practical technology education programs.' },
+        { image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop&crop=face', name: 'Team Member Three', role: 'Operations Manager', body: 'Ensures reliable delivery of services to clients and partners.' },
+        { image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face', name: 'Team Member Four', role: 'R&D Specialist', body: 'Drives research and innovation across JTES technology projects.' },
+        { image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=400&h=400&fit=crop&crop=face', name: 'Team Member Five', role: 'Curriculum Designer', body: 'Develops engaging STEM curricula aligned with industry needs.' },
+        { image: 'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?w=400&h=400&fit=crop&crop=face', name: 'Team Member Six', role: 'Project Manager', body: 'Coordinates project delivery ensuring quality and timeliness.' },
+        { image: 'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=400&h=400&fit=crop&crop=face', name: 'Team Member Seven', role: 'Growth & Innovation', body: 'Explores new technologies and opportunities to expand JTES impact and services.' },
+        { image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop&crop=face', name: 'Team Member Eight', role: 'Electrical Services Lead', body: 'Oversees electrical installation projects and ensures safety and quality standards.' }
+      ]
+    },
+    serve: {
+      visible: true, badge: 'WHO WE SERVE', headingHtml: 'Supporting Growth <span>Across Sectors</span>', body: 'We partner with diverse clients across sectors to deliver technology excellence.',
+      image: 'https://images.unsplash.com/photo-1507537297725-24a1c029d3ca?w=800&q=75',
+      items: [
+        { title: 'Educational Institutions', body: 'Strategic partners we empower with training, innovation, and reliable services.' },
+        { title: 'Businesses & Corporations', body: 'Strategic partners we empower with training, innovation, and reliable services.' },
+        { title: 'Industrial Facilities', body: 'Strategic partners we empower with training, innovation, and reliable services.' },
+        { title: 'Individual Learners', body: 'Strategic partners we empower with training, innovation, and reliable services.' }
+      ]
+    },
+    newsletter: {
+      visible: true, headingHtml: 'Stay Ahead with <span>JTES</span>',
+      body: "Join our exclusive community. Get event invites, new blog posts, STEM breakthroughs and tech insights from Ghana's leading technology team — straight to your inbox.",
+      perks: [
+        { icon: 'fas fa-calendar-star', label: 'Exclusive Events' },
+        { icon: 'fas fa-newspaper', label: 'Latest Articles' },
+        { icon: 'fas fa-bolt', label: 'Tech Insights' },
+        { icon: 'fas fa-trophy', label: 'STEM News' }
+      ],
+      fineprint: '🔒 Zero spam. Unsubscribe with one click, anytime.'
+    }
+  }
+};
+
+function applyPageContent(data) {
+  var s = data.sections || {};
+  if (s.hero) renderAboutHero(s.hero);
+  if (s.story) renderAboutStory(s.story);
+  if (s.vision) renderAboutVision(s.vision);
+  if (s.gallery) renderAboutGallery(s.gallery);
+  if (s.values) renderAboutValues(s.values);
+  if (s.team) renderAboutTeam(s.team);
+  if (s.serve) renderAboutServe(s.serve);
+  if (s.newsletter) renderAboutNewsletter(s.newsletter);
+  if (data.sectionOrder) reorderPageSections(data.sectionOrder, CMS_SECTION_ID_MAP);
+}
+
+async function loadPageContent() {
+  try {
+    var res = await fetch(CMS_FB_URL + '/siteContent/about.json');
+    var data = await res.json();
+    if (!data) {
+      if (isEditMode()) { pageContentDraft = JSON.parse(JSON.stringify(ABOUT_DEFAULTS)); applyPageContent(pageContentDraft); }
+      return;
+    }
+    pageContentDraft = data;
+    applyPageContent(data);
+  } catch (e) {
+    console.error('Failed to load about-page content, keeping built-in defaults:', e);
+    if (isEditMode()) { pageContentDraft = JSON.parse(JSON.stringify(ABOUT_DEFAULTS)); applyPageContent(pageContentDraft); }
+  }
+}
+
+function renderAboutHero(hero) {
+  var wrap = document.getElementById('carousel-about');
+  cmsSetVisible(wrap, hero.visible);
+  if (hero.visible === false || !hero.slides || !hero.slides.length) return;
+  var track = document.getElementById('track-about');
+  var dots  = document.getElementById('dots-about');
+  track.innerHTML = hero.slides.map(function(s, i) {
+    var base = 'sections.hero.slides[' + i + ']';
+    return '<div class="carousel-slide' + (i === 0 ? ' active' : '') + '">' +
+      '<div class="carousel-slide-bg" data-cms-path="' + base + '.bgImage" data-cms-mode="bgimage" style="background-image:url(\'' + cmsText(s.bgImage) + '\');"></div>' +
+      '<div class="carousel-slide-overlay"></div>' +
+      '<div class="carousel-content">' +
+        '<div class="badge"><span class="badge-dot"></span> <span data-cms-path="' + base + '.badge">' + cmsText(s.badge) + '</span></div>' +
+        '<h1 data-cms-path="' + base + '.headingHtml" data-cms-mode="html">' + cmsText(s.headingHtml) + '</h1>' +
+        '<p data-cms-path="' + base + '.body">' + cmsText(s.body) + '</p>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  dots.innerHTML = hero.slides.map(function(_, i) {
+    return '<button class="carousel-dot' + (i === 0 ? ' active' : '') + '" onclick="goToSlide(\'about\', ' + i + ')"></button>';
+  }).join('');
+}
+
+function renderAboutStory(s) {
+  var section = document.getElementById('about-story-section');
+  cmsSetVisible(section, s.visible);
+  if (s.visible === false) return;
+  var badge = section.querySelector('.section-badge');
+  if (badge) badge.innerHTML = '<span class="dot"></span> <span data-cms-path="sections.story.badge">' + cmsText(s.badge) + '</span>';
+  var heading = section.querySelector('h2');
+  if (heading) { heading.innerHTML = cmsText(s.headingHtml); heading.setAttribute('data-cms-path', 'sections.story.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
+  var paras = section.querySelectorAll('.about-story-grid > div:first-child > p');
+  (s.paragraphs || []).forEach(function(p, i) { if (paras[i]) { paras[i].textContent = p; paras[i].setAttribute('data-cms-path', 'sections.story.paragraphs[' + i + ']'); } });
+  var statEls = section.querySelectorAll('.stat');
+  (s.stats || []).forEach(function(stat, i) {
+    if (!statEls[i]) return;
+    var num = statEls[i].querySelector('.stat-num');
+    var lbl = statEls[i].querySelector('.stat-label');
+    if (num) { num.textContent = stat.num; num.setAttribute('data-cms-path', 'sections.story.stats[' + i + '].num'); }
+    if (lbl) { lbl.textContent = stat.label; lbl.setAttribute('data-cms-path', 'sections.story.stats[' + i + '].label'); }
+  });
+  var imgWraps = section.querySelectorAll('.about-img-wrap');
+  (s.images || []).forEach(function(img, i) {
+    if (!imgWraps[i]) return;
+    var imgEl = imgWraps[i].querySelector('img');
+    var lbl = imgWraps[i].querySelector('.label-overlay strong');
+    if (imgEl) { imgEl.src = img.image; imgEl.setAttribute('data-cms-path', 'sections.story.images[' + i + '].image'); }
+    if (lbl) { lbl.textContent = img.label; lbl.setAttribute('data-cms-path', 'sections.story.images[' + i + '].label'); }
+  });
+}
+
+function renderAboutVision(s) {
+  var section = document.getElementById('vision-section');
+  cmsSetVisible(section, s.visible);
+  if (s.visible === false) return;
+  var badge = section.querySelector('.vision-header .section-badge');
+  if (badge) badge.innerHTML = '<span class="dot"></span> <span data-cms-path="sections.vision.badge">' + cmsText(s.badge) + '</span>';
+  var heading = section.querySelector('.vision-header h2');
+  if (heading) { heading.innerHTML = cmsText(s.headingHtml); heading.setAttribute('data-cms-path', 'sections.vision.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
+  var body = section.querySelector('.vision-header p');
+  if (body) { body.textContent = cmsText(s.body); body.setAttribute('data-cms-path', 'sections.vision.body'); }
+  var grid = section.querySelector('.vision-cards');
+  if (grid && s.cards) {
+    grid.innerHTML = s.cards.map(function(c, i) {
+      var base = 'sections.vision.cards[' + i + ']';
+      return '<div class="vision-card' + (i === 1 ? ' active-card' : '') + '"><div class="num-bg">' + String(i + 1).padStart(2, '0') + '</div>' +
+        '<div class="vision-card-icon"><i class="' + cmsText(c.icon) + '"></i></div>' +
+        '<h3 data-cms-path="' + base + '.title">' + cmsText(c.title) + '</h3><p data-cms-path="' + base + '.body">' + cmsText(c.body) + '</p>' +
+        (i === 1 ? '<div class="bottom-bar"></div>' : '') + '</div>';
+    }).join('');
+  }
+}
+
+function renderAboutGallery(s) {
+  var section = document.getElementById('gallery-section');
+  cmsSetVisible(section, s.visible);
+  if (s.visible === false) return;
+  var grid = section.querySelector('.gallery-grid');
+  if (grid && s.items) {
+    grid.innerHTML = s.items.map(function(item, i) {
+      var base = 'sections.gallery.items[' + i + ']';
+      return '<div class="gallery-item"><img src="' + cmsText(item.image) + '" data-cms-path="' + base + '.image" alt="' + cmsText(item.title) + '">' +
+        '<div class="label-overlay"><strong data-cms-path="' + base + '.title">' + cmsText(item.title) + '</strong><span data-cms-path="' + base + '.subtitle">' + cmsText(item.subtitle) + '</span></div></div>';
+    }).join('');
+  }
+}
+
+function renderAboutValues(s) {
+  var section = document.getElementById('values-section');
+  cmsSetVisible(section, s.visible);
+  if (s.visible === false) return;
+  var badge = section.querySelector('.values-header .section-badge');
+  if (badge) badge.innerHTML = '<span class="dot"></span> <span data-cms-path="sections.values.badge">' + cmsText(s.badge) + '</span>';
+  var heading = section.querySelector('.values-header h2');
+  if (heading) { heading.innerHTML = cmsText(s.headingHtml); heading.setAttribute('data-cms-path', 'sections.values.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
+  var body = section.querySelector('.values-header p');
+  if (body) { body.textContent = cmsText(s.body); body.setAttribute('data-cms-path', 'sections.values.body'); }
+  var grid = section.querySelector('.values-grid');
+  if (grid && s.cards) {
+    grid.innerHTML = s.cards.map(function(c, i) {
+      var base = 'sections.values.cards[' + i + ']';
+      return '<div class="value-card"><img class="value-card-bg" src="' + cmsText(c.image) + '" data-cms-path="' + base + '.image" alt="">' +
+        '<div class="value-card-overlay"></div><div class="value-card-content">' +
+        '<div class="value-card-icon"><i class="' + cmsText(c.icon) + '"></i></div>' +
+        '<h4 data-cms-path="' + base + '.title">' + cmsText(c.title) + '</h4><p data-cms-path="' + base + '.body">' + cmsText(c.body) + '</p></div></div>';
+    }).join('');
+  }
+}
+
+function renderAboutTeam(s) {
+  var section = document.getElementById('team-section');
+  cmsSetVisible(section, s.visible);
+  if (s.visible === false) return;
+  var badge = section.querySelector('.team-header .section-badge');
+  if (badge) badge.innerHTML = '<span class="dot"></span> <span data-cms-path="sections.team.badge">' + cmsText(s.badge) + '</span>';
+  var heading = section.querySelector('.team-header h2');
+  if (heading) { heading.innerHTML = cmsText(s.headingHtml); heading.setAttribute('data-cms-path', 'sections.team.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
+  var body = section.querySelector('.team-header p');
+  if (body) { body.textContent = cmsText(s.body); body.setAttribute('data-cms-path', 'sections.team.body'); }
+  var grid = section.querySelector('.team-grid');
+  if (grid && s.members) {
+    grid.innerHTML = s.members.map(function(m, i) {
+      var base = 'sections.team.members[' + i + ']';
+      return '<div class="team-card"><div class="team-card-img" style="padding:0;overflow:hidden;">' +
+        '<img src="' + cmsText(m.image) + '" data-cms-path="' + base + '.image" style="width:100%;height:200px;object-fit:cover;object-position:center top;display:block;"></div>' +
+        '<div class="team-card-body"><h4 data-cms-path="' + base + '.name">' + cmsText(m.name) + '</h4>' +
+        '<div class="role" data-cms-path="' + base + '.role">' + cmsText(m.role) + '</div>' +
+        '<p data-cms-path="' + base + '.body">' + cmsText(m.body) + '</p></div></div>';
+    }).join('');
+  }
+}
+
+function renderAboutServe(s) {
+  var section = document.getElementById('serve-section');
+  cmsSetVisible(section, s.visible);
+  if (s.visible === false) return;
+  var badge = section.querySelector('.serve-header .section-badge');
+  if (badge) badge.innerHTML = '<span class="dot"></span> <span data-cms-path="sections.serve.badge">' + cmsText(s.badge) + '</span>';
+  var heading = section.querySelector('.serve-header h2');
+  if (heading) { heading.innerHTML = cmsText(s.headingHtml); heading.setAttribute('data-cms-path', 'sections.serve.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
+  var body = section.querySelector('.serve-header p');
+  if (body) { body.textContent = cmsText(s.body); body.setAttribute('data-cms-path', 'sections.serve.body'); }
+  var img = section.querySelector('.serve-img img');
+  if (img) { if (s.image) img.src = s.image; img.setAttribute('data-cms-path', 'sections.serve.image'); }
+  var itemsWrap = section.querySelector('.serve-items');
+  if (itemsWrap && s.items) {
+    itemsWrap.innerHTML = s.items.map(function(item, i) {
+      var base = 'sections.serve.items[' + i + ']';
+      return '<div class="serve-item' + (i === 1 ? ' active' : '') + '"><div class="serve-num">' + (i + 1) + '</div>' +
+        '<div><h4 data-cms-path="' + base + '.title">' + cmsText(item.title) + '</h4><p data-cms-path="' + base + '.body">' + cmsText(item.body) + '</p></div></div>';
+    }).join('');
+    itemsWrap.querySelectorAll('.serve-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        itemsWrap.querySelectorAll('.serve-item').forEach(function(i) { i.classList.remove('active'); });
+        item.classList.add('active');
+      });
+    });
+  }
+}
+
+function renderAboutNewsletter(s) {
+  var section = document.getElementById('newsletter-preview');
+  cmsSetVisible(section, s.visible);
+  if (s.visible === false) return;
+  var heading = section.querySelector('h2');
+  if (heading) { heading.innerHTML = cmsText(s.headingHtml); heading.setAttribute('data-cms-path', 'sections.newsletter.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
+  var body = section.querySelector('.nl-inner > p');
+  if (body) { body.textContent = cmsText(s.body); body.setAttribute('data-cms-path', 'sections.newsletter.body'); }
+  var perksWrap = section.querySelector('.nl-perks');
+  if (perksWrap && s.perks) {
+    perksWrap.innerHTML = s.perks.map(function(p, i) {
+      return '<div class="nl-perk"><i class="' + cmsText(p.icon) + '"></i> <span data-cms-path="sections.newsletter.perks[' + i + '].label">' + cmsText(p.label) + '</span></div>';
+    }).join('');
+  }
+  var fine = section.querySelector('.nl-fine');
+  if (fine) { if (s.fineprint) fine.textContent = s.fineprint; fine.setAttribute('data-cms-path', 'sections.newsletter.fineprint'); }
+}
+
+function reorderPageSections(order, idMap) {
+  var footer = document.querySelector('footer');
+  if (!footer) return;
+  order.forEach(function(key) {
+    var id = idMap[key];
+    var el = id && document.getElementById(id);
+    if (el) footer.parentNode.insertBefore(el, footer);
+  });
+}
+
+// ═══════════════════════════════════════════
+//  VISUAL EDIT MODE — generic engine, identical to index.html's.
+// ═══════════════════════════════════════════
+var EDIT_ADMIN_PASS = 'JTES@2025';
+var CMS_CLD_CLOUD = 'dx8ziypwz';
+var CMS_CLD_PRESET = 'JASSAN';
+var cmsDirty = false;
+
+var CMS_SECTION_ID_MAP = {
+  hero: 'carousel-about', story: 'about-story-section', vision: 'vision-section',
+  gallery: 'gallery-section', values: 'values-section', team: 'team-section',
+  serve: 'serve-section', newsletter: 'newsletter-preview'
+};
+var CMS_SECTION_LABELS = {
+  hero: 'Hero', story: 'Our Story', vision: 'Vision & Mission', gallery: 'Gallery',
+  values: 'Core Values', team: 'Team', serve: 'Who We Serve', newsletter: 'Newsletter'
+};
+var CMS_TEMPLATES = {
+  heroSlide: { badge: 'New badge', headingHtml: 'New Heading', body: 'Add a description here.', bgImage: 'https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=1600&q=80' },
+  visionCard: { icon: 'fas fa-star', title: 'New Card', body: 'Description here.' },
+  galleryItem: { image: 'https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=600&q=75', title: 'New Item', subtitle: 'Add a subtitle.' },
+  valueCard: { image: 'https://images.unsplash.com/photo-1541746972996-4e0b0f43e02a?w=400&q=70', icon: 'fas fa-star', title: 'New Value', body: 'Description here.' },
+  teamMember: { image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop&crop=face', name: 'New Team Member', role: 'Role', body: 'Short bio here.' },
+  serveItem: { title: 'New Audience', body: 'Description here.' },
+  perk: { icon: 'fas fa-star', label: 'New Perk' }
+};
+
+function cmsGetByPath(obj, path) {
+  var parts = path.replace(/\[(\d+)\]/g, '.$1').split('.');
+  var cur = obj;
+  for (var i = 0; i < parts.length; i++) { if (cur == null) return undefined; cur = cur[parts[i]]; }
+  return cur;
+}
+function cmsSetByPath(obj, path, value) {
+  var parts = path.replace(/\[(\d+)\]/g, '.$1').split('.');
+  var cur = obj;
+  for (var i = 0; i < parts.length - 1; i++) {
+    var key = parts[i];
+    if (cur[key] == null) cur[key] = /^\d+$/.test(parts[i + 1]) ? [] : {};
+    cur = cur[key];
+  }
+  cur[parts[parts.length - 1]] = value;
+}
+function markDirty() {
+  cmsDirty = true;
+  var el = document.getElementById('cms-dirty-indicator');
+  if (el) el.style.display = 'inline';
+}
+function injectEditModeStyles() {
+  var style = document.createElement('style');
+  style.textContent =
+    '.cms-editable-text{outline:2px dashed transparent;outline-offset:3px;cursor:text;transition:outline-color .15s,background-color .15s;border-radius:4px;}' +
+    '.cms-editable-text:hover{outline-color:rgba(37,99,235,0.55);}' +
+    '.cms-editable-text.cms-focused{outline-color:#2563EB;outline-style:solid;background-color:rgba(37,99,235,0.06);}' +
+    '.cms-image-edit-btn{opacity:0.92;}.cms-image-edit-btn:hover{background:#2563EB !important;opacity:1;}' +
+    '.cms-section-toolbar button:hover{color:#3B82F6;}';
+  document.head.appendChild(style);
+}
+function enableTextEditing(root) {
+  (root || document).querySelectorAll('[data-cms-path]').forEach(function(el) {
+    if (el.tagName === 'IMG' || el.getAttribute('data-cms-mode') === 'bgimage') return;
+    if (el.classList.contains('cms-editable-text')) return;
+    el.contentEditable = 'true';
+    el.spellcheck = false;
+    el.classList.add('cms-editable-text');
+    el.addEventListener('focus', function() { el.classList.add('cms-focused'); });
+    el.addEventListener('blur', function() {
+      el.classList.remove('cms-focused');
+      var path = el.getAttribute('data-cms-path');
+      var mode = el.getAttribute('data-cms-mode');
+      var value = mode === 'html' ? el.innerHTML : el.textContent;
+      cmsSetByPath(pageContentDraft, path, value);
+      markDirty();
+    });
+    if (el.tagName !== 'P') {
+      el.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } });
+    }
+  });
+}
+function cmsShowToast(msg) {
+  var el = document.createElement('div');
+  el.style.cssText = 'position:fixed;top:80px;right:20px;z-index:10000;background:#0A0F1E;color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;font-family:Manrope,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,0.3);';
+  el.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + msg;
+  document.body.appendChild(el);
+  return el;
+}
+function cmsResolveToast(el, msg, success) {
+  el.innerHTML = '<i class="fas fa-' + (success ? 'check-circle' : 'exclamation-circle') + '"></i> ' + msg;
+  el.style.background = success ? '#16a34a' : '#dc2626';
+  setTimeout(function() { el.remove(); }, 2500);
+}
+async function cmsUploadImage(file) {
+  var fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CMS_CLD_PRESET);
+  var res = await fetch('https://api.cloudinary.com/v1_1/' + CMS_CLD_CLOUD + '/upload', { method: 'POST', body: fd });
+  var data = await res.json();
+  if (!data.secure_url) throw new Error('Upload did not return a URL');
+  return data.secure_url;
+}
+function cmsPickImage(el) {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async function() {
+    if (!input.files[0]) return;
+    var toast = cmsShowToast('Uploading image…');
+    try {
+      var url = await cmsUploadImage(input.files[0]);
+      var path = el.getAttribute('data-cms-path');
+      cmsSetByPath(pageContentDraft, path, url);
+      if (el.tagName === 'IMG') el.src = url; else el.style.backgroundImage = "url('" + url + "')";
+      markDirty();
+      cmsResolveToast(toast, 'Image updated!', true);
+    } catch (err) {
+      console.error(err);
+      cmsResolveToast(toast, 'Upload failed. Try again.', false);
+    }
+  };
+  input.click();
+}
+function enableImageEditing(root) {
+  (root || document).querySelectorAll('[data-cms-path]').forEach(function(el) {
+    var isImg = el.tagName === 'IMG';
+    var isBg  = el.getAttribute('data-cms-mode') === 'bgimage';
+    if (!isImg && !isBg) return;
+    var posEl = isImg ? el.parentElement : el;
+    if (!posEl || posEl.querySelector('.cms-image-edit-btn')) return;
+    if (getComputedStyle(posEl).position === 'static') posEl.style.position = 'relative';
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'cms-image-edit-btn';
+    btn.innerHTML = '<i class="fas fa-camera"></i> Change Image';
+    btn.style.cssText = 'position:absolute;left:8px;bottom:8px;z-index:5;background:rgba(10,15,30,0.85);color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:Manrope,sans-serif;';
+    btn.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); cmsPickImage(el); });
+    posEl.appendChild(btn);
+  });
+}
+function cmsEnableListEditing(containerSelector, sectionKey, listKey, cardSelector, templateKey, addLabel, rerenderFn) {
+  var container = document.querySelector(containerSelector);
+  if (!container) return;
+  container.querySelectorAll(cardSelector).forEach(function(card, i) {
+    if (getComputedStyle(card).position === 'static') card.style.position = 'relative';
+    var rm = document.createElement('button');
+    rm.type = 'button';
+    rm.title = 'Remove';
+    rm.innerHTML = '<i class="fas fa-times"></i>';
+    rm.style.cssText = 'position:absolute;top:-10px;right:-10px;z-index:6;width:26px;height:26px;border-radius:50%;background:#dc2626;color:#fff;border:2px solid #fff;cursor:pointer;font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,0.25);';
+    rm.addEventListener('click', function(e) {
+      e.preventDefault(); e.stopPropagation();
+      if (!confirm('Remove this?')) return;
+      pageContentDraft.sections[sectionKey][listKey].splice(i, 1);
+      markDirty();
+      rerenderFn();
+    });
+    card.appendChild(rm);
+  });
+  var addBtn = document.createElement('button');
+  addBtn.type = 'button';
+  addBtn.innerHTML = '<i class="fas fa-plus"></i> ' + addLabel;
+  addBtn.style.cssText = 'display:inline-flex;align-items:center;gap:8px;background:#eff6ff;color:#2563EB;border:2px dashed #2563EB;border-radius:12px;padding:14px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;margin-top:14px;';
+  addBtn.addEventListener('click', function() {
+    pageContentDraft.sections[sectionKey][listKey].push(JSON.parse(JSON.stringify(CMS_TEMPLATES[templateKey])));
+    markDirty();
+    rerenderFn();
+  });
+  container.appendChild(addBtn);
+}
+function cmsForceVisibleInEditMode() {
+  Object.keys(CMS_SECTION_ID_MAP).forEach(function(key) {
+    var el = document.getElementById(CMS_SECTION_ID_MAP[key]);
+    if (!el) return;
+    var hidden = pageContentDraft.sections[key] && pageContentDraft.sections[key].visible === false;
+    el.style.display = '';
+    el.style.opacity = hidden ? '0.35' : '';
+    el.style.outline = hidden ? '3px dashed #ef4444' : '';
+    el.style.outlineOffset = hidden ? '-3px' : '';
+  });
+}
+function cmsMoveSection(key, dir) {
+  var order = pageContentDraft.sectionOrder;
+  var idx = order.indexOf(key);
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= order.length) return;
+  var tmp = order[idx]; order[idx] = order[newIdx]; order[newIdx] = tmp;
+  reorderPageSections(order, CMS_SECTION_ID_MAP);
+  markDirty();
+}
+function cmsToggleSectionVisible(key) {
+  var section = pageContentDraft.sections[key];
+  section.visible = section.visible === false ? true : false;
+  cmsForceVisibleInEditMode();
+  markDirty();
+}
+function enableSectionControls() {
+  (pageContentDraft.sectionOrder || Object.keys(CMS_SECTION_ID_MAP)).forEach(function(key) {
+    var el = document.getElementById(CMS_SECTION_ID_MAP[key]);
+    if (!el) return;
+    var bar = document.createElement('div');
+    bar.className = 'cms-section-toolbar';
+    bar.style.cssText = 'display:flex;align-items:center;gap:10px;background:#0A0F1E;color:#fff;padding:8px 16px;font-size:12px;font-weight:700;font-family:Manrope,sans-serif;';
+    bar.innerHTML =
+      '<span><i class="fas fa-grip-lines"></i> ' + CMS_SECTION_LABELS[key] + ' section</span>' +
+      '<button type="button" data-act="up" title="Move section up" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px 6px;"><i class="fas fa-arrow-up"></i> Move Up</button>' +
+      '<button type="button" data-act="down" title="Move section down" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px 6px;"><i class="fas fa-arrow-down"></i> Move Down</button>' +
+      '<button type="button" data-act="hide" title="Show or hide this section" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px 6px;"><i class="fas fa-eye-slash"></i> Show/Hide</button>' +
+      (key === 'hero' ? '<button type="button" data-act="addslide" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px 6px;"><i class="fas fa-plus"></i> Add Slide</button>' : '');
+    bar.querySelector('[data-act="up"]').onclick = function() { cmsMoveSection(key, -1); };
+    bar.querySelector('[data-act="down"]').onclick = function() { cmsMoveSection(key, 1); };
+    bar.querySelector('[data-act="hide"]').onclick = function() { cmsToggleSectionVisible(key); };
+    if (key === 'hero') bar.querySelector('[data-act="addslide"]').onclick = cmsAddHeroSlide;
+    el.insertBefore(bar, el.firstChild);
+  });
+}
+function cmsAttachHeroSlideRemoveButtons() {
+  document.querySelectorAll('#track-about .carousel-slide').forEach(function(slide, i) {
+    var content = slide.querySelector('.carousel-content');
+    if (!content || content.querySelector('.cms-remove-slide-btn')) return;
+    if (getComputedStyle(slide).position === 'static') slide.style.position = 'relative';
+    var rm = document.createElement('button');
+    rm.type = 'button';
+    rm.className = 'cms-remove-slide-btn';
+    rm.innerHTML = '<i class="fas fa-times"></i> Remove Slide';
+    rm.style.cssText = 'position:absolute;top:0;right:0;z-index:6;background:#dc2626;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;';
+    rm.addEventListener('click', function(e) {
+      e.preventDefault(); e.stopPropagation();
+      if (pageContentDraft.sections.hero.slides.length <= 1) { alert('Keep at least one slide.'); return; }
+      if (!confirm('Remove this slide?')) return;
+      pageContentDraft.sections.hero.slides.splice(i, 1);
+      markDirty();
+      cmsRefreshHero();
+    });
+    content.appendChild(rm);
+  });
+}
+function cmsRefreshHero() {
+  renderAboutHero(pageContentDraft.sections.hero);
+  var root = document.getElementById('carousel-about');
+  enableTextEditing(root);
+  enableImageEditing(root);
+  cmsAttachHeroSlideRemoveButtons();
+  initCarousel('about');
+}
+function cmsAddHeroSlide() {
+  pageContentDraft.sections.hero.slides.push(JSON.parse(JSON.stringify(CMS_TEMPLATES.heroSlide)));
+  markDirty();
+  cmsRefreshHero();
+}
+function cmsRefreshVision() {
+  renderAboutVision(pageContentDraft.sections.vision);
+  var root = document.getElementById('vision-section');
+  enableTextEditing(root); enableImageEditing(root);
+  cmsEnableListEditing('.vision-cards', 'vision', 'cards', '.vision-card', 'visionCard', 'Add Card', cmsRefreshVision);
+}
+function cmsRefreshGallery() {
+  renderAboutGallery(pageContentDraft.sections.gallery);
+  var root = document.getElementById('gallery-section');
+  enableTextEditing(root); enableImageEditing(root);
+  cmsEnableListEditing('.gallery-grid', 'gallery', 'items', '.gallery-item', 'galleryItem', 'Add Photo', cmsRefreshGallery);
+}
+function cmsRefreshValues() {
+  renderAboutValues(pageContentDraft.sections.values);
+  var root = document.getElementById('values-section');
+  enableTextEditing(root); enableImageEditing(root);
+  cmsEnableListEditing('.values-grid', 'values', 'cards', '.value-card', 'valueCard', 'Add Value', cmsRefreshValues);
+}
+function cmsRefreshTeam() {
+  renderAboutTeam(pageContentDraft.sections.team);
+  var root = document.getElementById('team-section');
+  enableTextEditing(root); enableImageEditing(root);
+  cmsEnableListEditing('.team-grid', 'team', 'members', '.team-card', 'teamMember', 'Add Team Member', cmsRefreshTeam);
+}
+function cmsRefreshServe() {
+  renderAboutServe(pageContentDraft.sections.serve);
+  var root = document.getElementById('serve-section');
+  enableTextEditing(root); enableImageEditing(root);
+  cmsEnableListEditing('.serve-items', 'serve', 'items', '.serve-item', 'serveItem', 'Add Audience', cmsRefreshServe);
+}
+function cmsRefreshNewsletter() {
+  renderAboutNewsletter(pageContentDraft.sections.newsletter);
+  var root = document.getElementById('newsletter-preview');
+  enableTextEditing(root); enableImageEditing(root);
+  cmsEnableListEditing('.nl-perks', 'newsletter', 'perks', '.nl-perk', 'perk', 'Add Perk', cmsRefreshNewsletter);
+}
+function buildEditModeChrome() {
+  var bar = document.createElement('div');
+  bar.id = 'cms-edit-bar';
+  bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#0A0F1E;color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 -4px 20px rgba(0,0,0,0.3);font-family:Manrope,sans-serif;';
+  bar.innerHTML =
+    '<div style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;"><i class="fas fa-pen" style="color:#3B82F6;"></i> Editing this page — click any text or image to change it.' +
+    '<span id="cms-dirty-indicator" style="display:none;color:#f59e0b;">● Unsaved changes</span></div>' +
+    '<div style="display:flex;gap:10px;">' +
+      '<button type="button" id="cms-exit-btn" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:8px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;font-family:Manrope,sans-serif;">Exit</button>' +
+      '<button type="button" id="cms-save-btn" style="background:#2563EB;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;"><i class="fas fa-save"></i> Save Changes</button>' +
+    '</div>';
+  document.body.appendChild(bar);
+  document.body.style.paddingBottom = '76px';
+  document.getElementById('cms-exit-btn').onclick = function() {
+    if (cmsDirty && !confirm('Discard unsaved changes?')) return;
+    window.location.href = window.location.pathname;
+  };
+  document.getElementById('cms-save-btn').onclick = cmsSavePageContent;
+}
+async function cmsSavePageContent() {
+  var btn = document.getElementById('cms-save-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+  try {
+    var res = await fetch(CMS_FB_URL + '/siteContent/about.json', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pageContentDraft)
+    });
+    if (!res.ok) throw new Error('Save failed with status ' + res.status);
+    cmsDirty = false;
+    var dirtyEl = document.getElementById('cms-dirty-indicator');
+    if (dirtyEl) dirtyEl.style.display = 'none';
+    btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+    setTimeout(function() { btn.innerHTML = '<i class="fas fa-save"></i> Save Changes'; btn.disabled = false; }, 1800);
+  } catch (e) {
+    console.error(e);
+    btn.innerHTML = '<i class="fas fa-exclamation-circle"></i> Save failed — try again';
+    btn.disabled = false;
+    setTimeout(function() { btn.innerHTML = '<i class="fas fa-save"></i> Save Changes'; }, 2200);
+  }
+}
+function showEditAuthGate(onSuccess) {
+  var overlay = document.createElement('div');
+  overlay.id = 'cms-auth-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10001;background:linear-gradient(135deg,#0A0F1E 0%,#1E3A8A 100%);display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.innerHTML =
+    '<div style="background:#fff;border-radius:20px;padding:40px 32px;max-width:380px;width:100%;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,0.3);font-family:Manrope,sans-serif;">' +
+      '<div style="width:56px;height:56px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;"><i class="fas fa-pen" style="font-size:22px;color:#2563EB;"></i></div>' +
+      '<h2 style="font-size:22px;font-weight:900;color:#0F172A;margin-bottom:6px;">Edit This Page</h2>' +
+      '<p style="font-size:14px;color:#64748b;margin-bottom:24px;">Enter the admin password to start editing.</p>' +
+      '<input type="password" id="cms-auth-pass" placeholder="Password" style="width:100%;padding:13px 16px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:16px;text-align:center;margin-bottom:12px;font-family:Manrope,sans-serif;box-sizing:border-box;">' +
+      '<p id="cms-auth-error" style="display:none;color:#ef4444;font-size:13px;margin-bottom:12px;">Incorrect password.</p>' +
+      '<button type="button" id="cms-auth-submit" style="width:100%;background:#2563EB;color:#fff;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Continue</button>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  var input = document.getElementById('cms-auth-pass');
+  input.focus();
+  function attempt() {
+    if (input.value === EDIT_ADMIN_PASS) {
+      sessionStorage.setItem('jtes_edit_auth', input.value);
+      overlay.remove();
+      onSuccess();
+    } else {
+      document.getElementById('cms-auth-error').style.display = 'block';
+      input.value = '';
+      input.focus();
+    }
+  }
+  document.getElementById('cms-auth-submit').onclick = attempt;
+  input.addEventListener('keydown', function(e) { if (e.key === 'Enter') attempt(); });
+}
+function startEditMode() {
+  if (!pageContentDraft) return;
+  injectEditModeStyles();
+  buildEditModeChrome();
+  enableTextEditing();
+  enableImageEditing();
+  enableSectionControls();
+  cmsForceVisibleInEditMode();
+  cmsAttachHeroSlideRemoveButtons();
+  cmsEnableListEditing('.vision-cards', 'vision', 'cards', '.vision-card', 'visionCard', 'Add Card', cmsRefreshVision);
+  cmsEnableListEditing('.gallery-grid', 'gallery', 'items', '.gallery-item', 'galleryItem', 'Add Photo', cmsRefreshGallery);
+  cmsEnableListEditing('.values-grid', 'values', 'cards', '.value-card', 'valueCard', 'Add Value', cmsRefreshValues);
+  cmsEnableListEditing('.team-grid', 'team', 'members', '.team-card', 'teamMember', 'Add Team Member', cmsRefreshTeam);
+  cmsEnableListEditing('.serve-items', 'serve', 'items', '.serve-item', 'serveItem', 'Add Audience', cmsRefreshServe);
+  cmsEnableListEditing('.nl-perks', 'newsletter', 'perks', '.nl-perk', 'perk', 'Add Perk', cmsRefreshNewsletter);
+}
+function initEditModeIfRequested() {
+  if (!isEditMode()) return;
+  if (sessionStorage.getItem('jtes_edit_auth') === EDIT_ADMIN_PASS) startEditMode();
+  else showEditAuthGate(startEditMode);
+}
+
 // ===== INIT ALL CAROUSELS =====
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadPageContent();
+  initEditModeIfRequested();
   ['home','about','services','projects','blog','contact'].forEach(id => initCarousel(id));
 
   // Blog filter pills
