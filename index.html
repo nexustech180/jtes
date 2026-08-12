@@ -1867,9 +1867,10 @@ function injectEditModeStyles() {
   document.head.appendChild(style);
 }
 
-function enableTextEditing() {
-  document.querySelectorAll('[data-cms-path]').forEach(function(el) {
+function enableTextEditing(root) {
+  (root || document).querySelectorAll('[data-cms-path]').forEach(function(el) {
     if (el.tagName === 'IMG' || el.getAttribute('data-cms-mode') === 'bgimage') return;
+    if (el.classList.contains('cms-editable-text')) return;
     el.contentEditable = 'true';
     el.spellcheck = false;
     el.classList.add('cms-editable-text');
@@ -1936,13 +1937,13 @@ function cmsPickImage(el) {
   input.click();
 }
 
-function enableImageEditing() {
-  document.querySelectorAll('[data-cms-path]').forEach(function(el) {
+function enableImageEditing(root) {
+  (root || document).querySelectorAll('[data-cms-path]').forEach(function(el) {
     var isImg = el.tagName === 'IMG';
     var isBg  = el.getAttribute('data-cms-mode') === 'bgimage';
     if (!isImg && !isBg) return;
     var posEl = isImg ? el.parentElement : el;
-    if (!posEl) return;
+    if (!posEl || posEl.querySelector('.cms-image-edit-btn')) return;
     if (getComputedStyle(posEl).position === 'static') posEl.style.position = 'relative';
     var btn = document.createElement('button');
     btn.type = 'button';
@@ -1955,6 +1956,139 @@ function enableImageEditing() {
     });
     posEl.appendChild(btn);
   });
+}
+
+// ── ADD / REMOVE CARDS ──────────────────────────────────────
+// Item shapes match admin.html's SC_TEMPLATES so a card added here
+// looks identical to one added through the field-by-field editor.
+var CMS_TEMPLATES = {
+  heroSlide:   { badge: 'New badge', headingHtml: 'New Heading', body: 'Add a description here.', bgImage: 'https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=1600&q=80', primaryLabel: 'Learn More', primaryHref: '#', secondaryLabel: 'Get in Touch', secondaryHref: 'contact.html' },
+  featureCard: { icon: 'fas fa-star', title: 'New Card', body: 'Description here.' },
+  serviceCard: { image: 'https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=800&q=80', icon: 'fas fa-star', title: 'New Service', body: 'Description here.' },
+  whyItem:     { title: 'New Reason', body: 'Description here.' },
+  projectCard: { image: '', tag: 'New', title: 'New Project', body: 'Description here.', tags: [] },
+  blogCard:    { image: 'https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=800&q=80', tag: 'News', date: '', readTime: '', title: 'New Post', body: 'Description here.', href: 'blog.html' },
+  perk:        { icon: 'fas fa-star', label: 'New Perk' }
+};
+
+// Adds a "+ Add" tile at the end of a card grid and a "✕" remove
+// button on each existing card. rerenderFn re-renders that one section
+// and calls this again so the new/updated card set is always correct
+// and every card (old and new) has working editing + remove/add
+// controls — never a stale or half-wired card.
+function cmsEnableListEditing(containerSelector, sectionKey, listKey, cardSelector, templateKey, addLabel, rerenderFn) {
+  var container = document.querySelector(containerSelector);
+  if (!container) return;
+  container.querySelectorAll(cardSelector).forEach(function(card, i) {
+    if (getComputedStyle(card).position === 'static') card.style.position = 'relative';
+    var rm = document.createElement('button');
+    rm.type = 'button';
+    rm.title = 'Remove';
+    rm.innerHTML = '<i class="fas fa-times"></i>';
+    rm.style.cssText = 'position:absolute;top:-10px;right:-10px;z-index:6;width:26px;height:26px;border-radius:50%;background:#dc2626;color:#fff;border:2px solid #fff;cursor:pointer;font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,0.25);';
+    rm.addEventListener('click', function(e) {
+      e.preventDefault(); e.stopPropagation();
+      if (!confirm('Remove this?')) return;
+      homeContentDraft.sections[sectionKey][listKey].splice(i, 1);
+      markDirty();
+      rerenderFn();
+    });
+    card.appendChild(rm);
+  });
+  var addBtn = document.createElement('button');
+  addBtn.type = 'button';
+  addBtn.innerHTML = '<i class="fas fa-plus"></i> ' + addLabel;
+  addBtn.style.cssText = 'display:inline-flex;align-items:center;gap:8px;background:#eff6ff;color:#2563EB;border:2px dashed #2563EB;border-radius:12px;padding:14px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;margin-top:14px;';
+  addBtn.addEventListener('click', function() {
+    homeContentDraft.sections[sectionKey][listKey].push(JSON.parse(JSON.stringify(CMS_TEMPLATES[templateKey])));
+    markDirty();
+    rerenderFn();
+  });
+  container.appendChild(addBtn);
+}
+
+function cmsRefreshAbout() {
+  renderHomeAboutPreview(homeContentDraft.sections.aboutPreview);
+  var root = document.getElementById('about-preview');
+  enableTextEditing(root);
+  enableImageEditing(root);
+  cmsEnableListEditing('.feature-cards', 'aboutPreview', 'cards', '.feature-card', 'featureCard', 'Add Card', cmsRefreshAbout);
+}
+function cmsRefreshServices() {
+  renderHomeServicesPreview(homeContentDraft.sections.services);
+  var root = document.getElementById('services');
+  enableTextEditing(root);
+  enableImageEditing(root);
+  cmsEnableListEditing('.services-grid', 'services', 'cards', '.service-card', 'serviceCard', 'Add Service', cmsRefreshServices);
+}
+function cmsRefreshWhyChoose() {
+  renderHomeWhyChoose(homeContentDraft.sections.whyChoose);
+  var root = document.getElementById('why-choose-preview');
+  enableTextEditing(root);
+  enableImageEditing(root);
+  cmsEnableListEditing('.why-right', 'whyChoose', 'items', '.why-item', 'whyItem', 'Add Reason', cmsRefreshWhyChoose);
+}
+function cmsRefreshProjects() {
+  renderHomeProjectsPreview(homeContentDraft.sections.projects);
+  var root = document.getElementById('projects-preview');
+  enableTextEditing(root);
+  enableImageEditing(root);
+  cmsEnableListEditing('.projects-grid', 'projects', 'cards', '.project-card', 'projectCard', 'Add Project', cmsRefreshProjects);
+}
+function cmsRefreshBlog() {
+  renderHomeBlogPreview(homeContentDraft.sections.blog);
+  var root = document.getElementById('blog-preview');
+  enableTextEditing(root);
+  enableImageEditing(root);
+  cmsEnableListEditing('.blog-grid', 'blog', 'cards', '.blog-card', 'blogCard', 'Add Post', cmsRefreshBlog);
+}
+function cmsRefreshNewsletter() {
+  renderHomeNewsletter(homeContentDraft.sections.newsletter);
+  var root = document.getElementById('newsletter-preview');
+  enableTextEditing(root);
+  enableImageEditing(root);
+  cmsEnableListEditing('.nl-perks', 'newsletter', 'perks', '.nl-perk', 'perk', 'Add Perk', cmsRefreshNewsletter);
+}
+
+// Hero slides are special-cased: they live in a carousel track whose
+// slide-width math the carousel engine (initCarousel/goToSlide) owns,
+// so an "Add" tile can't just live inside the track like other grids
+// — it's a toolbar button instead (see enableSectionControls), and
+// initCarousel('home') has to re-run after the slide count changes so
+// the carousel's internal index/width state matches the new DOM.
+function cmsAttachHeroSlideRemoveButtons() {
+  document.querySelectorAll('#track-home .carousel-slide').forEach(function(slide, i) {
+    var content = slide.querySelector('.carousel-content');
+    if (!content || content.querySelector('.cms-remove-slide-btn')) return;
+    if (getComputedStyle(slide).position === 'static') slide.style.position = 'relative';
+    var rm = document.createElement('button');
+    rm.type = 'button';
+    rm.className = 'cms-remove-slide-btn';
+    rm.innerHTML = '<i class="fas fa-times"></i> Remove Slide';
+    rm.style.cssText = 'position:absolute;top:0;right:0;z-index:6;background:#dc2626;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;';
+    rm.addEventListener('click', function(e) {
+      e.preventDefault(); e.stopPropagation();
+      if (homeContentDraft.sections.hero.slides.length <= 1) { alert('Keep at least one slide.'); return; }
+      if (!confirm('Remove this slide?')) return;
+      homeContentDraft.sections.hero.slides.splice(i, 1);
+      markDirty();
+      cmsRefreshHero();
+    });
+    content.appendChild(rm);
+  });
+}
+function cmsRefreshHero() {
+  renderHomeHero(homeContentDraft.sections.hero);
+  var root = document.getElementById('carousel-home');
+  enableTextEditing(root);
+  enableImageEditing(root);
+  cmsAttachHeroSlideRemoveButtons();
+  initCarousel('home');
+}
+function cmsAddHeroSlide() {
+  homeContentDraft.sections.hero.slides.push(JSON.parse(JSON.stringify(CMS_TEMPLATES.heroSlide)));
+  markDirty();
+  cmsRefreshHero();
 }
 
 function cmsForceVisibleInEditMode() {
@@ -1997,10 +2131,12 @@ function enableSectionControls() {
       '<span><i class="fas fa-grip-lines"></i> ' + CMS_SECTION_LABELS[key] + ' section</span>' +
       '<button type="button" data-act="up" title="Move section up" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px 6px;"><i class="fas fa-arrow-up"></i> Move Up</button>' +
       '<button type="button" data-act="down" title="Move section down" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px 6px;"><i class="fas fa-arrow-down"></i> Move Down</button>' +
-      '<button type="button" data-act="hide" title="Show or hide this section" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px 6px;"><i class="fas fa-eye-slash"></i> Show/Hide</button>';
+      '<button type="button" data-act="hide" title="Show or hide this section" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px 6px;"><i class="fas fa-eye-slash"></i> Show/Hide</button>' +
+      (key === 'hero' ? '<button type="button" data-act="addslide" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px 6px;"><i class="fas fa-plus"></i> Add Slide</button>' : '');
     bar.querySelector('[data-act="up"]').onclick = function() { cmsMoveSection(key, -1); };
     bar.querySelector('[data-act="down"]').onclick = function() { cmsMoveSection(key, 1); };
     bar.querySelector('[data-act="hide"]').onclick = function() { cmsToggleSectionVisible(key); };
+    if (key === 'hero') bar.querySelector('[data-act="addslide"]').onclick = cmsAddHeroSlide;
     el.insertBefore(bar, el.firstChild);
   });
 }
@@ -2088,6 +2224,13 @@ function startEditMode() {
   enableImageEditing();
   enableSectionControls();
   cmsForceVisibleInEditMode();
+  cmsAttachHeroSlideRemoveButtons();
+  cmsEnableListEditing('.feature-cards', 'aboutPreview', 'cards', '.feature-card', 'featureCard', 'Add Card', cmsRefreshAbout);
+  cmsEnableListEditing('.services-grid', 'services', 'cards', '.service-card', 'serviceCard', 'Add Service', cmsRefreshServices);
+  cmsEnableListEditing('.why-right', 'whyChoose', 'items', '.why-item', 'whyItem', 'Add Reason', cmsRefreshWhyChoose);
+  cmsEnableListEditing('.projects-grid', 'projects', 'cards', '.project-card', 'projectCard', 'Add Project', cmsRefreshProjects);
+  cmsEnableListEditing('.blog-grid', 'blog', 'cards', '.blog-card', 'blogCard', 'Add Post', cmsRefreshBlog);
+  cmsEnableListEditing('.nl-perks', 'newsletter', 'perks', '.nl-perk', 'perk', 'Add Perk', cmsRefreshNewsletter);
 }
 
 function initEditModeIfRequested() {
