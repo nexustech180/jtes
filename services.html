@@ -1350,20 +1350,6 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// ── SECRET ADMIN SHORTCUT (press A + D + M together) ──
-(function() {
-  var keys = {};
-  document.addEventListener('keydown', function(e) {
-    keys[e.key.toLowerCase()] = true;
-    if (keys['a'] && keys['d'] && keys['m']) {
-      window.location.href = 'admin.html';
-    }
-  });
-  document.addEventListener('keyup', function(e) {
-    delete keys[e.key.toLowerCase()];
-  });
-})();
-
 // ── NEWSLETTER SIGNUP ─────────────────────────────────────
 var SUB_BIN_NL  = '69befda1c3097a1dd5480987';
 var SUB_KEY_NL  = '$2a$10$d8wjYi.E/IcAmu515faPoesz/PUitzug7E4FJwqt6TdyABnaNAwiq';

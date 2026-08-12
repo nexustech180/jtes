@@ -1257,29 +1257,6 @@
   </footer>
 
 
-<!-- ── FLOATING ADMIN BUTTON ── -->
-<div id="admin-pwd-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
-  <div style="background:#fff;border-radius:20px;padding:40px 32px;max-width:360px;width:90%;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,0.3);animation:popUp 0.3s cubic-bezier(0.34,1.56,0.64,1);">
-    <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--blue-dark));display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-      <i class="fas fa-lock" style="color:#fff;font-size:22px;"></i>
-    </div>
-    <h3 style="font-size:22px;font-weight:900;color:var(--dark2);margin-bottom:6px;">Admin Access</h3>
-    <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;">Enter your password to open the admin panel.</p>
-    <input type="password" id="float-pwd-input" placeholder="Enter password"
-      style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-family:'Manrope',sans-serif;outline:none;margin-bottom:10px;text-align:center;letter-spacing:4px;"
-      onkeydown="if(event.key==='Enter') checkAdminPwd()">
-    <p id="float-pwd-error" style="color:#ef4444;font-size:13px;margin-bottom:10px;display:none;"><i class="fas fa-exclamation-circle"></i> Incorrect password.</p>
-    <div style="display:flex;gap:10px;">
-      <button onclick="closeAdminModal()" style="flex:1;padding:12px;border-radius:10px;border:1.5px solid var(--border);background:#f8fafc;font-size:14px;font-weight:600;cursor:pointer;font-family:'Manrope',sans-serif;">Cancel</button>
-      <button onclick="checkAdminPwd()" style="flex:1;padding:12px;border-radius:10px;border:none;background:var(--blue);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif;">Enter <i class="fas fa-arrow-right"></i></button>
-    </div>
-  </div>
-</div>
-
-<button id="float-admin-btn" onclick="openAdminModal()"
-  style="position:fixed;bottom:28px;right:28px;width:56px;height:56px;border-radius:50%;background:var(--blue);color:#fff;border:none;font-size:26px;cursor:pointer;z-index:999;box-shadow:0 8px 24px rgba(37,99,235,0.45);display:flex;align-items:center;justify-content:center;transition:all 0.2s;font-weight:300;"
-  title="Post">+</button>
-
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></body>
 
 <script>
@@ -1707,37 +1684,6 @@ async function submitComment() {
     renderBlogPosts(currentFilter === 'All' ? allPosts : allPosts.filter(function(p) { return p.category === currentFilter; }));
   } catch(e) { console.error('Comment error:', e); alert('Failed to post comment. Please try again.'); }
 }
-
-// ── FLOATING ADMIN BUTTON ──────────────────────────────
-function openAdminModal() {
-  var modal = document.getElementById('admin-pwd-modal');
-  modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-  setTimeout(function() { document.getElementById('float-pwd-input').focus(); }, 100);
-}
-function closeAdminModal() {
-  document.getElementById('admin-pwd-modal').style.display = 'none';
-  document.getElementById('float-pwd-input').value = '';
-  document.getElementById('float-pwd-error').style.display = 'none';
-  document.body.style.overflow = '';
-}
-function checkAdminPwd() {
-  var val = document.getElementById('float-pwd-input').value;
-  if (val === 'JTES@2025') {
-    window.location.href = 'admin.html';
-  } else {
-    document.getElementById('float-pwd-error').style.display = 'block';
-    document.getElementById('float-pwd-input').value = '';
-    document.getElementById('float-pwd-input').focus();
-  }
-}
-// hover effect on float btn
-var floatBtn = document.getElementById('float-admin-btn');
-if (floatBtn) {
-  floatBtn.addEventListener('mouseenter', function() { this.style.transform = 'scale(1.1)'; this.style.boxShadow = '0 12px 32px rgba(37,99,235,0.55)'; });
-  floatBtn.addEventListener('mouseleave', function() { this.style.transform = 'scale(1)'; this.style.boxShadow = '0 8px 24px rgba(37,99,235,0.45)'; });
-}
-
 
 // ── STATIC EARLIER ARTICLES ──────────────────────────────
 var staticArticles = {
