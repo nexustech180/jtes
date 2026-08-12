@@ -1456,13 +1456,17 @@ function resetProgress(id) {
 }
 
 // ═══════════════════════════════════════════
-//  HOMEPAGE CONTENT — admin-editable via admin.html's Site Content tab.
-//  Reads siteContent/home from Firebase and rewrites the page's sections
-//  from it. If nothing has been saved yet (data is null), the hardcoded
-//  HTML above stays exactly as-is — this is a progressive enhancement,
-//  not a hard dependency on Firebase having data.
+//  HOMEPAGE CONTENT — visually editable in place; see "VISUAL EDIT MODE"
+//  further down. Reads siteContent/home from Firebase and rewrites the
+//  page's sections from it. If nothing has been saved yet (data is
+//  null) AND we're not in edit mode, the hardcoded HTML above stays
+//  exactly as-is — this is a progressive enhancement for visitors, not
+//  a hard dependency on Firebase having data. In edit mode, defaults
+//  matching that same hardcoded HTML are loaded into homeContentDraft
+//  so there's always something real to edit, never a blank page.
 // ═══════════════════════════════════════════
 var CMS_FB_URL = 'https://jtes-website-default-rtdb.firebaseio.com';
+var homeContentDraft = null;
 
 function cmsText(v) { return v == null ? '' : v; }
 
@@ -1471,25 +1475,51 @@ function cmsSetVisible(el, visible) {
   el.style.display = (visible === false) ? 'none' : '';
 }
 
+function isEditMode() {
+  return new URLSearchParams(window.location.search).get('edit') === '1';
+}
+
+function applyHomeContent(data) {
+  var sections = data.sections || {};
+  if (sections.hero) renderHomeHero(sections.hero);
+  if (sections.aboutPreview) renderHomeAboutPreview(sections.aboutPreview);
+  if (sections.services) renderHomeServicesPreview(sections.services);
+  if (sections.whyChoose) renderHomeWhyChoose(sections.whyChoose);
+  if (sections.projects) renderHomeProjectsPreview(sections.projects);
+  if (sections.blog) renderHomeBlogPreview(sections.blog);
+  if (sections.newsletter) renderHomeNewsletter(sections.newsletter);
+  if (data.sectionOrder) reorderHomeSections(data.sectionOrder);
+}
+
 async function loadHomeContent() {
   try {
     var res = await fetch(CMS_FB_URL + '/siteContent/home.json');
     var data = await res.json();
-    if (!data) return;
-    var sections = data.sections || {};
-    if (sections.hero) renderHomeHero(sections.hero);
-    if (sections.aboutPreview) renderHomeAboutPreview(sections.aboutPreview);
-    if (sections.services) renderHomeServicesPreview(sections.services);
-    if (sections.whyChoose) renderHomeWhyChoose(sections.whyChoose);
-    if (sections.projects) renderHomeProjectsPreview(sections.projects);
-    if (sections.blog) renderHomeBlogPreview(sections.blog);
-    if (sections.newsletter) renderHomeNewsletter(sections.newsletter);
-    if (data.sectionOrder) reorderHomeSections(data.sectionOrder);
+    if (!data) {
+      if (isEditMode()) {
+        homeContentDraft = JSON.parse(JSON.stringify(HOME_DEFAULTS));
+        applyHomeContent(homeContentDraft);
+      }
+      return;
+    }
+    homeContentDraft = data;
+    applyHomeContent(data);
   } catch (e) {
     console.error('Failed to load homepage content, keeping built-in defaults:', e);
+    if (isEditMode()) {
+      homeContentDraft = JSON.parse(JSON.stringify(HOME_DEFAULTS));
+      applyHomeContent(homeContentDraft);
+    }
   }
 }
 
+// Every bound element below carries data-cms-path (dot/bracket path into
+// homeContentDraft, e.g. "sections.hero.slides[0].badge") and, for text
+// nodes, data-cms-mode ("html" preserves nested tags like the accent
+// <span> in headings; anything else is read back as plain text). Edit
+// mode (below) uses these two attributes to know what's editable and
+// how to write changes back into the draft — normal visitors never see
+// them do anything, they're just inert data attributes.
 function renderHomeHero(hero) {
   var wrap = document.getElementById('carousel-home');
   cmsSetVisible(wrap, hero.visible);
@@ -1497,16 +1527,17 @@ function renderHomeHero(hero) {
   var track = document.getElementById('track-home');
   var dots  = document.getElementById('dots-home');
   track.innerHTML = hero.slides.map(function(s, i) {
+    var base = 'sections.hero.slides[' + i + ']';
     return '<div class="carousel-slide' + (i === 0 ? ' active' : '') + '">' +
-      '<div class="carousel-slide-bg" style="background-image:url(\'' + cmsText(s.bgImage) + '\');"></div>' +
+      '<div class="carousel-slide-bg" data-cms-path="' + base + '.bgImage" data-cms-mode="bgimage" style="background-image:url(\'' + cmsText(s.bgImage) + '\');"></div>' +
       '<div class="carousel-slide-overlay"></div>' +
       '<div class="carousel-content">' +
-        '<div class="badge"><span class="badge-dot"></span> ' + cmsText(s.badge) + '</div>' +
-        '<h1>' + cmsText(s.headingHtml) + '</h1>' +
-        '<p>' + cmsText(s.body) + '</p>' +
+        '<div class="badge"><span class="badge-dot"></span> <span data-cms-path="' + base + '.badge">' + cmsText(s.badge) + '</span></div>' +
+        '<h1 data-cms-path="' + base + '.headingHtml" data-cms-mode="html">' + cmsText(s.headingHtml) + '</h1>' +
+        '<p data-cms-path="' + base + '.body">' + cmsText(s.body) + '</p>' +
         '<div class="hero-btns">' +
-          '<a class="btn-white" href="' + cmsText(s.primaryHref) + '">' + cmsText(s.primaryLabel) + '</a>' +
-          '<a class="btn-outline-white" href="' + cmsText(s.secondaryHref) + '">' + cmsText(s.secondaryLabel) + '</a>' +
+          '<a class="btn-white" href="' + cmsText(s.primaryHref) + '"><span data-cms-path="' + base + '.primaryLabel">' + cmsText(s.primaryLabel) + '</span></a>' +
+          '<a class="btn-outline-white" href="' + cmsText(s.secondaryHref) + '"><span data-cms-path="' + base + '.secondaryLabel">' + cmsText(s.secondaryLabel) + '</span></a>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -1521,21 +1552,24 @@ function renderHomeAboutPreview(s) {
   cmsSetVisible(section, s.visible);
   if (s.visible === false) return;
   var badge = section.querySelector('.about-left .section-badge');
-  if (badge) badge.innerHTML = '<span class="dot"></span> ' + cmsText(s.badge);
+  if (badge) badge.innerHTML = '<span class="dot"></span> <span data-cms-path="sections.aboutPreview.badge">' + cmsText(s.badge) + '</span>';
   var heading = section.querySelector('.about-left h2');
-  if (heading) heading.innerHTML = cmsText(s.headingHtml);
+  if (heading) { heading.innerHTML = cmsText(s.headingHtml); heading.setAttribute('data-cms-path', 'sections.aboutPreview.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
   var paras = section.querySelectorAll('.about-left > p');
-  (s.paragraphs || []).forEach(function(p, i) { if (paras[i]) paras[i].textContent = p; });
+  (s.paragraphs || []).forEach(function(p, i) {
+    if (paras[i]) { paras[i].textContent = p; paras[i].setAttribute('data-cms-path', 'sections.aboutPreview.paragraphs[' + i + ']'); }
+  });
   var cta = section.querySelector('.about-left .btn-blue');
   if (cta) {
     cta.href = s.ctaHref || '#';
-    cta.innerHTML = cmsText(s.ctaLabel) + ' <i class="fas fa-arrow-right"></i>';
+    cta.innerHTML = '<span data-cms-path="sections.aboutPreview.ctaLabel">' + cmsText(s.ctaLabel) + '</span> <i class="fas fa-arrow-right"></i>';
   }
   var cardsWrap = section.querySelector('.feature-cards');
   if (cardsWrap && s.cards) {
-    cardsWrap.innerHTML = s.cards.map(function(c) {
+    cardsWrap.innerHTML = s.cards.map(function(c, i) {
+      var base = 'sections.aboutPreview.cards[' + i + ']';
       return '<div class="feature-card"><div class="icon-box"><i class="' + cmsText(c.icon) + '"></i></div>' +
-        '<h4>' + cmsText(c.title) + '</h4><p>' + cmsText(c.body) + '</p></div>';
+        '<h4 data-cms-path="' + base + '.title">' + cmsText(c.title) + '</h4><p data-cms-path="' + base + '.body">' + cmsText(c.body) + '</p></div>';
     }).join('');
   }
 }
@@ -1545,24 +1579,25 @@ function renderHomeServicesPreview(s) {
   cmsSetVisible(section, s.visible);
   if (s.visible === false) return;
   var badge = section.querySelector('.services-header .section-badge');
-  if (badge) badge.innerHTML = '<span class="dot"></span> ' + cmsText(s.badge);
+  if (badge) badge.innerHTML = '<span class="dot"></span> <span data-cms-path="sections.services.badge">' + cmsText(s.badge) + '</span>';
   var heading = section.querySelector('.services-header h2');
-  if (heading) heading.innerHTML = cmsText(s.headingHtml);
+  if (heading) { heading.innerHTML = cmsText(s.headingHtml); heading.setAttribute('data-cms-path', 'sections.services.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
   var body = section.querySelector('.services-header p');
-  if (body) body.textContent = cmsText(s.body);
+  if (body) { body.textContent = cmsText(s.body); body.setAttribute('data-cms-path', 'sections.services.body'); }
   var grid = section.querySelector('.services-grid');
   if (grid && s.cards) {
-    grid.innerHTML = s.cards.map(function(c) {
+    grid.innerHTML = s.cards.map(function(c, i) {
+      var base = 'sections.services.cards[' + i + ']';
       return '<div class="service-card"><div class="service-card-img-placeholder">' +
-        '<img src="' + cmsText(c.image) + '" style="width:100%;height:100%;object-fit:cover;" alt="' + cmsText(c.title) + '"></div>' +
+        '<img src="' + cmsText(c.image) + '" data-cms-path="' + base + '.image" style="width:100%;height:100%;object-fit:cover;" alt="' + cmsText(c.title) + '"></div>' +
         '<div class="service-card-body"><div class="service-icon-box"><i class="' + cmsText(c.icon) + '"></i></div>' +
-        '<h3>' + cmsText(c.title) + '</h3><p>' + cmsText(c.body) + '</p></div></div>';
+        '<h3 data-cms-path="' + base + '.title">' + cmsText(c.title) + '</h3><p data-cms-path="' + base + '.body">' + cmsText(c.body) + '</p></div></div>';
     }).join('');
   }
   var link = section.querySelector('.view-all-link');
   if (link) {
     link.href = s.viewAllHref || 'services.html';
-    link.innerHTML = cmsText(s.viewAllLabel) + ' <i class="fas fa-arrow-right"></i>';
+    link.innerHTML = '<span data-cms-path="sections.services.viewAllLabel">' + cmsText(s.viewAllLabel) + '</span> <i class="fas fa-arrow-right"></i>';
   }
 }
 
@@ -1571,19 +1606,20 @@ function renderHomeWhyChoose(s) {
   cmsSetVisible(section, s.visible);
   if (s.visible === false) return;
   var img = section.querySelector('.why-image img');
-  if (img && s.image) img.src = s.image;
+  if (img) { if (s.image) img.src = s.image; img.setAttribute('data-cms-path', 'sections.whyChoose.image'); }
   var badge = section.querySelector('.why-right .section-badge');
-  if (badge) badge.innerHTML = '<span class="dot"></span> ' + cmsText(s.badge);
+  if (badge) badge.innerHTML = '<span class="dot"></span> <span data-cms-path="sections.whyChoose.badge">' + cmsText(s.badge) + '</span>';
   var heading = section.querySelector('.why-right h2');
-  if (heading) heading.innerHTML = cmsText(s.headingHtml);
+  if (heading) { heading.innerHTML = cmsText(s.headingHtml); heading.setAttribute('data-cms-path', 'sections.whyChoose.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
   var right = section.querySelector('.why-right');
   if (right && s.items) {
     right.querySelectorAll('.why-item').forEach(function(el) { el.remove(); });
-    s.items.forEach(function(item) {
+    s.items.forEach(function(item, i) {
+      var base = 'sections.whyChoose.items[' + i + ']';
       var div = document.createElement('div');
       div.className = 'why-item';
       div.innerHTML = '<div class="why-check"><i class="fas fa-check"></i></div>' +
-        '<div><h4>' + cmsText(item.title) + '</h4><p>' + cmsText(item.body) + '</p></div>';
+        '<div><h4 data-cms-path="' + base + '.title">' + cmsText(item.title) + '</h4><p data-cms-path="' + base + '.body">' + cmsText(item.body) + '</p></div>';
       right.appendChild(div);
     });
   }
@@ -1594,24 +1630,25 @@ function renderHomeProjectsPreview(s) {
   cmsSetVisible(section, s.visible);
   if (s.visible === false) return;
   var badge = section.querySelector('.projects-header .section-badge');
-  if (badge) badge.innerHTML = '<span class="dot"></span> ' + cmsText(s.badge);
+  if (badge) badge.innerHTML = '<span class="dot"></span> <span data-cms-path="sections.projects.badge">' + cmsText(s.badge) + '</span>';
   var heading = section.querySelector('.projects-header h2');
-  if (heading) heading.innerHTML = cmsText(s.headingHtml);
+  if (heading) { heading.innerHTML = cmsText(s.headingHtml); heading.setAttribute('data-cms-path', 'sections.projects.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
   var link = section.querySelector('.projects-header .btn-outline-white2');
   if (link) {
     link.href = s.viewAllHref || 'projects.html';
-    link.innerHTML = cmsText(s.viewAllLabel) + ' <i class="fas fa-arrow-right"></i>';
+    link.innerHTML = '<span data-cms-path="sections.projects.viewAllLabel">' + cmsText(s.viewAllLabel) + '</span> <i class="fas fa-arrow-right"></i>';
   }
   var grid = section.querySelector('.projects-grid');
   if (grid && s.cards) {
-    grid.innerHTML = s.cards.map(function(c) {
+    grid.innerHTML = s.cards.map(function(c, i) {
+      var base = 'sections.projects.cards[' + i + ']';
       var imgBlock = c.image
-        ? '<img src="' + cmsText(c.image) + '" alt="' + cmsText(c.title) + '">'
-        : '<div class="project-card-img-bg">JTES</div>';
+        ? '<img src="' + cmsText(c.image) + '" data-cms-path="' + base + '.image" alt="' + cmsText(c.title) + '">'
+        : '<div class="project-card-img-bg" data-cms-path="' + base + '.image">JTES</div>';
       var tags = (c.tags || []).map(function(t) { return '<span class="tag-pill">' + cmsText(t) + '</span>'; }).join('');
       return '<div class="project-card"><div class="project-card-img">' + imgBlock +
-        '<span class="project-tag">' + cmsText(c.tag) + '</span></div>' +
-        '<div class="project-card-body"><h3>' + cmsText(c.title) + '</h3><p>' + cmsText(c.body) + '</p>' +
+        '<span class="project-tag" data-cms-path="' + base + '.tag">' + cmsText(c.tag) + '</span></div>' +
+        '<div class="project-card-body"><h3 data-cms-path="' + base + '.title">' + cmsText(c.title) + '</h3><p data-cms-path="' + base + '.body">' + cmsText(c.body) + '</p>' +
         '<div class="project-tags">' + tags + '</div></div></div>';
     }).join('');
   }
@@ -1622,26 +1659,27 @@ function renderHomeBlogPreview(s) {
   cmsSetVisible(section, s.visible);
   if (s.visible === false) return;
   var badge = section.querySelector('.blog-header .section-badge');
-  if (badge) badge.innerHTML = '<span class="dot"></span> ' + cmsText(s.badge);
+  if (badge) badge.innerHTML = '<span class="dot"></span> <span data-cms-path="sections.blog.badge">' + cmsText(s.badge) + '</span>';
   var heading = section.querySelector('.blog-header h2');
-  if (heading) heading.innerHTML = cmsText(s.headingHtml);
+  if (heading) { heading.innerHTML = cmsText(s.headingHtml); heading.setAttribute('data-cms-path', 'sections.blog.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
   var body = section.querySelector('.blog-header p');
-  if (body) body.textContent = cmsText(s.body);
+  if (body) { body.textContent = cmsText(s.body); body.setAttribute('data-cms-path', 'sections.blog.body'); }
   var grid = section.querySelector('.blog-grid');
   if (grid && s.cards) {
-    grid.innerHTML = s.cards.map(function(c) {
-      return '<div class="blog-card"><div class="blog-card-img"><img src="' + cmsText(c.image) + '" alt="' + cmsText(c.title) + '">' +
-        '<span class="blog-tag">' + cmsText(c.tag) + '</span></div>' +
-        '<div class="blog-card-body"><div class="blog-meta"><span><i class="fas fa-calendar-alt"></i> ' + cmsText(c.date) + '</span>' +
-        '<span><i class="fas fa-clock"></i> ' + cmsText(c.readTime) + '</span></div>' +
-        '<h3>' + cmsText(c.title) + '</h3><p>' + cmsText(c.body) + '</p>' +
+    grid.innerHTML = s.cards.map(function(c, i) {
+      var base = 'sections.blog.cards[' + i + ']';
+      return '<div class="blog-card"><div class="blog-card-img"><img src="' + cmsText(c.image) + '" data-cms-path="' + base + '.image" alt="' + cmsText(c.title) + '">' +
+        '<span class="blog-tag" data-cms-path="' + base + '.tag">' + cmsText(c.tag) + '</span></div>' +
+        '<div class="blog-card-body"><div class="blog-meta"><span><i class="fas fa-calendar-alt"></i> <span data-cms-path="' + base + '.date">' + cmsText(c.date) + '</span></span>' +
+        '<span><i class="fas fa-clock"></i> <span data-cms-path="' + base + '.readTime">' + cmsText(c.readTime) + '</span></span></div>' +
+        '<h3 data-cms-path="' + base + '.title">' + cmsText(c.title) + '</h3><p data-cms-path="' + base + '.body">' + cmsText(c.body) + '</p>' +
         '<a class="read-more" href="' + cmsText(c.href || 'blog.html') + '">Read More <i class="fas fa-arrow-right"></i></a></div></div>';
     }).join('');
   }
   var cta = section.querySelector('.blog-cta .btn-blue-outline');
   if (cta) {
     cta.href = s.viewAllHref || 'blog.html';
-    cta.innerHTML = cmsText(s.viewAllLabel) + ' <i class="fas fa-arrow-right"></i>';
+    cta.innerHTML = '<span data-cms-path="sections.blog.viewAllLabel">' + cmsText(s.viewAllLabel) + '</span> <i class="fas fa-arrow-right"></i>';
   }
 }
 
@@ -1650,17 +1688,17 @@ function renderHomeNewsletter(s) {
   cmsSetVisible(section, s.visible);
   if (s.visible === false) return;
   var heading = section.querySelector('h2');
-  if (heading) heading.innerHTML = cmsText(s.headingHtml);
+  if (heading) { heading.innerHTML = cmsText(s.headingHtml); heading.setAttribute('data-cms-path', 'sections.newsletter.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
   var body = section.querySelector('.nl-inner > p');
-  if (body) body.textContent = cmsText(s.body);
+  if (body) { body.textContent = cmsText(s.body); body.setAttribute('data-cms-path', 'sections.newsletter.body'); }
   var perksWrap = section.querySelector('.nl-perks');
   if (perksWrap && s.perks) {
-    perksWrap.innerHTML = s.perks.map(function(p) {
-      return '<div class="nl-perk"><i class="' + cmsText(p.icon) + '"></i> ' + cmsText(p.label) + '</div>';
+    perksWrap.innerHTML = s.perks.map(function(p, i) {
+      return '<div class="nl-perk"><i class="' + cmsText(p.icon) + '"></i> <span data-cms-path="sections.newsletter.perks[' + i + '].label">' + cmsText(p.label) + '</span></div>';
     }).join('');
   }
   var fine = section.querySelector('.nl-fine');
-  if (fine && s.fineprint) fine.textContent = s.fineprint;
+  if (fine) { if (s.fineprint) fine.textContent = s.fineprint; fine.setAttribute('data-cms-path', 'sections.newsletter.fineprint'); }
 }
 
 function reorderHomeSections(order) {
@@ -1682,9 +1720,389 @@ function reorderHomeSections(order) {
   });
 }
 
+// Same values as admin.html's SC_DEFAULTS.home — kept in sync manually
+// since these are two separate static files with no shared module
+// system. Used so edit mode always has real content to show/edit even
+// when nothing has been saved to Firebase yet.
+var HOME_DEFAULTS = {
+  sectionOrder: ['hero','aboutPreview','services','whyChoose','projects','blog','newsletter'],
+  sections: {
+    hero: {
+      visible: true,
+      slides: [
+        { badge: 'Leading African Tech Innovation', headingHtml: 'JASSAN<br><span>Technologies &</span><br>Electrical Services', body: 'From classroom technology fundamentals to mega applications and industrial-scale solutions.', bgImage: 'https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=1600&q=80', primaryLabel: 'Get Started →', primaryHref: 'contact.html', secondaryLabel: 'Learn More', secondaryHref: 'about.html' },
+        { badge: 'STEM & Robotics Education', headingHtml: "Building<br><span>Tomorrow's</span><br>Engineers Today", body: 'Structured, hands-on STEM, STEAM, Robotics and AI training for children, teens, university students and professionals.', bgImage: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1600&q=80', primaryLabel: 'Explore Programs →', primaryHref: 'services.html#svc-stem', secondaryLabel: 'Our Projects', secondaryHref: 'projects.html' },
+        { badge: 'Smart Automation & IoT', headingHtml: 'Intelligent<br><span>Solutions for</span><br>African Industry', body: 'Smart home automation, IoT systems, electrical installations and industrial-scale engineering solutions across Ghana.', bgImage: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=1600&q=80', primaryLabel: 'Our Services →', primaryHref: 'services.html#svc-iot', secondaryLabel: 'Get a Quote', secondaryHref: 'contact.html' }
+      ]
+    },
+    aboutPreview: {
+      visible: true, badge: 'ABOUT JTES',
+      headingHtml: 'Empowering Africa Through <span>Technology &<br>Education</span>',
+      paragraphs: [
+        'JASSAN Technologies and Electrical Services (JTES) is an innovation-driven technology company dedicated to advancing electrical, electronic, and digital solutions through research, education, and real-world application.',
+        'We specialize in advanced electrical and electronic systems, STEM and STEAM education, robotics, artificial intelligence, and critical thinking skills development — bridging classroom fundamentals with industrial-scale solutions.'
+      ],
+      ctaLabel: 'Learn More About Us', ctaHref: 'about.html',
+      cards: [
+        { icon: 'fas fa-lightbulb', title: 'Innovation-Driven', body: 'Pioneering technology solutions for African industries' },
+        { icon: 'fas fa-users', title: 'Expert Team', body: 'Experienced engineers and educators dedicated to excellence' },
+        { icon: 'fas fa-bullseye', title: 'Real-World Impact', body: 'Practical applications that solve actual problems' },
+        { icon: 'fas fa-award', title: 'Industry Standards', body: 'Committed to quality and international best practices' }
+      ]
+    },
+    services: {
+      visible: true, badge: 'Our Services',
+      headingHtml: 'Comprehensive Technology &<br>Engineering Solutions',
+      body: 'From education to implementation, we provide end-to-end services that drive innovation and growth.',
+      cards: [
+        { image: 'https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000224884.jpg', icon: 'fas fa-bolt', title: 'Electrical & Electronics Services', body: 'Professional electrical installations, maintenance, and repair services for residential, commercial, and industrial clients.' },
+        { image: 'https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000224942.jpg', icon: 'fas fa-wifi', title: 'IoT & Smart Automation', body: 'Intelligent automation systems for homes, offices, and industries using cutting-edge IoT technologies.' },
+        { image: 'https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000226843.jpg', icon: 'fas fa-book-open', title: 'Curriculum Development', body: 'Custom technology curricula for schools, academies and training institutions aligned with local culture and international standards.' }
+      ],
+      viewAllLabel: 'View All Services', viewAllHref: 'services.html'
+    },
+    whyChoose: {
+      visible: true, image: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&q=80',
+      badge: 'WHY CHOOSE JTES', headingHtml: 'Your Trusted Partner in <span>Technology Excellence</span>',
+      items: [
+        { title: 'Innovation-Driven', body: 'Operating at the intersection of education, engineering and industry — we deliver advanced solutions that keep you ahead.' },
+        { title: 'Hands-On Learning', body: 'From early STEM education for young learners to advanced automation for industries — practical, scalable, future-ready solutions.' },
+        { title: 'Industry-Ready Solutions', body: 'Every product and service meets rigorous local and international engineering and educational standards.' },
+        { title: 'Reliable Electrical Services', body: 'Professional, safe electrical installations, maintenance and repairs — certified and compliant at any scale.' },
+        { title: 'Future-Focused Technology', body: 'We invest in AI, IoT, robotics and smart automation to ensure your institution or business is future-ready.' },
+        { title: 'Local Expertise, Global Standards', body: 'Proudly based in Kumasi, Ghana — serving schools, universities, companies, industries, NGOs and individual innovators.' }
+      ]
+    },
+    projects: {
+      visible: true, badge: 'FEATURED PROJECTS', headingHtml: 'Innovation in <span>Action</span>',
+      viewAllLabel: 'View All Projects', viewAllHref: 'projects.html',
+      cards: [
+        { image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=75', tag: 'IoT & Automation', title: 'Smart Dustbin System', body: 'Intelligent waste management system with sensors for fill-level monitoring and automated lid operation.', tags: ['Arduino','Sensors','IoT'] },
+        { image: 'https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=800&q=75', tag: 'Security & Surveillance', title: 'Smart Security System', body: 'Comprehensive security solution with motion detection, remote monitoring, and intelligent alerts.', tags: ['CCTV','AI','Remote Monitoring'] },
+        { image: '', tag: 'STEM Education', title: 'Educational Robotics Kit', body: 'Complete robotics learning kit designed for students to build and program various robotic systems.', tags: ['Custom PCB','Servo Motors','Python'] },
+        { image: '', tag: 'Industrial Solutions', title: 'Industrial Automation Controller', body: 'Custom automation controller for manufacturing processes with real-time monitoring capabilities.', tags: ['PLC','HMI','SCADA'] }
+      ]
+    },
+    blog: {
+      visible: true, badge: 'OUR BLOG', headingHtml: 'From Our <span>Blog</span>',
+      body: 'Stay updated with the latest trends, insights, and innovations in technology and education.',
+      viewAllLabel: 'View All Articles', viewAllHref: 'blog.html',
+      cards: [
+        { image: 'https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000224939.jpg', tag: 'Education', date: 'Jan 15, 2024', readTime: '5 min read', title: 'The Future of STEM Education in Africa', body: 'Exploring how hands-on technology training is transforming education across the continent and preparing the next generation of...', href: 'blog.html' },
+        { image: 'https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000224882.jpg', tag: 'Technology', date: 'Jan 10, 2024', readTime: '7 min read', title: 'Smart Automation in Industrial Settings', body: 'How IoT and automation technologies are revolutionizing manufacturing and industrial processes in Ghana and beyond.', href: 'blog.html' },
+        { image: 'https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/IMG_20260204_165248_345.jpg', tag: 'Innovation', date: 'Jan 5, 2024', readTime: '6 min read', title: 'Building Sustainable Tech Solutions', body: 'Our approach to creating environmentally conscious and sustainable technology solutions for African communities.', href: 'blog.html' }
+      ]
+    },
+    newsletter: {
+      visible: true, headingHtml: 'Stay Ahead with <span>JTES</span>',
+      body: "Join our exclusive community. Get event invites, new blog posts, STEM breakthroughs and tech insights from Ghana's leading technology team — straight to your inbox.",
+      perks: [
+        { icon: 'fas fa-calendar-star', label: 'Exclusive Events' },
+        { icon: 'fas fa-newspaper', label: 'Latest Articles' },
+        { icon: 'fas fa-bolt', label: 'Tech Insights' },
+        { icon: 'fas fa-trophy', label: 'STEM News' }
+      ],
+      fineprint: '🔒 Zero spam. Unsubscribe with one click, anytime.'
+    }
+  }
+};
+
+// ═══════════════════════════════════════════
+//  VISUAL EDIT MODE (?edit=1)
+//  Real WYSIWYG editing on the live page itself — click text to type
+//  directly on the design, click an image to replace it, use each
+//  section's toolbar to reorder or hide it. No forms, no field labels,
+//  no HTML knowledge required. Password-gated with the same admin
+//  credential used everywhere else on the site.
+// ═══════════════════════════════════════════
+var EDIT_ADMIN_PASS = 'JTES@2025';
+var CMS_CLD_CLOUD = 'dx8ziypwz';
+var CMS_CLD_PRESET = 'JASSAN';
+var cmsDirty = false;
+
+var CMS_SECTION_ID_MAP = {
+  hero: 'carousel-home', aboutPreview: 'about-preview', services: 'services',
+  whyChoose: 'why-choose-preview', projects: 'projects-preview', blog: 'blog-preview', newsletter: 'newsletter-preview'
+};
+var CMS_SECTION_LABELS = {
+  hero: 'Hero', aboutPreview: 'About', services: 'Services',
+  whyChoose: 'Why Choose Us', projects: 'Projects', blog: 'Blog', newsletter: 'Newsletter'
+};
+
+function cmsGetByPath(obj, path) {
+  var parts = path.replace(/\[(\d+)\]/g, '.$1').split('.');
+  var cur = obj;
+  for (var i = 0; i < parts.length; i++) {
+    if (cur == null) return undefined;
+    cur = cur[parts[i]];
+  }
+  return cur;
+}
+function cmsSetByPath(obj, path, value) {
+  var parts = path.replace(/\[(\d+)\]/g, '.$1').split('.');
+  var cur = obj;
+  for (var i = 0; i < parts.length - 1; i++) {
+    var key = parts[i];
+    if (cur[key] == null) cur[key] = /^\d+$/.test(parts[i + 1]) ? [] : {};
+    cur = cur[key];
+  }
+  cur[parts[parts.length - 1]] = value;
+}
+
+function markDirty() {
+  cmsDirty = true;
+  var el = document.getElementById('cms-dirty-indicator');
+  if (el) el.style.display = 'inline';
+}
+
+function injectEditModeStyles() {
+  var style = document.createElement('style');
+  style.textContent =
+    '.cms-editable-text{outline:2px dashed transparent;outline-offset:3px;cursor:text;transition:outline-color .15s,background-color .15s;border-radius:4px;}' +
+    '.cms-editable-text:hover{outline-color:rgba(37,99,235,0.55);}' +
+    '.cms-editable-text.cms-focused{outline-color:#2563EB;outline-style:solid;background-color:rgba(37,99,235,0.06);}' +
+    '.cms-image-edit-btn{opacity:0.92;}' +
+    '.cms-image-edit-btn:hover{background:#2563EB !important;opacity:1;}' +
+    '.cms-section-toolbar button:hover{color:#3B82F6;}';
+  document.head.appendChild(style);
+}
+
+function enableTextEditing() {
+  document.querySelectorAll('[data-cms-path]').forEach(function(el) {
+    if (el.tagName === 'IMG' || el.getAttribute('data-cms-mode') === 'bgimage') return;
+    el.contentEditable = 'true';
+    el.spellcheck = false;
+    el.classList.add('cms-editable-text');
+    el.addEventListener('focus', function() { el.classList.add('cms-focused'); });
+    el.addEventListener('blur', function() {
+      el.classList.remove('cms-focused');
+      var path = el.getAttribute('data-cms-path');
+      var mode = el.getAttribute('data-cms-mode');
+      var value = mode === 'html' ? el.innerHTML : el.textContent;
+      cmsSetByPath(homeContentDraft, path, value);
+      markDirty();
+    });
+    if (el.tagName !== 'P') {
+      el.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+      });
+    }
+  });
+}
+
+function cmsShowToast(msg) {
+  var el = document.createElement('div');
+  el.style.cssText = 'position:fixed;top:80px;right:20px;z-index:10000;background:#0A0F1E;color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;font-family:Manrope,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,0.3);';
+  el.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + msg;
+  document.body.appendChild(el);
+  return el;
+}
+function cmsResolveToast(el, msg, success) {
+  el.innerHTML = '<i class="fas fa-' + (success ? 'check-circle' : 'exclamation-circle') + '"></i> ' + msg;
+  el.style.background = success ? '#16a34a' : '#dc2626';
+  setTimeout(function() { el.remove(); }, 2500);
+}
+
+async function cmsUploadImage(file) {
+  var fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CMS_CLD_PRESET);
+  var res = await fetch('https://api.cloudinary.com/v1_1/' + CMS_CLD_CLOUD + '/upload', { method: 'POST', body: fd });
+  var data = await res.json();
+  if (!data.secure_url) throw new Error('Upload did not return a URL');
+  return data.secure_url;
+}
+
+function cmsPickImage(el) {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async function() {
+    if (!input.files[0]) return;
+    var toast = cmsShowToast('Uploading image…');
+    try {
+      var url = await cmsUploadImage(input.files[0]);
+      var path = el.getAttribute('data-cms-path');
+      cmsSetByPath(homeContentDraft, path, url);
+      if (el.tagName === 'IMG') el.src = url;
+      else el.style.backgroundImage = "url('" + url + "')";
+      markDirty();
+      cmsResolveToast(toast, 'Image updated!', true);
+    } catch (err) {
+      console.error(err);
+      cmsResolveToast(toast, 'Upload failed. Try again.', false);
+    }
+  };
+  input.click();
+}
+
+function enableImageEditing() {
+  document.querySelectorAll('[data-cms-path]').forEach(function(el) {
+    var isImg = el.tagName === 'IMG';
+    var isBg  = el.getAttribute('data-cms-mode') === 'bgimage';
+    if (!isImg && !isBg) return;
+    var posEl = isImg ? el.parentElement : el;
+    if (!posEl) return;
+    if (getComputedStyle(posEl).position === 'static') posEl.style.position = 'relative';
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'cms-image-edit-btn';
+    btn.innerHTML = '<i class="fas fa-camera"></i> Change Image';
+    btn.style.cssText = 'position:absolute;left:8px;bottom:8px;z-index:5;background:rgba(10,15,30,0.85);color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:Manrope,sans-serif;';
+    btn.addEventListener('click', function(e) {
+      e.preventDefault(); e.stopPropagation();
+      cmsPickImage(el);
+    });
+    posEl.appendChild(btn);
+  });
+}
+
+function cmsForceVisibleInEditMode() {
+  Object.keys(CMS_SECTION_ID_MAP).forEach(function(key) {
+    var el = document.getElementById(CMS_SECTION_ID_MAP[key]);
+    if (!el) return;
+    var hidden = homeContentDraft.sections[key] && homeContentDraft.sections[key].visible === false;
+    el.style.display = '';
+    el.style.opacity = hidden ? '0.35' : '';
+    el.style.outline = hidden ? '3px dashed #ef4444' : '';
+    el.style.outlineOffset = hidden ? '-3px' : '';
+  });
+}
+
+function cmsMoveSection(key, dir) {
+  var order = homeContentDraft.sectionOrder;
+  var idx = order.indexOf(key);
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= order.length) return;
+  var tmp = order[idx]; order[idx] = order[newIdx]; order[newIdx] = tmp;
+  reorderHomeSections(order);
+  markDirty();
+}
+
+function cmsToggleSectionVisible(key) {
+  var section = homeContentDraft.sections[key];
+  section.visible = section.visible === false ? true : false;
+  cmsForceVisibleInEditMode();
+  markDirty();
+}
+
+function enableSectionControls() {
+  (homeContentDraft.sectionOrder || Object.keys(CMS_SECTION_ID_MAP)).forEach(function(key) {
+    var el = document.getElementById(CMS_SECTION_ID_MAP[key]);
+    if (!el) return;
+    var bar = document.createElement('div');
+    bar.className = 'cms-section-toolbar';
+    bar.style.cssText = 'display:flex;align-items:center;gap:10px;background:#0A0F1E;color:#fff;padding:8px 16px;font-size:12px;font-weight:700;font-family:Manrope,sans-serif;';
+    bar.innerHTML =
+      '<span><i class="fas fa-grip-lines"></i> ' + CMS_SECTION_LABELS[key] + ' section</span>' +
+      '<button type="button" data-act="up" title="Move section up" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px 6px;"><i class="fas fa-arrow-up"></i> Move Up</button>' +
+      '<button type="button" data-act="down" title="Move section down" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px 6px;"><i class="fas fa-arrow-down"></i> Move Down</button>' +
+      '<button type="button" data-act="hide" title="Show or hide this section" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px 6px;"><i class="fas fa-eye-slash"></i> Show/Hide</button>';
+    bar.querySelector('[data-act="up"]').onclick = function() { cmsMoveSection(key, -1); };
+    bar.querySelector('[data-act="down"]').onclick = function() { cmsMoveSection(key, 1); };
+    bar.querySelector('[data-act="hide"]').onclick = function() { cmsToggleSectionVisible(key); };
+    el.insertBefore(bar, el.firstChild);
+  });
+}
+
+function buildEditModeChrome() {
+  var bar = document.createElement('div');
+  bar.id = 'cms-edit-bar';
+  bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#0A0F1E;color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 -4px 20px rgba(0,0,0,0.3);font-family:Manrope,sans-serif;';
+  bar.innerHTML =
+    '<div style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;">' +
+      '<i class="fas fa-pen" style="color:#3B82F6;"></i> Editing this page — click any text or image to change it.' +
+      '<span id="cms-dirty-indicator" style="display:none;color:#f59e0b;">● Unsaved changes</span>' +
+    '</div>' +
+    '<div style="display:flex;gap:10px;">' +
+      '<button type="button" id="cms-exit-btn" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:8px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;font-family:Manrope,sans-serif;">Exit</button>' +
+      '<button type="button" id="cms-save-btn" style="background:#2563EB;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;"><i class="fas fa-save"></i> Save Changes</button>' +
+    '</div>';
+  document.body.appendChild(bar);
+  document.body.style.paddingBottom = '76px';
+  document.getElementById('cms-exit-btn').onclick = function() {
+    if (cmsDirty && !confirm('Discard unsaved changes?')) return;
+    window.location.href = window.location.pathname;
+  };
+  document.getElementById('cms-save-btn').onclick = cmsSaveHomeContent;
+}
+
+async function cmsSaveHomeContent() {
+  var btn = document.getElementById('cms-save-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+  try {
+    var res = await fetch(CMS_FB_URL + '/siteContent/home.json', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(homeContentDraft)
+    });
+    if (!res.ok) throw new Error('Save failed with status ' + res.status);
+    cmsDirty = false;
+    var dirtyEl = document.getElementById('cms-dirty-indicator');
+    if (dirtyEl) dirtyEl.style.display = 'none';
+    btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+    setTimeout(function() { btn.innerHTML = '<i class="fas fa-save"></i> Save Changes'; btn.disabled = false; }, 1800);
+  } catch (e) {
+    console.error(e);
+    btn.innerHTML = '<i class="fas fa-exclamation-circle"></i> Save failed — try again';
+    btn.disabled = false;
+    setTimeout(function() { btn.innerHTML = '<i class="fas fa-save"></i> Save Changes'; }, 2200);
+  }
+}
+
+function showEditAuthGate(onSuccess) {
+  var overlay = document.createElement('div');
+  overlay.id = 'cms-auth-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10001;background:linear-gradient(135deg,#0A0F1E 0%,#1E3A8A 100%);display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.innerHTML =
+    '<div style="background:#fff;border-radius:20px;padding:40px 32px;max-width:380px;width:100%;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,0.3);font-family:Manrope,sans-serif;">' +
+      '<div style="width:56px;height:56px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;"><i class="fas fa-pen" style="font-size:22px;color:#2563EB;"></i></div>' +
+      '<h2 style="font-size:22px;font-weight:900;color:#0F172A;margin-bottom:6px;">Edit This Page</h2>' +
+      '<p style="font-size:14px;color:#64748b;margin-bottom:24px;">Enter the admin password to start editing.</p>' +
+      '<input type="password" id="cms-auth-pass" placeholder="Password" style="width:100%;padding:13px 16px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:16px;text-align:center;margin-bottom:12px;font-family:Manrope,sans-serif;box-sizing:border-box;">' +
+      '<p id="cms-auth-error" style="display:none;color:#ef4444;font-size:13px;margin-bottom:12px;">Incorrect password.</p>' +
+      '<button type="button" id="cms-auth-submit" style="width:100%;background:#2563EB;color:#fff;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Continue</button>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  var input = document.getElementById('cms-auth-pass');
+  input.focus();
+  function attempt() {
+    if (input.value === EDIT_ADMIN_PASS) {
+      sessionStorage.setItem('jtes_edit_auth', input.value);
+      overlay.remove();
+      onSuccess();
+    } else {
+      document.getElementById('cms-auth-error').style.display = 'block';
+      input.value = '';
+      input.focus();
+    }
+  }
+  document.getElementById('cms-auth-submit').onclick = attempt;
+  input.addEventListener('keydown', function(e) { if (e.key === 'Enter') attempt(); });
+}
+
+function startEditMode() {
+  if (!homeContentDraft) return;
+  injectEditModeStyles();
+  buildEditModeChrome();
+  enableTextEditing();
+  enableImageEditing();
+  enableSectionControls();
+  cmsForceVisibleInEditMode();
+}
+
+function initEditModeIfRequested() {
+  if (!isEditMode()) return;
+  if (sessionStorage.getItem('jtes_edit_auth') === EDIT_ADMIN_PASS) {
+    startEditMode();
+  } else {
+    showEditAuthGate(startEditMode);
+  }
+}
+
 // ===== INIT ALL CAROUSELS =====
 document.addEventListener('DOMContentLoaded', async () => {
   await loadHomeContent();
+  initEditModeIfRequested();
   ['home','about','services','projects','blog','contact'].forEach(id => initCarousel(id));
 
   // Blog filter pills
