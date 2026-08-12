@@ -72,8 +72,8 @@ const DEFAULT_ENTITY_ID = 'pg-test-d637f137-c0cc-49ba-a207-3d4d6a37397e';
 const DEFAULT_CONNECTED_ACCOUNT_ID = 'ca_4PfensM4N3iK';
 
 // admin.html/article.html now live on their own site, not this one — see
-// jtes_admin. TODO: replace with that site's real deployed URL once it's live.
-const ADMIN_ORIGIN = 'https://admin.jtes.example';
+// jtes_admin (deployed at https://jtes-admin.jassan.workers.dev).
+const ADMIN_ORIGIN = 'https://jtes-admin.jassan.workers.dev';
 
 const DRIVE_API_PATHS = ['/api/drive-upload', '/api/drive-list', '/api/drive-share'];
 
