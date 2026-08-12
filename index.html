@@ -1100,7 +1100,7 @@
   </section>
 
   <!-- WHY CHOOSE -->
-  <section class="why-section">
+  <section class="why-section" id="why-choose-preview">
     <div class="why-grid">
       <div class="why-image-wrap">
         <div class="why-image">
@@ -1283,7 +1283,7 @@
   </section>
 
   <!-- FOOTER -->
-  <div class="newsletter-section">
+  <div class="newsletter-section" id="newsletter-preview">
     <div class="nl-inner">
       <div class="nl-icon-wrap"><i class="fas fa-envelope-open-text"></i></div>
       <h2>Stay Ahead with <span>JTES</span></h2>
@@ -1455,8 +1455,236 @@ function resetProgress(id) {
   bar.style.animation = 'progress-bar 5s linear forwards';
 }
 
+// ═══════════════════════════════════════════
+//  HOMEPAGE CONTENT — admin-editable via admin.html's Site Content tab.
+//  Reads siteContent/home from Firebase and rewrites the page's sections
+//  from it. If nothing has been saved yet (data is null), the hardcoded
+//  HTML above stays exactly as-is — this is a progressive enhancement,
+//  not a hard dependency on Firebase having data.
+// ═══════════════════════════════════════════
+var CMS_FB_URL = 'https://jtes-website-default-rtdb.firebaseio.com';
+
+function cmsText(v) { return v == null ? '' : v; }
+
+function cmsSetVisible(el, visible) {
+  if (!el) return;
+  el.style.display = (visible === false) ? 'none' : '';
+}
+
+async function loadHomeContent() {
+  try {
+    var res = await fetch(CMS_FB_URL + '/siteContent/home.json');
+    var data = await res.json();
+    if (!data) return;
+    var sections = data.sections || {};
+    if (sections.hero) renderHomeHero(sections.hero);
+    if (sections.aboutPreview) renderHomeAboutPreview(sections.aboutPreview);
+    if (sections.services) renderHomeServicesPreview(sections.services);
+    if (sections.whyChoose) renderHomeWhyChoose(sections.whyChoose);
+    if (sections.projects) renderHomeProjectsPreview(sections.projects);
+    if (sections.blog) renderHomeBlogPreview(sections.blog);
+    if (sections.newsletter) renderHomeNewsletter(sections.newsletter);
+    if (data.sectionOrder) reorderHomeSections(data.sectionOrder);
+  } catch (e) {
+    console.error('Failed to load homepage content, keeping built-in defaults:', e);
+  }
+}
+
+function renderHomeHero(hero) {
+  var wrap = document.getElementById('carousel-home');
+  cmsSetVisible(wrap, hero.visible);
+  if (hero.visible === false || !hero.slides || !hero.slides.length) return;
+  var track = document.getElementById('track-home');
+  var dots  = document.getElementById('dots-home');
+  track.innerHTML = hero.slides.map(function(s, i) {
+    return '<div class="carousel-slide' + (i === 0 ? ' active' : '') + '">' +
+      '<div class="carousel-slide-bg" style="background-image:url(\'' + cmsText(s.bgImage) + '\');"></div>' +
+      '<div class="carousel-slide-overlay"></div>' +
+      '<div class="carousel-content">' +
+        '<div class="badge"><span class="badge-dot"></span> ' + cmsText(s.badge) + '</div>' +
+        '<h1>' + cmsText(s.headingHtml) + '</h1>' +
+        '<p>' + cmsText(s.body) + '</p>' +
+        '<div class="hero-btns">' +
+          '<a class="btn-white" href="' + cmsText(s.primaryHref) + '">' + cmsText(s.primaryLabel) + '</a>' +
+          '<a class="btn-outline-white" href="' + cmsText(s.secondaryHref) + '">' + cmsText(s.secondaryLabel) + '</a>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  dots.innerHTML = hero.slides.map(function(_, i) {
+    return '<button class="carousel-dot' + (i === 0 ? ' active' : '') + '" onclick="goToSlide(\'home\', ' + i + ')"></button>';
+  }).join('');
+}
+
+function renderHomeAboutPreview(s) {
+  var section = document.getElementById('about-preview');
+  cmsSetVisible(section, s.visible);
+  if (s.visible === false) return;
+  var badge = section.querySelector('.about-left .section-badge');
+  if (badge) badge.innerHTML = '<span class="dot"></span> ' + cmsText(s.badge);
+  var heading = section.querySelector('.about-left h2');
+  if (heading) heading.innerHTML = cmsText(s.headingHtml);
+  var paras = section.querySelectorAll('.about-left > p');
+  (s.paragraphs || []).forEach(function(p, i) { if (paras[i]) paras[i].textContent = p; });
+  var cta = section.querySelector('.about-left .btn-blue');
+  if (cta) {
+    cta.href = s.ctaHref || '#';
+    cta.innerHTML = cmsText(s.ctaLabel) + ' <i class="fas fa-arrow-right"></i>';
+  }
+  var cardsWrap = section.querySelector('.feature-cards');
+  if (cardsWrap && s.cards) {
+    cardsWrap.innerHTML = s.cards.map(function(c) {
+      return '<div class="feature-card"><div class="icon-box"><i class="' + cmsText(c.icon) + '"></i></div>' +
+        '<h4>' + cmsText(c.title) + '</h4><p>' + cmsText(c.body) + '</p></div>';
+    }).join('');
+  }
+}
+
+function renderHomeServicesPreview(s) {
+  var section = document.getElementById('services');
+  cmsSetVisible(section, s.visible);
+  if (s.visible === false) return;
+  var badge = section.querySelector('.services-header .section-badge');
+  if (badge) badge.innerHTML = '<span class="dot"></span> ' + cmsText(s.badge);
+  var heading = section.querySelector('.services-header h2');
+  if (heading) heading.innerHTML = cmsText(s.headingHtml);
+  var body = section.querySelector('.services-header p');
+  if (body) body.textContent = cmsText(s.body);
+  var grid = section.querySelector('.services-grid');
+  if (grid && s.cards) {
+    grid.innerHTML = s.cards.map(function(c) {
+      return '<div class="service-card"><div class="service-card-img-placeholder">' +
+        '<img src="' + cmsText(c.image) + '" style="width:100%;height:100%;object-fit:cover;" alt="' + cmsText(c.title) + '"></div>' +
+        '<div class="service-card-body"><div class="service-icon-box"><i class="' + cmsText(c.icon) + '"></i></div>' +
+        '<h3>' + cmsText(c.title) + '</h3><p>' + cmsText(c.body) + '</p></div></div>';
+    }).join('');
+  }
+  var link = section.querySelector('.view-all-link');
+  if (link) {
+    link.href = s.viewAllHref || 'services.html';
+    link.innerHTML = cmsText(s.viewAllLabel) + ' <i class="fas fa-arrow-right"></i>';
+  }
+}
+
+function renderHomeWhyChoose(s) {
+  var section = document.getElementById('why-choose-preview');
+  cmsSetVisible(section, s.visible);
+  if (s.visible === false) return;
+  var img = section.querySelector('.why-image img');
+  if (img && s.image) img.src = s.image;
+  var badge = section.querySelector('.why-right .section-badge');
+  if (badge) badge.innerHTML = '<span class="dot"></span> ' + cmsText(s.badge);
+  var heading = section.querySelector('.why-right h2');
+  if (heading) heading.innerHTML = cmsText(s.headingHtml);
+  var right = section.querySelector('.why-right');
+  if (right && s.items) {
+    right.querySelectorAll('.why-item').forEach(function(el) { el.remove(); });
+    s.items.forEach(function(item) {
+      var div = document.createElement('div');
+      div.className = 'why-item';
+      div.innerHTML = '<div class="why-check"><i class="fas fa-check"></i></div>' +
+        '<div><h4>' + cmsText(item.title) + '</h4><p>' + cmsText(item.body) + '</p></div>';
+      right.appendChild(div);
+    });
+  }
+}
+
+function renderHomeProjectsPreview(s) {
+  var section = document.getElementById('projects-preview');
+  cmsSetVisible(section, s.visible);
+  if (s.visible === false) return;
+  var badge = section.querySelector('.projects-header .section-badge');
+  if (badge) badge.innerHTML = '<span class="dot"></span> ' + cmsText(s.badge);
+  var heading = section.querySelector('.projects-header h2');
+  if (heading) heading.innerHTML = cmsText(s.headingHtml);
+  var link = section.querySelector('.projects-header .btn-outline-white2');
+  if (link) {
+    link.href = s.viewAllHref || 'projects.html';
+    link.innerHTML = cmsText(s.viewAllLabel) + ' <i class="fas fa-arrow-right"></i>';
+  }
+  var grid = section.querySelector('.projects-grid');
+  if (grid && s.cards) {
+    grid.innerHTML = s.cards.map(function(c) {
+      var imgBlock = c.image
+        ? '<img src="' + cmsText(c.image) + '" alt="' + cmsText(c.title) + '">'
+        : '<div class="project-card-img-bg">JTES</div>';
+      var tags = (c.tags || []).map(function(t) { return '<span class="tag-pill">' + cmsText(t) + '</span>'; }).join('');
+      return '<div class="project-card"><div class="project-card-img">' + imgBlock +
+        '<span class="project-tag">' + cmsText(c.tag) + '</span></div>' +
+        '<div class="project-card-body"><h3>' + cmsText(c.title) + '</h3><p>' + cmsText(c.body) + '</p>' +
+        '<div class="project-tags">' + tags + '</div></div></div>';
+    }).join('');
+  }
+}
+
+function renderHomeBlogPreview(s) {
+  var section = document.getElementById('blog-preview');
+  cmsSetVisible(section, s.visible);
+  if (s.visible === false) return;
+  var badge = section.querySelector('.blog-header .section-badge');
+  if (badge) badge.innerHTML = '<span class="dot"></span> ' + cmsText(s.badge);
+  var heading = section.querySelector('.blog-header h2');
+  if (heading) heading.innerHTML = cmsText(s.headingHtml);
+  var body = section.querySelector('.blog-header p');
+  if (body) body.textContent = cmsText(s.body);
+  var grid = section.querySelector('.blog-grid');
+  if (grid && s.cards) {
+    grid.innerHTML = s.cards.map(function(c) {
+      return '<div class="blog-card"><div class="blog-card-img"><img src="' + cmsText(c.image) + '" alt="' + cmsText(c.title) + '">' +
+        '<span class="blog-tag">' + cmsText(c.tag) + '</span></div>' +
+        '<div class="blog-card-body"><div class="blog-meta"><span><i class="fas fa-calendar-alt"></i> ' + cmsText(c.date) + '</span>' +
+        '<span><i class="fas fa-clock"></i> ' + cmsText(c.readTime) + '</span></div>' +
+        '<h3>' + cmsText(c.title) + '</h3><p>' + cmsText(c.body) + '</p>' +
+        '<a class="read-more" href="' + cmsText(c.href || 'blog.html') + '">Read More <i class="fas fa-arrow-right"></i></a></div></div>';
+    }).join('');
+  }
+  var cta = section.querySelector('.blog-cta .btn-blue-outline');
+  if (cta) {
+    cta.href = s.viewAllHref || 'blog.html';
+    cta.innerHTML = cmsText(s.viewAllLabel) + ' <i class="fas fa-arrow-right"></i>';
+  }
+}
+
+function renderHomeNewsletter(s) {
+  var section = document.getElementById('newsletter-preview');
+  cmsSetVisible(section, s.visible);
+  if (s.visible === false) return;
+  var heading = section.querySelector('h2');
+  if (heading) heading.innerHTML = cmsText(s.headingHtml);
+  var body = section.querySelector('.nl-inner > p');
+  if (body) body.textContent = cmsText(s.body);
+  var perksWrap = section.querySelector('.nl-perks');
+  if (perksWrap && s.perks) {
+    perksWrap.innerHTML = s.perks.map(function(p) {
+      return '<div class="nl-perk"><i class="' + cmsText(p.icon) + '"></i> ' + cmsText(p.label) + '</div>';
+    }).join('');
+  }
+  var fine = section.querySelector('.nl-fine');
+  if (fine && s.fineprint) fine.textContent = s.fineprint;
+}
+
+function reorderHomeSections(order) {
+  var idMap = {
+    hero: 'carousel-home',
+    aboutPreview: 'about-preview',
+    services: 'services',
+    whyChoose: 'why-choose-preview',
+    projects: 'projects-preview',
+    blog: 'blog-preview',
+    newsletter: 'newsletter-preview'
+  };
+  var footer = document.querySelector('footer');
+  if (!footer) return;
+  order.forEach(function(key) {
+    var id = idMap[key];
+    var el = id && document.getElementById(id);
+    if (el) footer.parentNode.insertBefore(el, footer);
+  });
+}
+
 // ===== INIT ALL CAROUSELS =====
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadHomeContent();
   ['home','about','services','projects','blog','contact'].forEach(id => initCarousel(id));
 
   // Blog filter pills
