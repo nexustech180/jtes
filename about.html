@@ -1795,6 +1795,7 @@ function injectEditModeStyles() {
 function enableTextEditing(root) {
   (root || document).querySelectorAll('[data-cms-path]').forEach(function(el) {
     if (el.tagName === 'IMG' || el.getAttribute('data-cms-mode') === 'bgimage') return;
+    if (el.closest('a[data-cms-href-path]')) return; // handled by the link editor popover instead
     if (el.classList.contains('cms-editable-text')) return;
     el.contentEditable = 'true';
     el.spellcheck = false;
@@ -2088,6 +2089,90 @@ function showEditAuthGate(onSuccess) {
   document.getElementById('cms-auth-submit').onclick = attempt;
   input.addEventListener('keydown', function(e) { if (e.key === 'Enter') attempt(); });
 }
+// ── LINK EDITOR: buttons/links become inert in edit mode; content
+// buttons (tagged data-cms-href-path) open a rename + destination
+// popover instead of navigating away and losing unsaved edits. ──
+var CMS_SITE_PAGES = [
+  { label: 'Home', href: 'index.html' },
+  { label: 'About', href: 'about.html' },
+  { label: 'Services', href: 'services.html' },
+  { label: 'Services — STEM & Robotics', href: 'services.html#svc-stem' },
+  { label: 'Services — Research & Development', href: 'services.html#svc-rd' },
+  { label: 'Services — Electrical Services', href: 'services.html#svc-electrical' },
+  { label: 'Services — IoT & Automation', href: 'services.html#svc-iot' },
+  { label: 'Services — Curriculum Development', href: 'services.html#svc-curriculum' },
+  { label: 'Services — Component Sales', href: 'services.html#svc-components' },
+  { label: 'Contact', href: 'contact.html' },
+  { label: 'Gallery (Animation-Dot)', href: 'gallery.html' },
+  { label: 'Project Space', href: 'projects.html' },
+  { label: 'My Store', href: 'sales.html' },
+  { label: 'Blog', href: 'blog.html' },
+  { label: 'Portal', href: 'portal.html' }
+];
+function cmsInstallLinkGuard() {
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.nav-logo')) { e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); return; }
+    var a = e.target.closest('a[href]');
+    if (!a) return;
+    if (a.closest('#cms-edit-bar, #cms-auth-overlay, #cms-link-editor-overlay')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var hrefPath = a.getAttribute('data-cms-href-path');
+    if (hrefPath) cmsOpenLinkEditor(a, hrefPath);
+  }, true);
+}
+function cmsOpenLinkEditor(a, hrefPath) {
+  var labelEl = a.querySelector('[data-cms-path]');
+  var labelPath = labelEl ? labelEl.getAttribute('data-cms-path') : null;
+  var currentLabel = labelEl ? labelEl.textContent : '';
+  var currentHref = cmsGetByPath(pageContentDraft, hrefPath) || a.getAttribute('href') || '';
+  var matchedPage = CMS_SITE_PAGES.filter(function(p) { return p.href === currentHref; })[0];
+
+  var overlay = document.createElement('div');
+  overlay.id = 'cms-link-editor-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10002;background:rgba(10,15,30,0.55);display:flex;align-items:center;justify-content:center;padding:20px;';
+  var pageOptionsHtml = CMS_SITE_PAGES.map(function(p) {
+    return '<option value="' + p.href + '"' + (p.href === currentHref ? ' selected' : '') + '>' + p.label + '</option>';
+  }).join('');
+  overlay.innerHTML =
+    '<div style="background:#fff;border-radius:18px;padding:32px;max-width:420px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.35);font-family:Manrope,sans-serif;">' +
+      '<h3 style="font-size:18px;font-weight:900;color:#0F172A;margin-bottom:18px;"><i class="fas fa-link" style="color:#2563EB;"></i> Edit Button</h3>' +
+      (labelPath ? '<label style="display:block;font-size:13px;font-weight:700;color:#334155;margin-bottom:6px;">Button text</label>' +
+        '<input type="text" id="cms-link-label" value="' + String(currentLabel).replace(/"/g, '&quot;') + '" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14px;margin-bottom:16px;box-sizing:border-box;font-family:Manrope,sans-serif;">' : '') +
+      '<label style="display:block;font-size:13px;font-weight:700;color:#334155;margin-bottom:6px;">Goes to</label>' +
+      '<select id="cms-link-page-select" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14px;margin-bottom:12px;box-sizing:border-box;font-family:Manrope,sans-serif;">' +
+        pageOptionsHtml + '<option value="__custom__"' + (matchedPage ? '' : ' selected') + '>Custom URL…</option>' +
+      '</select>' +
+      '<input type="text" id="cms-link-custom-url" placeholder="https:// or a page like services.html#svc-stem" value="' + (matchedPage ? '' : String(currentHref).replace(/"/g, '&quot;')) + '" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14px;margin-bottom:20px;box-sizing:border-box;font-family:Manrope,sans-serif;display:' + (matchedPage ? 'none' : 'block') + ';">' +
+      '<div style="display:flex;gap:10px;justify-content:flex-end;">' +
+        '<button type="button" id="cms-link-cancel" style="background:#f1f5f9;color:#334155;border:none;border-radius:9px;padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Cancel</button>' +
+        '<button type="button" id="cms-link-save" style="background:#2563EB;color:#fff;border:none;border-radius:9px;padding:11px 22px;font-size:14px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Save</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+
+  var select = document.getElementById('cms-link-page-select');
+  var customInput = document.getElementById('cms-link-custom-url');
+  select.addEventListener('change', function() {
+    customInput.style.display = select.value === '__custom__' ? 'block' : 'none';
+  });
+  document.getElementById('cms-link-cancel').onclick = function() { overlay.remove(); };
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  document.getElementById('cms-link-save').onclick = function() {
+    var newHref = select.value === '__custom__' ? customInput.value.trim() : select.value;
+    if (!newHref) { customInput.focus(); return; }
+    cmsSetByPath(pageContentDraft, hrefPath, newHref);
+    a.setAttribute('href', newHref);
+    if (labelPath) {
+      var newLabel = document.getElementById('cms-link-label').value;
+      cmsSetByPath(pageContentDraft, labelPath, newLabel);
+      if (labelEl) labelEl.textContent = newLabel;
+    }
+    markDirty();
+    overlay.remove();
+  };
+}
+
 function startEditMode() {
   if (!pageContentDraft) return;
   injectEditModeStyles();
@@ -2097,6 +2182,7 @@ function startEditMode() {
   enableSectionControls();
   cmsForceVisibleInEditMode();
   cmsAttachHeroSlideRemoveButtons();
+  cmsInstallLinkGuard();
   cmsEnableListEditing('.vision-cards', 'vision', 'cards', '.vision-card', 'visionCard', 'Add Card', cmsRefreshVision);
   cmsEnableListEditing('.gallery-grid', 'gallery', 'items', '.gallery-item', 'galleryItem', 'Add Photo', cmsRefreshGallery);
   cmsEnableListEditing('.values-grid', 'values', 'cards', '.value-card', 'valueCard', 'Add Value', cmsRefreshValues);
