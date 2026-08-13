@@ -1377,25 +1377,32 @@ async function subscribeNewsletter() {
   .ad-hero-cta:hover { transform: translateY(-2px); }
 
   .psa-modal-overlay {
-    position: fixed; inset: 0; background: rgba(5,7,14,0.72); backdrop-filter: blur(6px); z-index: 6000;
-    display: flex; align-items: center; justify-content: center; padding: 20px;
-    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    position: fixed; inset: 0; background: #f0ebf8; z-index: 6000;
+    overflow-y: auto; opacity: 0; pointer-events: none; transition: opacity 0.25s;
   }
   .psa-modal-overlay.open { opacity: 1; pointer-events: all; }
-  .psa-modal-box {
-    background: #fff; border-radius: 20px; max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto;
-    padding: 32px 30px; transform: scale(0.94); transition: transform 0.25s;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+  .psa-modal-topbar {
+    position: sticky; top: 0; z-index: 2; background: rgba(255,255,255,0.94); backdrop-filter: blur(10px);
+    border-bottom: 1px solid #e2e8f0; padding: 0 32px; height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
   }
-  .psa-modal-overlay.open .psa-modal-box { transform: scale(1); }
-  .psa-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
-  .psa-modal-head h3 { font-size: 21px; font-weight: 900; color: var(--dark2, #0F172A); margin: 0; }
+  .psa-modal-topbar-title { font-size: 15px; font-weight: 800; color: var(--dark2, #0F172A); display: flex; align-items: center; gap: 10px; }
+  .psa-modal-topbar-title i { color: var(--blue, #2563EB); }
+  .psa-modal-box {
+    max-width: 700px; width: 100%; margin: 32px auto 80px; padding: 0 24px; box-sizing: border-box;
+  }
+  .psa-modal-head-card, .psa-modal-fields-card {
+    background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); margin-bottom: 20px; box-sizing: border-box;
+  }
+  .psa-modal-head-card { border-top: 10px solid var(--blue, #2563EB); padding: 26px 32px 22px; }
+  .psa-modal-fields-card { padding: 28px 32px; }
+  .psa-modal-head h3 { font-size: 24px; font-weight: 800; color: var(--dark2, #0F172A); margin: 0; }
   .psa-modal-close {
-    background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; color: var(--text-muted, #64748b);
+    background: #f1f5f9; border: none; width: 36px; height: 36px; border-radius: 50%; color: var(--text-muted, #64748b);
     cursor: pointer; flex-shrink: 0; font-size: 14px;
   }
   .psa-modal-close:hover { background: #fee2e2; color: #ef4444; }
-  .psa-modal-sub { font-size: 13.5px; color: var(--text-muted, #64748b); margin: 0 0 22px; }
+  .psa-modal-sub { font-size: 13.5px; color: var(--text-muted, #64748b); margin: 10px 0 0; }
   .psa-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
   .psa-group { margin-bottom: 14px; }
   .psa-group label { display: block; font-size: 12.5px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
@@ -1415,7 +1422,7 @@ async function subscribeNewsletter() {
   .psa-submit-btn:hover { background: var(--blue-dark, #1D4ED8); }
   .psa-submit-btn:disabled { opacity: 0.65; cursor: not-allowed; }
   .psa-modal-note { font-size: 11.5px; color: #94a3b8; text-align: center; margin-top: 12px; }
-  .psa-success { text-align: center; padding: 10px 0 4px; }
+  .psa-success { text-align: center; }
   .psa-success i { font-size: 46px; color: #10B981; margin-bottom: 14px; display: block; }
   .psa-success h4 { font-size: 19px; font-weight: 800; color: var(--dark2, #0F172A); margin: 0 0 8px; }
   .psa-success p { font-size: 13.5px; color: var(--text-muted, #64748b); margin: 0 0 22px; line-height: 1.6; }
@@ -1425,14 +1432,17 @@ async function subscribeNewsletter() {
 </style>
 
 <div class="psa-modal-overlay" id="psaModalOverlay">
+  <div class="psa-modal-topbar">
+    <div class="psa-modal-topbar-title"><i class="fas fa-bolt"></i> Request Service</div>
+    <button type="button" class="psa-modal-close" onclick="closeServiceRequestModal()"><i class="fas fa-times"></i></button>
+  </div>
   <div class="psa-modal-box">
     <div id="psaFormView">
-      <div class="psa-modal-head">
-        <h3><i class="fas fa-bolt" style="color:var(--blue);"></i> Request Service</h3>
-        <button type="button" class="psa-modal-close" onclick="closeServiceRequestModal()"><i class="fas fa-times"></i></button>
+      <div class="psa-modal-head-card">
+        <h3>Request Service</h3>
+        <p class="psa-modal-sub">Tell us what needs fixing or installing and where — an agent will confirm and quote you.</p>
       </div>
-      <p class="psa-modal-sub">Tell us what needs fixing or installing and where — an agent will confirm and quote you.</p>
-
+      <div class="psa-modal-fields-card">
       <div class="psa-form-row">
         <div class="psa-group">
           <label><span class="req">*</span> Full Name</label>
@@ -1482,10 +1492,11 @@ async function subscribeNewsletter() {
         <i class="fas fa-paper-plane"></i> Submit Request
       </button>
       <p class="psa-modal-note"><i class="fas fa-lock"></i> Your information is kept private. We'll respond within 24 hours.</p>
+      </div>
     </div>
 
     <div id="psaSuccessView" style="display:none;">
-      <div class="psa-success">
+      <div class="psa-modal-head-card psa-success">
         <i class="fas fa-check-circle"></i>
         <h4>Request Received!</h4>
         <p>Thanks — a Prime Aide agent will reach out shortly. Your reference is <strong id="psaRefCode"></strong>.</p>
