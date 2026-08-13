@@ -1619,25 +1619,32 @@ document.querySelectorAll('.nav-dropdown > a').forEach(function(link) {
   .psp-intake-banner-btn:hover { transform: translateY(-2px); }
 
   .psp-modal-overlay {
-    position: fixed; inset: 0; background: rgba(5,7,14,0.72); backdrop-filter: blur(6px); z-index: 6000;
-    display: flex; align-items: center; justify-content: center; padding: 20px;
-    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    position: fixed; inset: 0; background: #f0ebf8; z-index: 6000;
+    overflow-y: auto; opacity: 0; pointer-events: none; transition: opacity 0.25s;
   }
   .psp-modal-overlay.open { opacity: 1; pointer-events: all; }
-  .psp-modal-box {
-    background: #fff; border-radius: 20px; max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto;
-    padding: 32px 30px; transform: scale(0.94); transition: transform 0.25s;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+  .psp-modal-topbar {
+    position: sticky; top: 0; z-index: 2; background: rgba(255,255,255,0.94); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border); padding: 0 32px; height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
   }
-  .psp-modal-overlay.open .psp-modal-box { transform: scale(1); }
-  .psp-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
-  .psp-modal-head h3 { font-size: 21px; font-weight: 900; color: var(--dark2); margin: 0; }
+  .psp-modal-topbar-title { font-size: 15px; font-weight: 800; color: var(--dark2); display: flex; align-items: center; gap: 10px; }
+  .psp-modal-topbar-title i { color: var(--blue); }
+  .psp-modal-box {
+    max-width: 700px; width: 100%; margin: 32px auto 80px; padding: 0 24px; box-sizing: border-box;
+  }
+  .psp-modal-head-card, .psp-modal-fields-card {
+    background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); margin-bottom: 20px; box-sizing: border-box;
+  }
+  .psp-modal-head-card { border-top: 10px solid var(--blue); padding: 26px 32px 22px; }
+  .psp-modal-fields-card { padding: 28px 32px; }
+  .psp-modal-head h3 { font-size: 24px; font-weight: 800; color: var(--dark2); margin: 0; }
   .psp-modal-close {
-    background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; color: var(--text-muted);
+    background: #f1f5f9; border: none; width: 36px; height: 36px; border-radius: 50%; color: var(--text-muted);
     cursor: pointer; flex-shrink: 0; font-size: 14px;
   }
   .psp-modal-close:hover { background: #fee2e2; color: #ef4444; }
-  .psp-modal-sub { font-size: 13.5px; color: var(--text-muted); margin: 0 0 22px; }
+  .psp-modal-sub { font-size: 13.5px; color: var(--text-muted); margin: 10px 0 0; }
   .psp-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
   .psp-group { margin-bottom: 14px; }
   .psp-group label { display: block; font-size: 12.5px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
@@ -1656,7 +1663,7 @@ document.querySelectorAll('.nav-dropdown > a').forEach(function(link) {
   .psp-submit-btn:hover { background: var(--blue-dark); }
   .psp-submit-btn:disabled { opacity: 0.65; cursor: not-allowed; }
   .psp-modal-note { font-size: 11.5px; color: #94a3b8; text-align: center; margin-top: 12px; }
-  .psp-success { text-align: center; padding: 10px 0 4px; }
+  .psp-success { text-align: center; }
   .psp-success i { font-size: 46px; color: #10B981; margin-bottom: 14px; display: block; }
   .psp-success h4 { font-size: 19px; font-weight: 800; color: var(--dark2); margin: 0 0 8px; }
   .psp-success p { font-size: 13.5px; color: var(--text-muted); margin: 0 0 22px; line-height: 1.6; }
@@ -1667,14 +1674,17 @@ document.querySelectorAll('.nav-dropdown > a').forEach(function(link) {
 </style>
 
 <div class="psp-modal-overlay" id="pspModalOverlay">
+  <div class="psp-modal-topbar">
+    <div class="psp-modal-topbar-title"><i class="fas fa-rocket"></i> Start a Project</div>
+    <button type="button" class="psp-modal-close" onclick="closeProjectRequestModal()"><i class="fas fa-times"></i></button>
+  </div>
   <div class="psp-modal-box">
     <div id="pspFormView">
-      <div class="psp-modal-head">
-        <h3><i class="fas fa-rocket" style="color:var(--blue);"></i> Start a Project</h3>
-        <button type="button" class="psp-modal-close" onclick="closeProjectRequestModal()"><i class="fas fa-times"></i></button>
+      <div class="psp-modal-head-card">
+        <h3>Start a Project</h3>
+        <p class="psp-modal-sub">Tell us about your project and a JTES agent will follow up with next steps.</p>
       </div>
-      <p class="psp-modal-sub">Tell us about your project and a JTES agent will follow up with next steps.</p>
-
+      <div class="psp-modal-fields-card">
       <div class="psp-form-row">
         <div class="psp-group">
           <label><span class="req">*</span> Full Name</label>
@@ -1723,10 +1733,11 @@ document.querySelectorAll('.nav-dropdown > a').forEach(function(link) {
         <i class="fas fa-paper-plane"></i> Submit Request
       </button>
       <p class="psp-modal-note"><i class="fas fa-lock"></i> Your information is kept private. We'll respond within 24 hours.</p>
+      </div>
     </div>
 
     <div id="pspSuccessView" style="display:none;">
-      <div class="psp-success">
+      <div class="psp-modal-head-card psp-success">
         <i class="fas fa-check-circle"></i>
         <h4>Request Received!</h4>
         <p>Thanks — a JTES agent will reach out shortly. Your reference is <strong id="pspRefCode"></strong>.</p>
