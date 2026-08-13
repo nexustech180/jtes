@@ -920,6 +920,7 @@
     <a href="blog.html">Blog</a>
     <a href="contact.html">Contact</a>
     <a href="portal.html">Portal</a>
+    <a href="#" onclick="openTrackRequestModal();return false;"><i class="fas fa-route" style="margin-right:5px;"></i>Track Request</a>
   </div>
   <a class="nav-admin-lock" href="https://jtes-admin.jassan.workers.dev" title="Admin"><i class="fas fa-lock"></i></a>
   <button class="mobile-menu-btn" id="menuBtn">&#9776;</button>
@@ -1402,6 +1403,9 @@ async function subscribeNewsletter() {
           style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px;background:linear-gradient(135deg,#25D366,#1DA851);color:#fff;border-radius:11px;font-size:14px;font-weight:700;text-decoration:none;margin-bottom:10px;">
           <i class="fab fa-whatsapp"></i> Message Us on WhatsApp
         </a>
+        <button type="button" style="width:100%;background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:11px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="closeServiceRequestModal();openTrackRequestModal();document.getElementById('trk-query').value=document.getElementById('psaRefCode').textContent;lookupRequest();">
+          <i class="fas fa-route"></i> Track This Request
+        </button>
         <button type="button" class="psa-modal-close" style="width:100%;border-radius:11px;padding:12px;" onclick="closeServiceRequestModal()">Close</button>
       </div>
     </div>
@@ -1473,6 +1477,7 @@ async function submitServiceRequest() {
     if (waBtn) waBtn.href = 'https://wa.me/233548029027?text=' + encodeURIComponent(waLines.join('\n'));
 
     document.getElementById('psaRefCode').textContent = refCode;
+    if (typeof trkSaveRequestToDevice === 'function') trkSaveRequestToDevice(refCode);
     document.getElementById('psaFormView').style.display = 'none';
     document.getElementById('psaSuccessView').style.display = 'block';
     ['psa-name','psa-phone','psa-email','psa-address','psa-desc','psa-date'].forEach(function(id) {
@@ -1484,6 +1489,208 @@ async function submitServiceRequest() {
   }
   btn.disabled = false;
   btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Request';
+}
+</script>
+
+<!-- ===== TRACK REQUEST ===== -->
+<style>
+  .trk-modal-overlay {
+    position: fixed; inset: 0; background: rgba(5,7,14,0.72); backdrop-filter: blur(6px); z-index: 6000;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  .trk-modal-overlay.open { opacity: 1; pointer-events: all; }
+  .trk-modal-box {
+    background: #fff; border-radius: 20px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto;
+    padding: 32px 30px; transform: scale(0.94); transition: transform 0.25s;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+  }
+  .trk-modal-overlay.open .trk-modal-box { transform: scale(1); }
+  .trk-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+  .trk-modal-head h3 { font-size: 21px; font-weight: 900; color: var(--dark2, #0F172A); margin: 0; }
+  .trk-modal-close {
+    background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; color: var(--text-muted, #64748b);
+    cursor: pointer; flex-shrink: 0; font-size: 14px;
+  }
+  .trk-modal-close:hover { background: #fee2e2; color: #ef4444; }
+  .trk-modal-sub { font-size: 13.5px; color: var(--text-muted, #64748b); margin: 0 0 20px; }
+  .trk-search-row { display: flex; gap: 10px; margin-bottom: 8px; }
+  .trk-search-row input {
+    flex: 1; padding: 12px 14px; border: 1.5px solid var(--border, #e2e8f0); border-radius: 10px;
+    font-size: 14px; font-family: 'Manrope', sans-serif; box-sizing: border-box;
+  }
+  .trk-search-row input:focus { outline: none; border-color: var(--blue, #2563EB); }
+  .trk-search-btn {
+    background: var(--blue, #2563EB); color: #fff; border: none; padding: 0 20px; border-radius: 10px;
+    font-size: 14px; font-weight: 800; cursor: pointer; font-family: 'Manrope', sans-serif;
+    display: flex; align-items: center; gap: 8px; transition: background 0.2s;
+  }
+  .trk-search-btn:hover { background: var(--blue-dark, #1D4ED8); }
+  .trk-search-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+  .trk-hint { font-size: 11.5px; color: #94a3b8; margin: 0 0 22px; }
+  .trk-error { display: none; color: #ef4444; font-size: 12.5px; margin: -10px 0 16px; }
+  .trk-empty { text-align: center; padding: 30px 10px; color: var(--text-muted, #64748b); }
+  .trk-empty i { font-size: 36px; color: #cbd5e1; margin-bottom: 12px; display: block; }
+  .trk-results { display: flex; flex-direction: column; gap: 14px; }
+  .trk-card { border: 1.5px solid var(--border, #e2e8f0); border-radius: 14px; padding: 18px 20px; }
+  .trk-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .trk-card-ref { font-size: 14.5px; font-weight: 800; color: var(--dark2, #0F172A); }
+  .trk-card-date { font-size: 12px; color: var(--text-muted, #64748b); }
+  .trk-badge {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 800;
+    letter-spacing: 0.02em; padding: 5px 11px; border-radius: 50px; text-transform: uppercase;
+  }
+  .trk-badge.new         { background: #FEF3C7; color: #92400E; }
+  .trk-badge.reviewing   { background: #DBEAFE; color: #1E40AF; }
+  .trk-badge.quoted      { background: #EDE9FE; color: #5B21B6; }
+  .trk-badge.inprogress  { background: #CFFAFE; color: #155E75; }
+  .trk-badge.completed   { background: #D1FAE5; color: #065F46; }
+  .trk-badge.declined    { background: #FEE2E2; color: #991B1B; }
+  .trk-card-items { font-size: 13px; color: var(--text-muted, #64748b); line-height: 1.6; margin-bottom: 6px; }
+  @media (max-width: 560px) {
+    .trk-search-row { flex-direction: column; }
+    .trk-search-btn { padding: 12px; justify-content: center; }
+  }
+</style>
+
+<div class="trk-modal-overlay" id="trkModalOverlay">
+  <div class="trk-modal-box">
+    <div class="trk-modal-head">
+      <h3><i class="fas fa-route" style="color:var(--blue);"></i> Track Your Request</h3>
+      <button type="button" class="trk-modal-close" onclick="closeTrackRequestModal()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div id="trkMyRequestsWrap"></div>
+
+    <p class="trk-modal-sub">Enter a request reference or phone number to look up any service request — including ones placed on a different device.</p>
+
+    <div class="trk-search-row">
+      <input type="text" id="trk-query" placeholder="e.g. PSA-1699999999999 or 0548029027">
+      <button type="button" class="trk-search-btn" id="trkSearchBtn" onclick="lookupRequest()">
+        <i class="fas fa-search"></i> Track
+      </button>
+    </div>
+    <p class="trk-hint"><i class="fas fa-lock"></i> We only show requests that match exactly what you enter.</p>
+    <p class="trk-error" id="trkError"></p>
+
+    <div id="trkResultsWrap"></div>
+  </div>
+</div>
+
+<script>
+// ── REQUEST HISTORY ON THIS DEVICE ──
+var MY_REQUESTS_KEY = 'jtes_my_service_requests';
+var MY_REQUESTS_MAX = 15;
+
+function trkSaveRequestToDevice(ref) {
+  try {
+    var refs = JSON.parse(localStorage.getItem(MY_REQUESTS_KEY) || '[]');
+    refs = refs.filter(function(r) { return r !== ref; });
+    refs.unshift(ref);
+    if (refs.length > MY_REQUESTS_MAX) refs = refs.slice(0, MY_REQUESTS_MAX);
+    localStorage.setItem(MY_REQUESTS_KEY, JSON.stringify(refs));
+  } catch (e) { /* localStorage unavailable — history just won't persist */ }
+}
+
+function trkGetDeviceRequestRefs() {
+  try { return JSON.parse(localStorage.getItem(MY_REQUESTS_KEY) || '[]'); }
+  catch (e) { return []; }
+}
+
+function trkNormalizePhone(p) { return (p || '').replace(/\D/g, ''); }
+
+function trkRenderRequestCard(r) {
+  var statusClass = (r.status || 'new').toLowerCase().replace(/\s+/g, '');
+  var statusLabel = r.status || 'New';
+  return '<div class="trk-card">'
+    + '<div class="trk-card-head">'
+    + '<span class="trk-card-ref">' + (r.ref || '—') + '</span>'
+    + '<span class="trk-badge ' + statusClass + '">' + statusLabel + '</span>'
+    + '</div>'
+    + '<div class="trk-card-date">' + (r.date ? new Date(r.date).toLocaleString() : '—') + '</div>'
+    + '<div class="trk-card-items" style="margin-top:8px;"><strong>' + (r.type || '—') + '</strong> — ' + (r.description || '—') + '</div>'
+    + '</div>';
+}
+
+async function trkRenderMyDeviceRequests() {
+  var wrap = document.getElementById('trkMyRequestsWrap');
+  var refs = trkGetDeviceRequestRefs();
+  if (!refs.length) { wrap.innerHTML = ''; return; }
+
+  wrap.innerHTML = '<div class="trk-hint" style="margin-bottom:10px;"><i class="fas fa-spinner fa-spin"></i> Loading your requests on this device…</div>';
+  try {
+    var res = await fetch(PSA_FB_URL + '/serviceRequests.json');
+    var data = await res.json();
+    var requests = data && typeof data === 'object' ? Object.values(data) : [];
+    var byRef = {};
+    requests.forEach(function(r) { if (r && r.ref) byRef[r.ref] = r; });
+    var mine = refs.map(function(ref) { return byRef[ref]; }).filter(Boolean);
+
+    if (!mine.length) { wrap.innerHTML = ''; return; }
+
+    wrap.innerHTML = '<p class="trk-modal-sub" style="margin-bottom:10px;"><strong>Your Requests on This Device</strong></p>'
+      + '<div class="trk-results" style="margin-bottom:22px;">' + mine.map(trkRenderRequestCard).join('') + '</div>';
+  } catch (e) {
+    wrap.innerHTML = '';
+  }
+}
+
+function openTrackRequestModal() {
+  document.getElementById('trkModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  trkRenderMyDeviceRequests();
+  var input = document.getElementById('trk-query');
+  setTimeout(function() { input.focus(); }, 50);
+}
+function closeTrackRequestModal() {
+  document.getElementById('trkModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('DOMContentLoaded', function() {
+  var input = document.getElementById('trk-query');
+  if (input) input.addEventListener('keydown', function(e) { if (e.key === 'Enter') lookupRequest(); });
+});
+
+async function lookupRequest() {
+  var query = (document.getElementById('trk-query').value || '').trim();
+  var errEl = document.getElementById('trkError');
+  var resultsWrap = document.getElementById('trkResultsWrap');
+  errEl.style.display = 'none';
+  resultsWrap.innerHTML = '';
+
+  if (!query) {
+    errEl.textContent = 'Please enter a request reference or phone number.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  var btn = document.getElementById('trkSearchBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching…';
+
+  try {
+    var res = await fetch(PSA_FB_URL + '/serviceRequests.json');
+    var data = await res.json();
+    var requests = data && typeof data === 'object' ? Object.values(data) : [];
+    var qLower = query.toLowerCase();
+    var qDigits = trkNormalizePhone(query);
+    var matches = requests.filter(function(r) {
+      var refMatch = r.ref && r.ref.toLowerCase() === qLower;
+      var phoneMatch = qDigits.length >= 6 && trkNormalizePhone(r.phone) === qDigits;
+      return refMatch || phoneMatch;
+    }).sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+
+    if (!matches.length) {
+      resultsWrap.innerHTML = '<div class="trk-empty"><i class="fas fa-inbox"></i><p>No request found matching "' + query.replace(/</g,'&lt;') + '".</p></div>';
+    } else {
+      resultsWrap.innerHTML = '<div class="trk-results">' + matches.map(trkRenderRequestCard).join('') + '</div>';
+    }
+  } catch (e) {
+    errEl.textContent = 'Something went wrong. Please try again.';
+    errEl.style.display = 'block';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-search"></i> Track';
 }
 </script>
 
