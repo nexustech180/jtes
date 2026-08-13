@@ -3,19 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Projects — Jassan Technologies</title>
+<title>Prime Aide — Jassan Technologies</title>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-<!-- Three.js r155 ESM — stable import map -->
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.155.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.155.0/examples/jsm/"
-  }
-}
-</script>
 
 <style>
   .page { display: block !important; }
@@ -921,8 +911,8 @@
     <div class="nav-dropdown">
       <a>Services &#9660;</a>
       <div class="nav-dropdown-menu"><div class="nav-dropdown-menu-inner">
-        <a href="prime-aide.html">Prime Aide</a>
-        <a href="gallery.html" class="active">Animation-Dot</a>
+        <a href="prime-aide.html" class="active">Prime Aide</a>
+        <a href="gallery.html">Animation-Dot</a>
         <a href="projects.html">Project Space</a>
         <a href="sales.html">My Store</a>
       </div></div>
@@ -936,61 +926,105 @@
   <a class="btn-primary" id="nav-cta" href="contact.html">Get Started</a>
 </nav>
 
-<!-- ANIMATION-DOT HERO -->
+<!-- PRIME AIDE HERO -->
 <section class="ad-hero">
   <div class="ad-hero-inner">
-    <div class="section-badge dark"><span class="dot"></span> JTES Creative Studio</div>
-    <h1>Animation<span>-Dot</span></h1>
-    <p>A curated showcase of images, videos, 3D works and creative projects from the JTES team.</p>
-    <button type="button" class="ad-hero-cta" onclick="openDesignRequestModal()"><i class="fas fa-magic"></i> Request Design / Get a Quote</button>
+    <div class="section-badge dark"><span class="dot"></span> JTES · Prime Aide</div>
+    <h1>Electrical <span>Installation</span> &amp; Appliance Repair</h1>
+    <p>Fast, certified electrical help for homes and businesses — installations, repairs, panel upgrades and emergency call-outs, done right the first time.</p>
+    <button type="button" class="ad-hero-cta" onclick="openServiceRequestModal()"><i class="fas fa-bolt"></i> Request Service</button>
   </div>
 </section>
 
-<!-- FILTER BAR -->
-<div class="ad-filters">
-  <button class="ad-filter-btn active" data-filter="all" onclick="filterGallery('all',this)">
-    <i class="fas fa-th"></i> All <span class="ad-filter-count" id="count-all">0</span>
-  </button>
-  <button class="ad-filter-btn" data-filter="image" onclick="filterGallery('image',this)">
-    <i class="fas fa-image"></i> Images <span class="ad-filter-count" id="count-image">0</span>
-  </button>
-  <button class="ad-filter-btn" data-filter="video" onclick="filterGallery('video',this)">
-    <i class="fas fa-video"></i> Videos <span class="ad-filter-count" id="count-video">0</span>
-  </button>
-  <button class="ad-filter-btn" data-filter="3d" onclick="filterGallery('3d',this)">
-    <i class="fas fa-cube"></i> 3D Works <span class="ad-filter-count" id="count-3d">0</span>
-  </button>
-  <button class="ad-filter-btn" data-filter="project" onclick="filterGallery('project',this)">
-    <i class="fas fa-folder-open"></i> Projects <span class="ad-filter-count" id="count-project">0</span>
-  </button>
-</div>
-
-<!-- GALLERY GRID -->
-<section class="ad-gallery">
-  <div class="ad-grid" id="ad-grid">
-    <div class="ad-empty"><i class="fas fa-spinner fa-spin"></i><p>Loading works…</p></div>
+<!-- SERVICES -->
+<section class="services-section">
+  <div class="services-header">
+    <div class="section-badge dark"><span class="dot"></span> What We Do</div>
+    <h2>Electrical Services We Provide</h2>
+    <p>Certified technicians handling residential, commercial and industrial electrical work across Ghana.</p>
+  </div>
+  <div class="services-grid">
+    <div class="service-card">
+      <div class="service-card-img-placeholder"><i class="fas fa-plug-circle-bolt" style="font-size:40px;color:rgba(255,255,255,0.85);"></i></div>
+      <div class="service-card-body">
+        <div class="service-icon-box"><i class="fas fa-house-signal"></i></div>
+        <h3>Electrical Installation</h3>
+        <p>New wiring, sockets, lighting circuits and full installations for homes, offices and job sites.</p>
+      </div>
+    </div>
+    <div class="service-card">
+      <div class="service-card-img-placeholder"><i class="fas fa-screwdriver-wrench" style="font-size:40px;color:rgba(255,255,255,0.85);"></i></div>
+      <div class="service-card-body">
+        <div class="service-icon-box"><i class="fas fa-tools"></i></div>
+        <h3>Repairs &amp; Maintenance</h3>
+        <p>Faulty wiring, tripping breakers, dead sockets and appliance repairs — diagnosed and fixed fast.</p>
+      </div>
+    </div>
+    <div class="service-card">
+      <div class="service-card-img-placeholder"><i class="fas fa-server" style="font-size:40px;color:rgba(255,255,255,0.85);"></i></div>
+      <div class="service-card-body">
+        <div class="service-icon-box"><i class="fas fa-charging-station"></i></div>
+        <h3>Panel Upgrades</h3>
+        <p>Distribution board and panel upgrades to safely support modern electrical loads.</p>
+      </div>
+    </div>
+    <div class="service-card">
+      <div class="service-card-img-placeholder"><i class="fas fa-clipboard-check" style="font-size:40px;color:rgba(255,255,255,0.85);"></i></div>
+      <div class="service-card-body">
+        <div class="service-icon-box"><i class="fas fa-shield-halved"></i></div>
+        <h3>Safety Inspections</h3>
+        <p>Full electrical safety audits and compliance checks for homes and commercial premises.</p>
+      </div>
+    </div>
+    <div class="service-card">
+      <div class="service-card-img-placeholder"><i class="fas fa-bolt-lightning" style="font-size:40px;color:rgba(255,255,255,0.85);"></i></div>
+      <div class="service-card-body">
+        <div class="service-icon-box"><i class="fas fa-truck-fast"></i></div>
+        <h3>Emergency Repairs</h3>
+        <p>Power outages, sparking outlets or urgent faults — call-out response when it can't wait.</p>
+      </div>
+    </div>
+    <div class="service-card">
+      <div class="service-card-img-placeholder"><i class="fas fa-industry" style="font-size:40px;color:rgba(255,255,255,0.85);"></i></div>
+      <div class="service-card-body">
+        <div class="service-icon-box"><i class="fas fa-industry"></i></div>
+        <h3>Industrial Electrical Work</h3>
+        <p>Larger-scale installation, maintenance and troubleshooting for industrial sites.</p>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- LIGHTBOX -->
-<div class="ad-lightbox" id="ad-lightbox">
-  <div class="ad-lb-topbar">
-    <div class="ad-lb-topbar-left">
-      <span class="ad-lb-cat-badge" id="ad-lb-cat"></span>
-      <span class="ad-lb-topbar-title" id="ad-lb-title"></span>
+<!-- WHY PRIME AIDE -->
+<section class="why-section">
+  <div class="why-grid">
+    <div class="why-image-wrap">
+      <div class="why-image">
+        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80" alt="Electrician at work">
+      </div>
     </div>
-    <button class="ad-lb-close" onclick="closeLightbox()"><i class="fas fa-times"></i></button>
-  </div>
-  <div class="ad-lb-body" id="ad-lb-inner">
-    <div class="ad-lb-media-pane" id="ad-lb-media"></div>
-    <div class="ad-lb-sidebar" id="ad-lb-sidebar">
-      <div class="ad-lb-sidebar-title" id="ad-lb-sidebar-title"></div>
-      <div class="ad-lb-divider"></div>
-      <div class="ad-lb-desc-label">Description</div>
-      <div class="ad-lb-desc" id="ad-lb-desc"></div>
+    <div class="why-right">
+      <div class="section-badge"><span class="dot"></span> Why Prime Aide</div>
+      <h2>Electrical Help You Can <span>Trust</span></h2>
+      <div class="why-item">
+        <div class="why-check"><i class="fas fa-check"></i></div>
+        <div><h4>Certified Technicians</h4><p>Every job is handled by trained, experienced JTES electricians.</p></div>
+      </div>
+      <div class="why-item">
+        <div class="why-check"><i class="fas fa-check"></i></div>
+        <div><h4>Fast Response</h4><p>We aim to confirm every request within 24 hours.</p></div>
+      </div>
+      <div class="why-item">
+        <div class="why-check"><i class="fas fa-check"></i></div>
+        <div><h4>Transparent Pricing</h4><p>Clear quotes before work starts — no surprise charges.</p></div>
+      </div>
+      <div class="why-item">
+        <div class="why-check"><i class="fas fa-check"></i></div>
+        <div><h4>Residential &amp; Commercial</h4><p>From single homes to full commercial and industrial sites.</p></div>
+      </div>
     </div>
   </div>
-</div>
+</section>
 
 <!-- NEWSLETTER -->
 <div class="newsletter-section">
@@ -1075,12 +1109,6 @@
   </div>
 </footer>
 
-<!-- ═══════════════════════════════════════════
-     ALL SCRIPTS — ES modules for Three.js,
-     classic scripts for everything else
-════════════════════════════════════════════ -->
-
-<!-- Non-3D page scripts (classic) -->
 <script>
 // ── MOBILE MENU
 var menuBtn  = document.getElementById('menuBtn');
@@ -1146,549 +1174,8 @@ async function subscribeNewsletter() {
   if (btn) { btn.disabled = false; btn.textContent = 'Subscribe'; }
 }
 
-// ── GALLERY LOGIC
-var AD_FB_URL = 'https://jtes-website-default-rtdb.firebaseio.com';
-var adAllItems = [];
-var adRenderedItems = [];
-
-async function loadGallery() {
-  try {
-    var res  = await fetch(AD_FB_URL + '/animations.json');
-    var data = await res.json();
-    adAllItems = data
-      ? Object.keys(data).map(function(k) { return Object.assign({ id: k }, data[k]); })
-          .sort(function(a,b) { return new Date(b.date) - new Date(a.date); })
-      : [];
-    updateCounts();
-    renderGallery(adAllItems);
-  } catch(e) {
-    document.getElementById('ad-grid').innerHTML = '<div class="ad-empty"><i class="fas fa-exclamation-circle"></i><p>Could not load works.</p></div>';
-  }
-}
-
-function updateCounts() {
-  var cats = ['image','video','3d','project'];
-  document.getElementById('count-all').textContent = adAllItems.length;
-  cats.forEach(function(c) {
-    var el = document.getElementById('count-' + c);
-    if (el) el.textContent = adAllItems.filter(function(i){ return i.category === c; }).length;
-  });
-}
-
-function filterGallery(filter, btn) {
-  document.querySelectorAll('.ad-filter-btn').forEach(function(b) { b.classList.remove('active'); });
-  btn.classList.add('active');
-  var filtered = filter === 'all' ? adAllItems : adAllItems.filter(function(i){ return i.category === filter; });
-  renderGallery(filtered);
-}
-
-function renderGallery(items) {
-  var grid = document.getElementById('ad-grid');
-  if (!items.length) {
-    grid.innerHTML = '<div class="ad-empty"><i class="fas fa-film"></i><p>No works in this category yet.</p></div>';
-    adRenderedItems = []; return;
-  }
-  adRenderedItems = items;
-  var catLabel = { image: 'Image', video: 'Video', '3d': '3D Work', project: 'Project' };
-  grid.innerHTML = items.map(function(item, idx) {
-    var mediaHtml = '';
-    if (item.mediaType === 'video') {
-      mediaHtml = '<div class="ad-card-media"><video src="' + item.mediaUrl + '" muted playsinline preload="metadata"></video>'
-        + '<div class="ad-card-play"><i class="fas fa-play-circle"></i></div></div>';
-    } else if (item.mediaType === '3d' || item.mediaType === 'embed') {
-      var lbl = item.mediaType === 'embed' ? 'Tinkercad' : (item.mediaUrl ? item.mediaUrl.split('.').pop().split('?')[0].toUpperCase() : '3D');
-      mediaHtml = '<div class="ad-card-media model-card">'
-        + '<i class="fas fa-cube" style="font-size:44px;color:#93C5FD;"></i>'
-        + '<span class="model-ext">.' + lbl + '</span></div>';
-    } else if (item.mediaUrl) {
-      mediaHtml = '<div class="ad-card-media"><img src="' + item.mediaUrl + '" alt="" loading="lazy"></div>';
-    }
-    var cat = item.category || 'image';
-    return '<div class="ad-card" onclick="openLightbox(adRenderedItems[' + idx + '])">'
-      + mediaHtml
-      + '<div class="ad-card-body">'
-      + '<div class="ad-card-cat"><span class="cat-dot"></span>' + (catLabel[cat] || cat) + '</div>'
-      + '<div class="ad-card-title">' + item.title + '</div>'
-      + (item.description ? '<div class="ad-card-desc">' + item.description + '</div>' : '')
-      + '</div></div>';
-  }).join('');
-}
-
-function openLightbox(item) {
-  var lb    = document.getElementById('ad-lightbox');
-  var media = document.getElementById('ad-lb-media');
-  var catLabel = { image: 'Image', video: 'Video', '3d': '3D Work', project: 'Project' };
-
-  // Destroy old viewer
-  if (window._threeDestroy) { window._threeDestroy(); window._threeDestroy = null; }
-
-  if (item.mediaType === 'video') {
-    media.innerHTML = '<video src="' + item.mediaUrl + '" controls autoplay style="max-width:100%;max-height:100%;border-radius:8px;display:block;"></video>';
-  } else if (item.mediaType === 'embed') {
-    media.innerHTML = '<iframe src="' + item.mediaUrl + '" style="width:100%;height:100%;border:none;" allowfullscreen></iframe>';
-  } else if (item.mediaType === '3d') {
-    var ext = item.mediaUrl ? item.mediaUrl.split('.').pop().split('?')[0].toLowerCase() : '';
-    var supported = ['glb','gltf','obj','stl'];
-    if (supported.indexOf(ext) !== -1) {
-      media.innerHTML = buildViewerShell(item.mediaUrl, ext);
-      // Pass explicit mtlUrl from Firebase if present, else null (viewer will skip MTL load)
-      setTimeout(function() { initModelViewer('lb-viewer-wrap', item.mediaUrl, ext, item.mtlUrl || null); }, 80);
-    } else {
-      media.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:20px;padding:40px;">'
-        + '<i class="fas fa-cube" style="font-size:80px;color:#93C5FD;"></i>'
-        + '<div style="font-size:18px;font-weight:700;color:#fff;">.' + ext.toUpperCase() + ' 3D Model</div>'
-        + '<div style="font-size:14px;color:rgba(255,255,255,0.5);max-width:260px;text-align:center;">Interactive preview not available for .' + ext.toUpperCase() + ' files.</div>'
-        + '<a href="' + item.mediaUrl + '" download class="ad-lb-download"><i class="fas fa-download"></i> Download File</a>'
-        + '</div>';
-    }
-  } else {
-    media.innerHTML = '<img src="' + item.mediaUrl + '" alt="" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;">';
-  }
-
-  document.getElementById('ad-lb-title').textContent = item.title;
-  document.getElementById('ad-lb-cat').textContent = catLabel[item.category] || item.category;
-  document.getElementById('ad-lb-sidebar-title').textContent = item.title;
-  var descEl = document.getElementById('ad-lb-desc');
-  descEl.innerHTML = item.description
-    ? '<span>' + item.description + '</span>'
-    : '<span class="ad-lb-no-desc">No description provided.</span>';
-
-  lb.classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function buildViewerShell(url, ext) {
-  var extUp = ext.toUpperCase();
-  return '<div class="ad-lb-viewer" id="lb-viewer-wrap">'
-    + '<div class="viewer-toolbar">'
-    + '<button class="vt-btn active" id="vt-orbit" title="Orbit" onclick="viewerSetMode(\'orbit\')"><i class="fas fa-sync-alt"></i></button>'
-    + '<button class="vt-btn" id="vt-pan" title="Pan" onclick="viewerSetMode(\'pan\')"><i class="fas fa-arrows-alt"></i></button>'
-    + '<div class="viewer-toolbar-sep"></div>'
-    + '<button class="vt-btn" id="vt-grid" title="Toggle Grid" onclick="viewerToggleGrid()"><i class="fas fa-border-all"></i></button>'
-    + '<button class="vt-btn active" id="vt-shaded" title="Shaded" onclick="viewerSetShading(\'shaded\')"><i class="fas fa-circle"></i></button>'
-    + '<button class="vt-btn" id="vt-wire" title="Wireframe" onclick="viewerSetShading(\'wire\')"><i class="fas fa-vector-square"></i></button>'
-    + '<div class="viewer-toolbar-sep"></div>'
-    + '<button class="vt-btn" title="Reset View" onclick="viewerResetCamera()"><i class="fas fa-home"></i></button>'
-    + '<div class="viewer-toolbar-sep"></div>'
-    + '<button class="vt-btn" id="vt-rx" title="Rotate X (fix upright)" onclick="viewerRotate(\'x\')"><span style="font-size:11px;font-weight:900;">X↺</span></button>'
-    + '<button class="vt-btn" id="vt-ry" title="Rotate Y" onclick="viewerRotate(\'y\')"><span style="font-size:11px;font-weight:900;">Y↺</span></button>'
-    + '<button class="vt-btn" id="vt-rz" title="Rotate Z" onclick="viewerRotate(\'z\')"><span style="font-size:11px;font-weight:900;">Z↺</span></button>'
-    + '<a class="vt-btn" title="Download" href="' + url + '" download><i class="fas fa-download"></i></a>'
-    + '</div>'
-    + '<div class="viewer-side-controls">'
-    + '<button class="vsc-btn" title="Zoom In" onclick="viewerZoom(0.8)"><i class="fas fa-plus"></i></button>'
-    + '<div class="vsc-sep"></div>'
-    + '<button class="vsc-btn" title="Zoom Out" onclick="viewerZoom(1.25)"><i class="fas fa-minus"></i></button>'
-    + '</div>'
-    + '<div class="viewer-statusbar"><span class="status-dot"></span><span id="viewer-status">.' + extUp + ' Model</span></div>'
-    + '<div class="viewer-loading" id="viewer-loading">'
-    + '<div class="viewer-loading-spinner"></div>'
-    + '<div class="load-pct" id="viewer-load-pct">0%</div>'
-    + '<p>Loading model…</p>'
-    + '</div>'
-    + '</div>';
-}
-
-// Toolbar relay functions — call into the ES module viewer
-function viewerSetMode(mode)     { if(window._viewerAPI) window._viewerAPI.setMode(mode); }
-function viewerToggleGrid()      { if(window._viewerAPI) window._viewerAPI.toggleGrid(); }
-function viewerSetShading(mode)  { if(window._viewerAPI) window._viewerAPI.setShading(mode); }
-function viewerResetCamera()     { if(window._viewerAPI) window._viewerAPI.resetCamera(); }
-function viewerZoom(factor)      { if(window._viewerAPI) window._viewerAPI.zoom(factor); }
-function viewerRotate(axis)      { if(window._viewerAPI) window._viewerAPI.rotatePivot(axis); }
-
-function closeLightbox() {
-  var lb = document.getElementById('ad-lightbox');
-  lb.classList.remove('open');
-  var vid = document.querySelector('#ad-lb-media video');
-  if (vid) { vid.pause(); vid.src = ''; }
-  var ifr = document.querySelector('#ad-lb-media iframe');
-  if (ifr) { ifr.src = ''; }
-  if (window._threeDestroy) { window._threeDestroy(); window._threeDestroy = null; }
-  window._viewerAPI = null;
-  document.getElementById('ad-lb-media').innerHTML = '';
-  document.body.style.overflow = '';
-}
-
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    var lb = document.getElementById('ad-lightbox');
-    if (lb && lb.classList.contains('open')) closeLightbox();
-  }
-});
-
-document.addEventListener('DOMContentLoaded', loadGallery);
 </script>
 
-<!-- Three.js viewer — ES module (must be type="module") -->
-<script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { GLTFLoader }    from 'three/addons/loaders/GLTFLoader.js';
-import { OBJLoader }     from 'three/addons/loaders/OBJLoader.js';
-import { MTLLoader }     from 'three/addons/loaders/MTLLoader.js';
-import { STLLoader }     from 'three/addons/loaders/STLLoader.js';
-
-// Expose initModelViewer to the global scope so classic scripts can call it
-window.initModelViewer = function(containerId, modelUrl, ext, mtlUrl) {
-  var container = document.getElementById(containerId);
-  if (!container) return;
-  ext = (ext || '').toLowerCase();
-
-  var w = container.clientWidth  || 800;
-  var h = container.clientHeight || 600;
-
-  // Scene — Tinkercad palette: warm light-grey sky
-  var scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xe8ecf0);
-  scene.fog = new THREE.FogExp2(0xe8ecf0, 0.006);
-
-  // Camera
-  var camera = new THREE.PerspectiveCamera(45, w / h, 0.001, 2000);
-  camera.position.set(4, 3, 5);
-
-  // Renderer — append directly into container
-  var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(w, h);
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.1;
-
-  // Insert canvas BEFORE the loading overlay
-  var loadingEl = document.getElementById('viewer-loading');
-  if (loadingEl) {
-    container.insertBefore(renderer.domElement, loadingEl);
-  } else {
-    container.appendChild(renderer.domElement);
-  }
-
-  // Lights
-  var hemi = new THREE.HemisphereLight(0xffffff, 0xc8d0dc, 1.0);
-  scene.add(hemi);
-
-  var sun = new THREE.DirectionalLight(0xffffff, 1.2);
-  sun.position.set(6, 14, 8);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
-  sun.shadow.camera.near = 0.5;
-  sun.shadow.camera.far  = 200;
-  sun.shadow.camera.left = sun.shadow.camera.bottom = -20;
-  sun.shadow.camera.right = sun.shadow.camera.top   =  20;
-  scene.add(sun);
-
-  var fill = new THREE.DirectionalLight(0xdce8ff, 0.4);
-  fill.position.set(-5, 4, -8);
-  scene.add(fill);
-
-  // ── Workplane (Tinkercad-style) ─────────────────
-  // Solid white-blue floor
-  var floorMesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(80, 80),
-    new THREE.MeshLambertMaterial({ color: 0xfafcff, side: THREE.FrontSide })
-  );
-  floorMesh.rotation.x = -Math.PI / 2;
-  floorMesh.position.y = -0.002;
-  floorMesh.receiveShadow = true;
-  scene.add(floorMesh);
-
-  // Fine grid — light blue lines, matches Tinkercad
-  var grid = new THREE.GridHelper(80, 80, 0x9ab8d8, 0xc2d8ec);
-  grid.material.transparent = true;
-  grid.material.opacity = 0.7;
-  scene.add(grid);
-
-  // Major grid lines every 10 units (thicker visual weight)
-  var majorGrid = new THREE.GridHelper(80, 8, 0x7aaaca, 0x7aaaca);
-  majorGrid.material.transparent = true;
-  majorGrid.material.opacity = 0.35;
-  majorGrid.position.y = 0.001;
-  scene.add(majorGrid);
-
-  // Axis lines — red X, blue Z (like Tinkercad)
-  var xGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-40,0.003,0), new THREE.Vector3(40,0.003,0)]);
-  scene.add(new THREE.Line(xGeo, new THREE.LineBasicMaterial({ color: 0xdd2222 })));
-  var zGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0.003,-40), new THREE.Vector3(0,0.003,40)]);
-  scene.add(new THREE.Line(zGeo, new THREE.LineBasicMaterial({ color: 0x2244dd })));
-
-  // Shadow receiver plane (invisible, just catches shadows)
-  var shadowPlane = new THREE.Mesh(
-    new THREE.PlaneGeometry(80, 80),
-    new THREE.ShadowMaterial({ opacity: 0.22 })
-  );
-  shadowPlane.rotation.x = -Math.PI / 2;
-  shadowPlane.position.y = 0.001;
-  shadowPlane.receiveShadow = true;
-  scene.add(shadowPlane);
-
-  // Controls
-  var controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping   = true;
-  controls.dampingFactor   = 0.07;
-  controls.screenSpacePanning = true;
-  controls.minDistance     = 0.05;
-  controls.maxDistance     = 500;
-  controls.zoomSpeed       = 1.2;
-  controls.rotateSpeed     = 0.8;
-
-  var initialCamPos = camera.position.clone();
-  var initialTarget = new THREE.Vector3();
-
-  // Internal state
-  var state = { wireframe: false, gridVisible: true };
-
-  // ── API exposed to toolbar buttons ──────────────
-  // Store the auto-corrected rotation so Reset restores it
-  var _autoRotX = 0;
-
-  window._viewerAPI = {
-    setMode: function(mode) {
-      if (mode === 'orbit') {
-        controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
-        document.getElementById('vt-orbit').classList.add('active');
-        document.getElementById('vt-pan').classList.remove('active');
-      } else {
-        controls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
-        document.getElementById('vt-pan').classList.add('active');
-        document.getElementById('vt-orbit').classList.remove('active');
-      }
-    },
-    toggleGrid: function() {
-      state.gridVisible = !state.gridVisible;
-      grid.visible      = state.gridVisible;
-      majorGrid.visible = state.gridVisible;
-      floorMesh.visible = state.gridVisible;
-      document.getElementById('vt-grid').classList.toggle('active', state.gridVisible);
-    },
-    setShading: function(mode) {
-      state.wireframe = (mode === 'wire');
-      scene.traverse(function(obj) {
-        if (!obj.isMesh) return;
-        var mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-        mats.forEach(function(m) { m.wireframe = state.wireframe; });
-      });
-      document.getElementById('vt-shaded').classList.toggle('active', !state.wireframe);
-      document.getElementById('vt-wire').classList.toggle('active',   state.wireframe);
-    },
-    resetCamera: function() {
-      // Reset camera position
-      camera.position.copy(initialCamPos);
-      controls.target.copy(initialTarget);
-      controls.update();
-      // Also reset pivot rotation back to auto-corrected state
-      if (_pivot) {
-        _pivot.rotation.set(_autoRotX, 0, 0);
-        _pivot.position.y = 0;
-        reseatPivot();
-        fitCamera();
-      }
-    },
-    zoom: function(factor) {
-      var dir = camera.position.clone().sub(controls.target);
-      camera.position.copy(controls.target).addScaledVector(dir, factor);
-      controls.update();
-    },
-    // Rotate the pivot 90° around the given axis and re-seat on grid
-    rotatePivot: function(axis) {
-      if (!_pivot) return;
-      var angle = Math.PI / 2;
-      if (axis === 'x') _pivot.rotation.x += angle;
-      if (axis === 'y') _pivot.rotation.y += angle;
-      if (axis === 'z') _pivot.rotation.z += angle;
-      // Re-seat and refit camera after rotation
-      _pivot.position.y = 0;
-      reseatPivot();
-      fitCamera();
-    },
-    // Called by onLoaded to store the auto rotation so Reset can restore it
-    _setAutoRot: function(rx) { _autoRotX = rx; }
-  };
-
-  // ── Loaders ─────────────────────────────────────
-  function onProgress(xhr) {
-    var el = document.getElementById('viewer-load-pct');
-    if (el && xhr.total > 0) el.textContent = Math.round(xhr.loaded / xhr.total * 100) + '%';
-  }
-
-  // Shared pivot reference so toolbar rotation buttons can act on it
-  var _pivot = null;
-
-  // Re-seats the pivot on the grid after any rotation
-  function reseatPivot() {
-    if (!_pivot) return;
-    _pivot.updateMatrixWorld(true);
-    var b = new THREE.Box3().setFromObject(_pivot);
-    _pivot.position.y += -b.min.y;
-  }
-
-  // Fit camera to the current pivot world box
-  function fitCamera() {
-    if (!_pivot) return;
-    _pivot.updateMatrixWorld(true);
-    var b    = new THREE.Box3().setFromObject(_pivot);
-    var sz   = b.getSize(new THREE.Vector3());
-    var ctr  = b.getCenter(new THREE.Vector3());
-    var dist = Math.max(sz.x, sz.z) * 1.8 + sz.y;
-    camera.position.set(
-      ctr.x + dist * 0.75,
-      ctr.y + dist * 0.55,
-      ctr.z + dist * 0.75
-    );
-    controls.target.copy(ctr);
-    controls.update();
-    initialCamPos = camera.position.clone();
-    initialTarget = controls.target.clone();
-  }
-
-  function onLoaded(object) {
-    var loadEl = document.getElementById('viewer-loading');
-    if (loadEl) loadEl.style.display = 'none';
-
-    // ── Step 1: measure raw bounding box BEFORE any transform
-    object.updateMatrixWorld(true);
-    var rawBox  = new THREE.Box3().setFromObject(object);
-    var rawSize = rawBox.getSize(new THREE.Vector3());
-    var rawCtr  = rawBox.getCenter(new THREE.Vector3());
-    var maxDim  = Math.max(rawSize.x, rawSize.y, rawSize.z) || 1;
-
-    // ── Step 2: wrap in pivot Group, centre the mesh at pivot origin
-    var pivot = new THREE.Group();
-    _pivot = pivot;
-    scene.add(pivot);
-    pivot.add(object);
-    object.position.set(-rawCtr.x, -rawCtr.y, -rawCtr.z);
-
-    // ── Step 3: scale so model fits ~4-unit cube
-    pivot.scale.setScalar(4 / maxDim);
-
-    // ── Step 4: AUTO-ORIENTATION for OBJ / STL
-    // Problem: Tinkercad exports OBJ with Z-up (model lies flat in Three.js Y-up world).
-    // Detection: if the scaled bounding box is much flatter in Y than in X/Z, rotate -90° on X.
-    if (ext === 'obj' || ext === 'stl') {
-      pivot.updateMatrixWorld(true);
-      var testBox  = new THREE.Box3().setFromObject(pivot);
-      var testSize = testBox.getSize(new THREE.Vector3());
-      var flatness = Math.max(testSize.x, testSize.z) / (testSize.y || 0.001);
-      // If width/depth is more than 2× the height, the model is probably lying flat
-      if (flatness > 2.0) {
-        pivot.rotation.x = -Math.PI / 2;
-      }
-    }
-    // Store auto-corrected rotation so Reset can restore it
-    if (window._viewerAPI && window._viewerAPI._setAutoRot) window._viewerAPI._setAutoRot(pivot.rotation.x);
-
-    // ── Step 5: sit on grid (y = 0)
-    reseatPivot();
-
-    // ── Step 6: shadows
-    pivot.traverse(function(n) {
-      if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; }
-    });
-
-    // ── Step 7: fit camera
-    fitCamera();
-
-    var statusEl = document.getElementById('viewer-status');
-    if (statusEl) statusEl.textContent = ext.toUpperCase() + ' · ' + (maxDim.toFixed(2)) + ' units';
-  }
-
-  function onError(err) {
-    var loadEl = document.getElementById('viewer-loading');
-    if (loadEl) loadEl.innerHTML =
-      '<i class="fas fa-exclamation-triangle" style="font-size:36px;color:#ef4444;"></i>'
-      + '<p style="color:#ef4444;font-family:Manrope,sans-serif;">Failed to load model</p>';
-    console.error('Model load error:', err);
-  }
-
-  if (ext === 'glb' || ext === 'gltf') {
-    new GLTFLoader().load(modelUrl, function(gltf) { onLoaded(gltf.scene); }, onProgress, onError);
-  } else if (ext === 'obj') {
-    var objLoader = new OBJLoader();
-
-    function loadObjWithMaterial(materials) {
-      if (materials) {
-        materials.preload();
-        objLoader.setMaterials(materials);
-      }
-      objLoader.load(modelUrl, function(obj) {
-        // Convert MeshPhongMaterial (from MTL) -> MeshStandardMaterial so PBR lighting works.
-        // Preserve the colour. Only replace truly absent/basic materials with a neutral default.
-        var applyMat = function(m) {
-          if (!m) return new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.6, metalness: 0.05 });
-          if (m.isMeshPhongMaterial || m.isMeshLambertMaterial) {
-            return new THREE.MeshStandardMaterial({
-              color:     m.color  ? m.color.clone() : new THREE.Color(0xcccccc),
-              map:       m.map    || null,
-              roughness: 0.55,
-              metalness: 0.05,
-              side:      THREE.FrontSide
-            });
-          }
-          if (m.isMeshBasicMaterial) {
-            return new THREE.MeshStandardMaterial({ color: m.color ? m.color.clone() : 0xcccccc, roughness: 0.6, metalness: 0.05 });
-          }
-          return m;
-        };
-        obj.traverse(function(c) {
-          if (!c.isMesh) return;
-          c.material = Array.isArray(c.material) ? c.material.map(applyMat) : applyMat(c.material);
-        });
-        onLoaded(obj);
-      }, onProgress, onError);
-    }
-
-    if (mtlUrl) {
-      // Explicit MTL URL from Firebase (uploaded alongside the OBJ)
-      new MTLLoader().load(
-        mtlUrl,
-        function(materials) { loadObjWithMaterial(materials); },
-        undefined,
-        function() { loadObjWithMaterial(null); }  // MTL URL given but failed — load raw
-      );
-    } else {
-      // No MTL available — load OBJ with default grey material
-      loadObjWithMaterial(null);
-    }
-  } else if (ext === 'stl') {
-    new STLLoader().load(modelUrl, function(geo) {
-      geo.computeVertexNormals();
-      onLoaded(new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0xE07020, roughness: 0.55, metalness: 0.05 })));
-    }, onProgress, onError);
-  }
-
-  // ── Render loop ──────────────────────────────────
-  var animId;
-  (function animate() {
-    animId = requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
-  })();
-
-  // ── Resize ───────────────────────────────────────
-  function onResize() {
-    var nw = container.clientWidth;
-    var nh = container.clientHeight;
-    if (!nw || !nh) return;
-    camera.aspect = nw / nh;
-    camera.updateProjectionMatrix();
-    renderer.setSize(nw, nh);
-  }
-  window.addEventListener('resize', onResize);
-
-  // ── Destroy ──────────────────────────────────────
-  window._threeDestroy = function() {
-    window._viewerAPI   = null;
-    cancelAnimationFrame(animId);
-    window.removeEventListener('resize', onResize);
-    controls.dispose();
-    renderer.dispose();
-    if (renderer.domElement.parentNode)
-      renderer.domElement.parentNode.removeChild(renderer.domElement);
-  };
-};
-</script>
 
 
 <!-- ===== FLOATING SHOP CTA ===== -->
@@ -1792,7 +1279,7 @@ window.initModelViewer = function(containerId, modelUrl, ext, mtlUrl) {
   </span>
 </a>
 
-<!-- ===== REQUEST DESIGN / QUOTE — INTAKE FORM ===== -->
+<!-- ===== REQUEST SERVICE — INTAKE FORM ===== -->
 <style>
   .ad-hero-cta {
     margin-top: 26px; background: #fff; color: var(--dark2, #0F172A); border: none; padding: 14px 28px;
@@ -1802,203 +1289,196 @@ window.initModelViewer = function(containerId, modelUrl, ext, mtlUrl) {
   }
   .ad-hero-cta:hover { transform: translateY(-2px); }
 
-  .ad-modal-overlay {
+  .psa-modal-overlay {
     position: fixed; inset: 0; background: rgba(5,7,14,0.72); backdrop-filter: blur(6px); z-index: 6000;
     display: flex; align-items: center; justify-content: center; padding: 20px;
     opacity: 0; pointer-events: none; transition: opacity 0.25s;
   }
-  .ad-modal-overlay.open { opacity: 1; pointer-events: all; }
-  .ad-modal-box {
+  .psa-modal-overlay.open { opacity: 1; pointer-events: all; }
+  .psa-modal-box {
     background: #fff; border-radius: 20px; max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto;
     padding: 32px 30px; transform: scale(0.94); transition: transform 0.25s;
     box-shadow: 0 24px 80px rgba(0,0,0,0.4);
   }
-  .ad-modal-overlay.open .ad-modal-box { transform: scale(1); }
-  .ad-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
-  .ad-modal-head h3 { font-size: 21px; font-weight: 900; color: var(--dark2, #0F172A); margin: 0; }
-  .ad-modal-close {
+  .psa-modal-overlay.open .psa-modal-box { transform: scale(1); }
+  .psa-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+  .psa-modal-head h3 { font-size: 21px; font-weight: 900; color: var(--dark2, #0F172A); margin: 0; }
+  .psa-modal-close {
     background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; color: var(--text-muted, #64748b);
     cursor: pointer; flex-shrink: 0; font-size: 14px;
   }
-  .ad-modal-close:hover { background: #fee2e2; color: #ef4444; }
-  .ad-modal-sub { font-size: 13.5px; color: var(--text-muted, #64748b); margin: 0 0 22px; }
-  .ad-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
-  .ad-group { margin-bottom: 14px; }
-  .ad-group label { display: block; font-size: 12.5px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
-  .ad-group .req { color: #ef4444; }
-  .ad-group input, .ad-group select, .ad-group textarea {
+  .psa-modal-close:hover { background: #fee2e2; color: #ef4444; }
+  .psa-modal-sub { font-size: 13.5px; color: var(--text-muted, #64748b); margin: 0 0 22px; }
+  .psa-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .psa-group { margin-bottom: 14px; }
+  .psa-group label { display: block; font-size: 12.5px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
+  .psa-group .req { color: #ef4444; }
+  .psa-group input, .psa-group select, .psa-group textarea {
     width: 100%; padding: 11px 13px; border: 1.5px solid var(--border, #e2e8f0); border-radius: 9px;
     font-size: 14px; font-family: 'Manrope', sans-serif; box-sizing: border-box; color: #1e293b;
   }
-  .ad-group input:focus, .ad-group select:focus, .ad-group textarea:focus { outline: none; border-color: var(--blue, #2563EB); }
-  .ad-group textarea { resize: vertical; min-height: 90px; }
-  .ad-form-error { display: none; color: #ef4444; font-size: 12.5px; margin: -6px 0 14px; }
-  .ad-submit-btn {
+  .psa-group input:focus, .psa-group select:focus, .psa-group textarea:focus { outline: none; border-color: var(--blue, #2563EB); }
+  .psa-group textarea { resize: vertical; min-height: 90px; }
+  .psa-form-error { display: none; color: #ef4444; font-size: 12.5px; margin: -6px 0 14px; }
+  .psa-submit-btn {
     width: 100%; background: var(--blue, #2563EB); color: #fff; border: none; padding: 14px; border-radius: 11px;
     font-size: 15px; font-weight: 800; cursor: pointer; font-family: 'Manrope', sans-serif; margin-top: 4px;
     display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s;
   }
-  .ad-submit-btn:hover { background: var(--blue-dark, #1D4ED8); }
-  .ad-submit-btn:disabled { opacity: 0.65; cursor: not-allowed; }
-  .ad-modal-note { font-size: 11.5px; color: #94a3b8; text-align: center; margin-top: 12px; }
-  .ad-success { text-align: center; padding: 10px 0 4px; }
-  .ad-success i { font-size: 46px; color: #10B981; margin-bottom: 14px; display: block; }
-  .ad-success h4 { font-size: 19px; font-weight: 800; color: var(--dark2, #0F172A); margin: 0 0 8px; }
-  .ad-success p { font-size: 13.5px; color: var(--text-muted, #64748b); margin: 0 0 22px; line-height: 1.6; }
+  .psa-submit-btn:hover { background: var(--blue-dark, #1D4ED8); }
+  .psa-submit-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+  .psa-modal-note { font-size: 11.5px; color: #94a3b8; text-align: center; margin-top: 12px; }
+  .psa-success { text-align: center; padding: 10px 0 4px; }
+  .psa-success i { font-size: 46px; color: #10B981; margin-bottom: 14px; display: block; }
+  .psa-success h4 { font-size: 19px; font-weight: 800; color: var(--dark2, #0F172A); margin: 0 0 8px; }
+  .psa-success p { font-size: 13.5px; color: var(--text-muted, #64748b); margin: 0 0 22px; line-height: 1.6; }
   @media (max-width: 560px) {
-    .ad-form-row { grid-template-columns: 1fr; gap: 0; }
+    .psa-form-row { grid-template-columns: 1fr; gap: 0; }
   }
 </style>
 
-<div class="ad-modal-overlay" id="adModalOverlay">
-  <div class="ad-modal-box">
-    <div id="adFormView">
-      <div class="ad-modal-head">
-        <h3><i class="fas fa-magic" style="color:var(--blue);"></i> Request Design / Quote</h3>
-        <button type="button" class="ad-modal-close" onclick="closeDesignRequestModal()"><i class="fas fa-times"></i></button>
+<div class="psa-modal-overlay" id="psaModalOverlay">
+  <div class="psa-modal-box">
+    <div id="psaFormView">
+      <div class="psa-modal-head">
+        <h3><i class="fas fa-bolt" style="color:var(--blue);"></i> Request Service</h3>
+        <button type="button" class="psa-modal-close" onclick="closeServiceRequestModal()"><i class="fas fa-times"></i></button>
       </div>
-      <p class="ad-modal-sub">Tell us what you'd like designed, animated or modeled and we'll send a quote.</p>
+      <p class="psa-modal-sub">Tell us what needs fixing or installing and where — an agent will confirm and quote you.</p>
 
-      <div class="ad-form-row">
-        <div class="ad-group">
+      <div class="psa-form-row">
+        <div class="psa-group">
           <label><span class="req">*</span> Full Name</label>
-          <input type="text" id="ad-name" placeholder="e.g. Kofi Mensah">
+          <input type="text" id="psa-name" placeholder="e.g. Kofi Mensah">
         </div>
-        <div class="ad-group">
+        <div class="psa-group">
           <label><span class="req">*</span> Phone Number</label>
-          <input type="tel" id="ad-phone" placeholder="e.g. 0548029027">
+          <input type="tel" id="psa-phone" placeholder="e.g. 0548029027">
         </div>
       </div>
-      <div class="ad-group">
+      <div class="psa-group">
         <label><span class="req">*</span> Email Address</label>
-        <input type="email" id="ad-email" placeholder="your@email.com">
+        <input type="email" id="psa-email" placeholder="your@email.com">
       </div>
-      <div class="ad-group">
+      <div class="psa-group">
+        <label><span class="req">*</span> Service Address</label>
+        <input type="text" id="psa-address" placeholder="Street, area, city — e.g. Madina, Accra">
+      </div>
+      <div class="psa-group">
         <label><span class="req">*</span> Service Type</label>
-        <select id="ad-type">
+        <select id="psa-type">
           <option value="">Select a service</option>
-          <option>Logo &amp; Brand Identity</option>
-          <option>Animation / Motion Graphics</option>
-          <option>3D Modeling</option>
-          <option>Print Design (flyers, banners, cards)</option>
-          <option>Illustration</option>
-          <option>Design Mentorship</option>
+          <option>Electrical Installation</option>
+          <option>Repairs &amp; Maintenance</option>
+          <option>Panel Upgrade</option>
+          <option>Safety Inspection</option>
+          <option>Emergency Repair</option>
+          <option>Industrial Electrical Work</option>
           <option>Other</option>
         </select>
       </div>
-      <div class="ad-group">
-        <label><span class="req">*</span> Project Description</label>
-        <textarea id="ad-desc" placeholder="What do you need designed? Include style references, dimensions, or use case."></textarea>
+      <div class="psa-group">
+        <label><span class="req">*</span> Describe the Issue / Job</label>
+        <textarea id="psa-desc" placeholder="What needs doing? Include any relevant details — appliance type, symptoms, site access, etc."></textarea>
       </div>
-      <div class="ad-form-row">
-        <div class="ad-group">
-          <label>Estimated Budget (optional)</label>
-          <select id="ad-budget">
-            <option value="">Prefer not to say</option>
-            <option>Under GHS 300</option>
-            <option>GHS 300 – 1,000</option>
-            <option>GHS 1,000 – 5,000</option>
-            <option>Above GHS 5,000</option>
-          </select>
-        </div>
-        <div class="ad-group">
-          <label>Needed By (optional)</label>
-          <input type="date" id="ad-deadline">
-        </div>
+      <div class="psa-group">
+        <label>Preferred Date (optional)</label>
+        <input type="date" id="psa-date">
       </div>
 
-      <p class="ad-form-error" id="adFormError"></p>
-      <button type="button" class="ad-submit-btn" id="adSubmitBtn" onclick="submitDesignRequest()">
+      <p class="psa-form-error" id="psaFormError"></p>
+      <button type="button" class="psa-submit-btn" id="psaSubmitBtn" onclick="submitServiceRequest()">
         <i class="fas fa-paper-plane"></i> Submit Request
       </button>
-      <p class="ad-modal-note"><i class="fas fa-lock"></i> Your information is kept private. We'll respond within 24 hours.</p>
+      <p class="psa-modal-note"><i class="fas fa-lock"></i> Your information is kept private. We'll respond within 24 hours.</p>
     </div>
 
-    <div id="adSuccessView" style="display:none;">
-      <div class="ad-success">
+    <div id="psaSuccessView" style="display:none;">
+      <div class="psa-success">
         <i class="fas fa-check-circle"></i>
         <h4>Request Received!</h4>
-        <p>Thanks — a JTES designer will reach out with a quote. Your reference is <strong id="adRefCode"></strong>.</p>
-        <a id="adSuccessWaBtn" href="#" target="_blank" rel="noopener"
+        <p>Thanks — a Prime Aide agent will reach out shortly. Your reference is <strong id="psaRefCode"></strong>.</p>
+        <a id="psaSuccessWaBtn" href="#" target="_blank" rel="noopener"
           style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px;background:linear-gradient(135deg,#25D366,#1DA851);color:#fff;border-radius:11px;font-size:14px;font-weight:700;text-decoration:none;margin-bottom:10px;">
           <i class="fab fa-whatsapp"></i> Message Us on WhatsApp
         </a>
-        <button type="button" class="ad-modal-close" style="width:100%;border-radius:11px;padding:12px;" onclick="closeDesignRequestModal()">Close</button>
+        <button type="button" class="psa-modal-close" style="width:100%;border-radius:11px;padding:12px;" onclick="closeServiceRequestModal()">Close</button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-async function adFbPush(path, data) {
-  var res = await fetch(AD_FB_URL + '/' + path + '.json', {
+var PSA_FB_URL = 'https://jtes-website-default-rtdb.firebaseio.com';
+async function psaFbPush(path, data) {
+  var res = await fetch(PSA_FB_URL + '/' + path + '.json', {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
   });
   return res.json();
 }
-function openDesignRequestModal() {
-  document.getElementById('adFormView').style.display = 'block';
-  document.getElementById('adSuccessView').style.display = 'none';
-  document.getElementById('adModalOverlay').classList.add('open');
+function openServiceRequestModal() {
+  document.getElementById('psaFormView').style.display = 'block';
+  document.getElementById('psaSuccessView').style.display = 'none';
+  document.getElementById('psaModalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
-function closeDesignRequestModal() {
-  document.getElementById('adModalOverlay').classList.remove('open');
+function closeServiceRequestModal() {
+  document.getElementById('psaModalOverlay').classList.remove('open');
   document.body.style.overflow = '';
 }
-async function submitDesignRequest() {
-  var name  = (document.getElementById('ad-name').value  || '').trim();
-  var phone = (document.getElementById('ad-phone').value || '').trim();
-  var email = (document.getElementById('ad-email').value || '').trim();
-  var type  = document.getElementById('ad-type').value;
-  var desc  = (document.getElementById('ad-desc').value  || '').trim();
-  var budget = document.getElementById('ad-budget').value;
-  var deadline = document.getElementById('ad-deadline').value;
-  var errEl = document.getElementById('adFormError');
+async function submitServiceRequest() {
+  var name    = (document.getElementById('psa-name').value    || '').trim();
+  var phone   = (document.getElementById('psa-phone').value   || '').trim();
+  var email   = (document.getElementById('psa-email').value   || '').trim();
+  var address = (document.getElementById('psa-address').value || '').trim();
+  var type    = document.getElementById('psa-type').value;
+  var desc    = (document.getElementById('psa-desc').value    || '').trim();
+  var date    = document.getElementById('psa-date').value;
+  var errEl   = document.getElementById('psaFormError');
   errEl.style.display = 'none';
 
   function fail(msg) { errEl.textContent = msg; errEl.style.display = 'block'; }
-  if (!name)  { fail('Please enter your full name.'); return; }
-  if (!phone) { fail('Please enter your phone number.'); return; }
+  if (!name)    { fail('Please enter your full name.'); return; }
+  if (!phone)   { fail('Please enter your phone number.'); return; }
   if (!email || !email.includes('@')) { fail('Please enter a valid email address.'); return; }
-  if (!type)  { fail('Please select a service type.'); return; }
-  if (!desc)  { fail('Please describe what you need designed.'); return; }
+  if (!address) { fail('Please enter the service address.'); return; }
+  if (!type)    { fail('Please select a service type.'); return; }
+  if (!desc)    { fail('Please describe the issue or job.'); return; }
 
-  var btn = document.getElementById('adSubmitBtn');
+  var btn = document.getElementById('psaSubmitBtn');
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
 
-  var refCode = 'AD-' + Date.now();
+  var refCode = 'PSA-' + Date.now();
   try {
-    await adFbPush('designRequests', {
+    await psaFbPush('serviceRequests', {
       ref: refCode, date: new Date().toISOString(), status: 'New',
-      name: name, phone: phone, email: email,
-      type: type, description: desc, budget: budget, deadline: deadline
+      name: name, phone: phone, email: email, address: address,
+      type: type, description: desc, preferredDate: date
     });
 
     var waLines = [
-      '🎨 *NEW DESIGN REQUEST — ' + refCode + '*',
+      '⚡ *NEW SERVICE REQUEST — ' + refCode + '*',
       '━━━━━━━━━━━━━━━━━━━━',
       '👤 *Name:* ' + name,
       '📞 *Phone:* ' + phone,
       '📧 *Email:* ' + email,
+      '📍 *Address:* ' + address,
       '🗂️ *Service:* ' + type
     ];
-    if (budget)   waLines.push('💰 *Budget:* ' + budget);
-    if (deadline) waLines.push('📅 *Needed by:* ' + deadline);
+    if (date) waLines.push('📅 *Preferred date:* ' + date);
     waLines.push('━━━━━━━━━━━━━━━━━━━━');
-    waLines.push('📝 *Description:* ' + desc);
-    var waBtn = document.getElementById('adSuccessWaBtn');
+    waLines.push('📝 *Details:* ' + desc);
+    var waBtn = document.getElementById('psaSuccessWaBtn');
     if (waBtn) waBtn.href = 'https://wa.me/233548029027?text=' + encodeURIComponent(waLines.join('\n'));
 
-    document.getElementById('adRefCode').textContent = refCode;
-    document.getElementById('adFormView').style.display = 'none';
-    document.getElementById('adSuccessView').style.display = 'block';
-    ['ad-name','ad-phone','ad-email','ad-desc','ad-deadline'].forEach(function(id) {
+    document.getElementById('psaRefCode').textContent = refCode;
+    document.getElementById('psaFormView').style.display = 'none';
+    document.getElementById('psaSuccessView').style.display = 'block';
+    ['psa-name','psa-phone','psa-email','psa-address','psa-desc','psa-date'].forEach(function(id) {
       var el = document.getElementById(id); if (el) el.value = '';
     });
-    document.getElementById('ad-type').value = '';
-    document.getElementById('ad-budget').value = '';
+    document.getElementById('psa-type').value = '';
   } catch (e) {
     fail('Something went wrong. Please try again.');
   }
