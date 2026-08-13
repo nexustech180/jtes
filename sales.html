@@ -1772,8 +1772,8 @@ function selectPayment(card, method) {
 // Public key — safe to expose client-side (that's the whole point of a
 // "public" key). The secret key that actually verifies payments lives only
 // in the Cloudflare Worker's environment (see _worker.js's setup notes),
-// never here. PLACEHOLDER — replace with the real pk_live_/pk_test_ key.
-var PAYSTACK_PUBLIC_KEY = 'pk_test_REPLACE_WITH_REAL_PAYSTACK_PUBLIC_KEY';
+// never here. This is a LIVE key — checkout charges real money.
+var PAYSTACK_PUBLIC_KEY = 'pk_live_6c593b9660221d5852bee4e88dcb2cd7a17715f7';
 
 // ===== STORE PRODUCTS — FIREBASE =====
 var FB_CONFIG = {
