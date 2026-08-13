@@ -12,6 +12,9 @@
 //   POST /api/drive-upload  — upload a new file from the admin's computer into Drive
 //   POST /api/drive-list    — search/list files already in the connected Drive
 //   POST /api/drive-share   — set an existing Drive file to "anyone with link can view"
+//   POST /api/place-order   — validate cart stock server-side, decrement it, and write
+//                             the order — sales.html no longer writes orders to Firebase
+//                             directly
 //
 // ── ONE-TIME SETUP ──
 //
@@ -75,6 +78,14 @@ const DEFAULT_CONNECTED_ACCOUNT_ID = 'ca_4PfensM4N3iK';
 // jtes_admin (deployed at https://jtes-admin.jassan.workers.dev).
 const ADMIN_ORIGIN = 'https://jtes-admin.jassan.workers.dev';
 
+// Same Firebase RTDB the client-side pages already talk to directly for
+// content/store/orders reads. It has no write auth configured (matches the
+// rest of this codebase's documented "no real backend yet" posture), so this
+// Worker doesn't need a credential to use it either — it's just doing the
+// stock check and the order write in one place instead of leaving both to
+// client-side trust.
+const STORE_DB_URL = 'https://jtes-website-default-rtdb.firebaseio.com';
+
 const DRIVE_API_PATHS = ['/api/drive-upload', '/api/drive-list', '/api/drive-share'];
 
 function corsHeaders() {
@@ -107,6 +118,9 @@ export default {
       if (url.pathname === '/api/drive-list') return handleDriveList(request, env);
       if (url.pathname === '/api/drive-share') return handleDriveShare(request, env);
     }
+    if (url.pathname === '/api/place-order' && request.method === 'POST') {
+      return handlePlaceOrder(request, env);
+    }
     if (url.pathname === '/api/debug-composio' && request.method === 'GET') {
       return handleDebugComposio(request, env);
     }
@@ -118,6 +132,113 @@ export default {
     return env.ASSETS.fetch(request);
   }
 };
+
+// Places a store order server-side: validates each cart item against the
+// product's current `stock` field (products that don't track stock are
+// treated as unlimited, matching sales.html's own "In stock" display logic
+// for products with no stock value), decrements stock for the ones that do,
+// and only then writes the order record. Replaces the old flow where
+// sales.html wrote straight to Firebase with no stock check at all.
+//
+// NOTE — this is read-check-write over two plain REST calls, not a Firebase
+// transaction, so two orders racing for the last unit of the same product
+// within milliseconds of each other could both pass validation. Given this
+// project's current traffic and the fact nothing else here is transactional
+// either, that's an accepted gap, not an oversight — a real fix would need
+// Firebase's transaction/ETag support or a move off client-writable RTDB.
+async function handlePlaceOrder(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch (err) {
+    return jsonResponse({ error: 'Invalid request body.' }, 400);
+  }
+
+  const name    = (body.name || '').trim();
+  const phone   = (body.phone || '').trim();
+  const email   = (body.email || '').trim();
+  const address = (body.address || '').trim();
+  const region  = body.region || '';
+  const payment = body.payment || '';
+  const notes   = (body.notes || '').trim();
+  const items   = Array.isArray(body.items) ? body.items : [];
+
+  if (!name)    return jsonResponse({ error: 'Full name is required.' }, 400);
+  if (!phone)   return jsonResponse({ error: 'Phone number is required.' }, 400);
+  if (!address) return jsonResponse({ error: 'Delivery address is required.' }, 400);
+  if (!items.length) return jsonResponse({ error: 'Cart is empty.' }, 400);
+  for (const it of items) {
+    if (!it || !it.id || !it.name || typeof it.price !== 'number' || !(it.qty > 0)) {
+      return jsonResponse({ error: 'Cart contains an invalid item — please refresh and try again.' }, 400);
+    }
+  }
+
+  let products;
+  try {
+    const res = await fetch(STORE_DB_URL + '/store/products.json');
+    const val = await res.json();
+    products = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
+  } catch (err) {
+    return jsonResponse({ error: 'Could not check product availability. Please try again.' }, 502);
+  }
+
+  const productById = {};
+  products.forEach(function(p) { if (p && p.id) productById[p.id] = p; });
+
+  const issues = [];
+  items.forEach(function(it) {
+    const p = productById[it.id];
+    if (!p) { issues.push({ id: it.id, name: it.name, reason: 'no_longer_available' }); return; }
+    if (typeof p.stock === 'number' && p.stock < it.qty) {
+      issues.push({ id: it.id, name: it.name, reason: 'insufficient_stock', available: p.stock, requested: it.qty });
+    }
+    // Trust the catalog's price, not whatever the client sent — a tampered
+    // request could otherwise submit a real product at a fabricated price.
+    if (typeof p.price === 'number') it.price = p.price;
+  });
+  if (issues.length) {
+    return jsonResponse({ error: 'Some items in your cart are no longer available in the requested quantity.', issues: issues }, 409);
+  }
+
+  const updatedProducts = products.map(function(p) {
+    const it = items.find(function(i) { return i.id === p.id; });
+    if (it && typeof p.stock === 'number') {
+      return Object.assign({}, p, { stock: Math.max(0, p.stock - it.qty) });
+    }
+    return p;
+  });
+
+  try {
+    await fetch(STORE_DB_URL + '/store/products.json', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedProducts)
+    });
+  } catch (err) {
+    return jsonResponse({ error: 'Could not reserve stock. Please try again.' }, 502);
+  }
+
+  const itemsText = items.map(function(i) { return i.name + ' x' + i.qty + ' = GHS ' + (i.price * i.qty).toFixed(2); }).join('; ');
+  const total = items.reduce(function(s, i) { return s + i.price * i.qty; }, 0);
+  const order = {
+    id: 'ORD-' + Date.now(), date: new Date().toISOString(),
+    name: name, phone: phone, email: email, address: address,
+    region: region, payment: payment, notes: notes,
+    items: itemsText, total: 'GHS ' + total.toFixed(2), status: 'Pending'
+  };
+
+  try {
+    await fetch(STORE_DB_URL + '/store/orders.json', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(order)
+    });
+  } catch (err) {
+    return jsonResponse({ error: 'Stock was reserved but the order could not be saved. Please contact us directly.' }, 502);
+  }
+
+  return jsonResponse({ order: order });
+}
 
 async function handleDriveUpload(request, env) {
   if (!env.COMPOSIO_API_KEY) {

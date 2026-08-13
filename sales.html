@@ -2324,21 +2324,38 @@ async function placeOrder() {
     closeOrderModal(); return;
   }
 
-  var total     = items.reduce(function(s,i){ return s + i.price * i.qty; }, 0);
-  var itemsText = items.map(function(i){ return i.name + ' x' + i.qty + ' = GHS ' + (i.price * i.qty).toFixed(2); }).join('; ');
+  var total = items.reduce(function(s,i){ return s + i.price * i.qty; }, 0);
 
   var btn = document.getElementById('placeOrderBtn');
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
 
   try {
-    var order = {
-      id: 'ORD-' + Date.now(), date: new Date().toISOString(),
-      name: name, phone: phone, email: email, address: address,
-      region: region, payment: payment, notes: notes,
-      items: itemsText, total: 'GHS ' + total.toFixed(2), status: 'Pending'
-    };
-    await fbPush('store/orders', order);
+    var res = await fetch('/api/place-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name, phone: phone, email: email, address: address,
+        region: region, payment: payment, notes: notes,
+        items: items.map(function(i){ return { id: i.id, name: i.name, price: i.price, qty: i.qty }; })
+      })
+    });
+    var result = await res.json();
+
+    if (res.status === 409 && result.issues) {
+      var lines = result.issues.map(function(iss) {
+        return iss.reason === 'insufficient_stock'
+          ? iss.name + ' — only ' + iss.available + ' left (you asked for ' + iss.requested + ')'
+          : iss.name + ' — no longer available';
+      });
+      alert('Some items in your cart changed:\n\n' + lines.join('\n') + '\n\nPlease update your cart and try again.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Place Order';
+      return;
+    }
+    if (!res.ok) throw new Error(result.error || 'Order failed');
+
+    var order = result.order;
 
     // Build WhatsApp message for admin
     var waLines = [];
@@ -2361,6 +2378,7 @@ async function placeOrder() {
     if (waBtn) waBtn.href = waUrl;
     var refEl = document.getElementById('successOrderRef');
     if (refEl) refEl.textContent = order.id;
+    if (typeof trkSaveOrderToDevice === 'function') trkSaveOrderToDevice(order.id);
 
     cart = {};
     updateCartUI();
@@ -2685,7 +2703,9 @@ document.addEventListener('DOMContentLoaded', function() {
       <h3><i class="fas fa-truck" style="color:var(--blue);"></i> Track Your Order</h3>
       <button type="button" class="trk-modal-close" onclick="closeTrackOrderModal()"><i class="fas fa-times"></i></button>
     </div>
-    <p class="trk-modal-sub">Enter the order reference from your confirmation, or the phone number you ordered with.</p>
+    <div id="trkMyOrdersWrap"></div>
+
+    <p class="trk-modal-sub">Enter an order reference or phone number to look up any order — including ones placed on a different device.</p>
 
     <div class="trk-search-row">
       <input type="text" id="trk-query" placeholder="e.g. ORD-1699999999999 or 0548029027">
@@ -2701,9 +2721,69 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <script>
+// ── ORDER HISTORY ON THIS DEVICE ──
+// No customer accounts exist, so "order history" just means remembering
+// which reference codes this browser has placed, then looking their live
+// status up from Firebase each time — nothing sensitive is stored locally,
+// only the reference codes themselves.
+var MY_ORDERS_KEY = 'jtes_my_orders';
+var MY_ORDERS_MAX = 15;
+
+function trkSaveOrderToDevice(orderId) {
+  try {
+    var ids = JSON.parse(localStorage.getItem(MY_ORDERS_KEY) || '[]');
+    ids = ids.filter(function(id) { return id !== orderId; });
+    ids.unshift(orderId);
+    if (ids.length > MY_ORDERS_MAX) ids = ids.slice(0, MY_ORDERS_MAX);
+    localStorage.setItem(MY_ORDERS_KEY, JSON.stringify(ids));
+  } catch (e) { /* localStorage unavailable — order history just won't persist */ }
+}
+
+function trkGetDeviceOrderIds() {
+  try { return JSON.parse(localStorage.getItem(MY_ORDERS_KEY) || '[]'); }
+  catch (e) { return []; }
+}
+
+async function trkRenderMyDeviceOrders() {
+  var wrap = document.getElementById('trkMyOrdersWrap');
+  var ids = trkGetDeviceOrderIds();
+  if (!ids.length) { wrap.innerHTML = ''; return; }
+
+  wrap.innerHTML = '<div class="trk-hint" style="margin-bottom:10px;"><i class="fas fa-spinner fa-spin"></i> Loading your orders on this device…</div>';
+  try {
+    var data = await fbGet('store/orders');
+    var orders = data && typeof data === 'object' ? Object.values(data) : [];
+    var byId = {};
+    orders.forEach(function(o) { if (o && o.id) byId[o.id] = o; });
+    var mine = ids.map(function(id) { return byId[id]; }).filter(Boolean);
+
+    if (!mine.length) { wrap.innerHTML = ''; return; }
+
+    wrap.innerHTML = '<p class="trk-modal-sub" style="margin-bottom:10px;"><strong>Your Orders on This Device</strong></p>'
+      + '<div class="trk-results" style="margin-bottom:22px;">' + mine.map(trkRenderOrderCard).join('') + '</div>';
+  } catch (e) {
+    wrap.innerHTML = '';
+  }
+}
+
+function trkRenderOrderCard(o) {
+  var statusClass = (o.status || 'pending').toLowerCase();
+  var statusLabel = o.status || 'Pending';
+  return '<div class="trk-card">'
+    + '<div class="trk-card-head">'
+    + '<span class="trk-card-ref">' + (o.id || '—') + '</span>'
+    + '<span class="trk-badge ' + statusClass + '">' + statusLabel + '</span>'
+    + '</div>'
+    + '<div class="trk-card-date">' + (o.date ? new Date(o.date).toLocaleString() : '—') + '</div>'
+    + '<div class="trk-card-items" style="margin-top:8px;">' + (o.items || '—') + '</div>'
+    + '<div class="trk-card-total">Total: ' + (o.total || '—') + '</div>'
+    + '</div>';
+}
+
 function openTrackOrderModal() {
   document.getElementById('trkModalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+  trkRenderMyDeviceOrders();
   var input = document.getElementById('trk-query');
   setTimeout(function() { input.focus(); }, 50);
 }
@@ -2749,19 +2829,7 @@ async function lookupOrder() {
     if (!matches.length) {
       resultsWrap.innerHTML = '<div class="trk-empty"><i class="fas fa-inbox"></i><p>No order found matching "' + query.replace(/</g,'&lt;') + '".</p></div>';
     } else {
-      resultsWrap.innerHTML = '<div class="trk-results">' + matches.map(function(o) {
-        var statusClass = (o.status || 'pending').toLowerCase();
-        var statusLabel = o.status || 'Pending';
-        return '<div class="trk-card">'
-          + '<div class="trk-card-head">'
-          + '<span class="trk-card-ref">' + (o.id || '—') + '</span>'
-          + '<span class="trk-badge ' + statusClass + '">' + statusLabel + '</span>'
-          + '</div>'
-          + '<div class="trk-card-date">' + (o.date ? new Date(o.date).toLocaleString() : '—') + '</div>'
-          + '<div class="trk-card-items" style="margin-top:8px;">' + (o.items || '—') + '</div>'
-          + '<div class="trk-card-total">Total: ' + (o.total || '—') + '</div>'
-          + '</div>';
-      }).join('') + '</div>';
+      resultsWrap.innerHTML = '<div class="trk-results">' + matches.map(trkRenderOrderCard).join('') + '</div>';
     }
   } catch (e) {
     errEl.textContent = 'Something went wrong. Please try again.';
