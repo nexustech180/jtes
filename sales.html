@@ -1079,6 +1079,7 @@
     <a href="blog.html">Blog</a>
     <a href="contact.html">Contact</a>
     <a href="portal.html">Portal</a>
+    <a href="#" onclick="openTrackOrderModal();return false;"><i class="fas fa-truck" style="margin-right:5px;"></i>Track Order</a>
   </div>
   <a class="nav-admin-lock" href="https://jtes-admin.jassan.workers.dev" title="Admin"><i class="fas fa-lock"></i></a>
   <button class="mobile-menu-btn" id="menuBtn">&#9776;</button>
@@ -1540,6 +1541,9 @@
       onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
       <i class="fab fa-whatsapp" style="font-size:18px;"></i> Send Order via WhatsApp
     </a>
+    <button type="button" style="width:100%;background:transparent;color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="closeSuccessModal();openTrackOrderModal();document.getElementById('trk-query').value=document.getElementById('successOrderRef').textContent;lookupOrder();">
+      <i class="fas fa-truck"></i> Track This Order
+    </button>
     <button class="btn-modal-close" onclick="closeSuccessModal()">Continue Shopping</button>
   </div>
 </div>
@@ -2614,5 +2618,159 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 </script>
+
+<!-- ===== TRACK ORDER ===== -->
+<style>
+  .trk-modal-overlay {
+    position: fixed; inset: 0; background: rgba(5,7,14,0.72); backdrop-filter: blur(6px); z-index: 6000;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  .trk-modal-overlay.open { opacity: 1; pointer-events: all; }
+  .trk-modal-box {
+    background: #fff; border-radius: 20px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto;
+    padding: 32px 30px; transform: scale(0.94); transition: transform 0.25s;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+  }
+  .trk-modal-overlay.open .trk-modal-box { transform: scale(1); }
+  .trk-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+  .trk-modal-head h3 { font-size: 21px; font-weight: 900; color: var(--dark2); margin: 0; }
+  .trk-modal-close {
+    background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; color: var(--text-muted);
+    cursor: pointer; flex-shrink: 0; font-size: 14px;
+  }
+  .trk-modal-close:hover { background: #fee2e2; color: #ef4444; }
+  .trk-modal-sub { font-size: 13.5px; color: var(--text-muted); margin: 0 0 20px; }
+  .trk-search-row { display: flex; gap: 10px; margin-bottom: 8px; }
+  .trk-search-row input {
+    flex: 1; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 10px;
+    font-size: 14px; font-family: 'Manrope', sans-serif; box-sizing: border-box;
+  }
+  .trk-search-row input:focus { outline: none; border-color: var(--blue); }
+  .trk-search-btn {
+    background: var(--blue); color: #fff; border: none; padding: 0 20px; border-radius: 10px;
+    font-size: 14px; font-weight: 800; cursor: pointer; font-family: 'Manrope', sans-serif;
+    display: flex; align-items: center; gap: 8px; transition: background 0.2s;
+  }
+  .trk-search-btn:hover { background: var(--blue-dark); }
+  .trk-search-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+  .trk-hint { font-size: 11.5px; color: #94a3b8; margin: 0 0 22px; }
+  .trk-error { display: none; color: #ef4444; font-size: 12.5px; margin: -10px 0 16px; }
+  .trk-empty { text-align: center; padding: 30px 10px; color: var(--text-muted); }
+  .trk-empty i { font-size: 36px; color: #cbd5e1; margin-bottom: 12px; display: block; }
+  .trk-results { display: flex; flex-direction: column; gap: 14px; }
+  .trk-card { border: 1.5px solid var(--border); border-radius: 14px; padding: 18px 20px; }
+  .trk-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .trk-card-ref { font-size: 14.5px; font-weight: 800; color: var(--dark2); }
+  .trk-card-date { font-size: 12px; color: var(--text-muted); }
+  .trk-badge {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 800;
+    letter-spacing: 0.02em; padding: 5px 11px; border-radius: 50px; text-transform: uppercase;
+  }
+  .trk-badge.pending    { background: #FEF3C7; color: #92400E; }
+  .trk-badge.processing { background: #DBEAFE; color: #1E40AF; }
+  .trk-badge.delivered  { background: #D1FAE5; color: #065F46; }
+  .trk-badge.cancelled  { background: #FEE2E2; color: #991B1B; }
+  .trk-card-items { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 6px; }
+  .trk-card-total { font-size: 14px; font-weight: 800; color: var(--dark2); }
+  @media (max-width: 560px) {
+    .trk-search-row { flex-direction: column; }
+    .trk-search-btn { padding: 12px; justify-content: center; }
+  }
+</style>
+
+<div class="trk-modal-overlay" id="trkModalOverlay">
+  <div class="trk-modal-box">
+    <div class="trk-modal-head">
+      <h3><i class="fas fa-truck" style="color:var(--blue);"></i> Track Your Order</h3>
+      <button type="button" class="trk-modal-close" onclick="closeTrackOrderModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <p class="trk-modal-sub">Enter the order reference from your confirmation, or the phone number you ordered with.</p>
+
+    <div class="trk-search-row">
+      <input type="text" id="trk-query" placeholder="e.g. ORD-1699999999999 or 0548029027">
+      <button type="button" class="trk-search-btn" id="trkSearchBtn" onclick="lookupOrder()">
+        <i class="fas fa-search"></i> Track
+      </button>
+    </div>
+    <p class="trk-hint"><i class="fas fa-lock"></i> We only show orders that match exactly what you enter.</p>
+    <p class="trk-error" id="trkError"></p>
+
+    <div id="trkResultsWrap"></div>
+  </div>
+</div>
+
+<script>
+function openTrackOrderModal() {
+  document.getElementById('trkModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  var input = document.getElementById('trk-query');
+  setTimeout(function() { input.focus(); }, 50);
+}
+function closeTrackOrderModal() {
+  document.getElementById('trkModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('DOMContentLoaded', function() {
+  var input = document.getElementById('trk-query');
+  if (input) input.addEventListener('keydown', function(e) { if (e.key === 'Enter') lookupOrder(); });
+});
+
+function trkNormalizePhone(p) { return (p || '').replace(/\D/g, ''); }
+
+async function lookupOrder() {
+  var query = (document.getElementById('trk-query').value || '').trim();
+  var errEl = document.getElementById('trkError');
+  var resultsWrap = document.getElementById('trkResultsWrap');
+  errEl.style.display = 'none';
+  resultsWrap.innerHTML = '';
+
+  if (!query) {
+    errEl.textContent = 'Please enter an order reference or phone number.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  var btn = document.getElementById('trkSearchBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching…';
+
+  try {
+    var data = await fbGet('store/orders');
+    var orders = data && typeof data === 'object' ? Object.values(data) : [];
+    var qLower = query.toLowerCase();
+    var qDigits = trkNormalizePhone(query);
+    var matches = orders.filter(function(o) {
+      var idMatch = o.id && o.id.toLowerCase() === qLower;
+      var phoneMatch = qDigits.length >= 6 && trkNormalizePhone(o.phone) === qDigits;
+      return idMatch || phoneMatch;
+    }).sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+
+    if (!matches.length) {
+      resultsWrap.innerHTML = '<div class="trk-empty"><i class="fas fa-inbox"></i><p>No order found matching "' + query.replace(/</g,'&lt;') + '".</p></div>';
+    } else {
+      resultsWrap.innerHTML = '<div class="trk-results">' + matches.map(function(o) {
+        var statusClass = (o.status || 'pending').toLowerCase();
+        var statusLabel = o.status || 'Pending';
+        return '<div class="trk-card">'
+          + '<div class="trk-card-head">'
+          + '<span class="trk-card-ref">' + (o.id || '—') + '</span>'
+          + '<span class="trk-badge ' + statusClass + '">' + statusLabel + '</span>'
+          + '</div>'
+          + '<div class="trk-card-date">' + (o.date ? new Date(o.date).toLocaleString() : '—') + '</div>'
+          + '<div class="trk-card-items" style="margin-top:8px;">' + (o.items || '—') + '</div>'
+          + '<div class="trk-card-total">Total: ' + (o.total || '—') + '</div>'
+          + '</div>';
+      }).join('') + '</div>';
+    }
+  } catch (e) {
+    errEl.textContent = 'Something went wrong. Please try again.';
+    errEl.style.display = 'block';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-search"></i> Track';
+}
+</script>
+
 </body>
 </html>
