@@ -1017,6 +1017,71 @@
     <div class="carousel-progress" id="progress-home"></div>
   </div>
 
+  <!-- JTES ECOSYSTEM -->
+  <style>
+    .eco-section { padding: 80px 80px 90px; background: #fff; }
+    .eco-header { text-align: center; max-width: 640px; margin: 0 auto 48px; }
+    .eco-header h2 { font-size: 38px; font-weight: 900; color: var(--dark2); margin: 14px 0 12px; line-height: 1.15; }
+    .eco-header h2 span { color: var(--blue); }
+    .eco-header p { font-size: 15.5px; color: var(--text-muted); line-height: 1.7; }
+    .eco-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    .eco-card {
+      display: block; background: #f8fafc; border: 1px solid var(--border); border-radius: 18px;
+      padding: 30px 26px; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    }
+    .eco-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(37,99,235,0.14); border-color: var(--blue); }
+    .eco-card-icon {
+      width: 52px; height: 52px; border-radius: 14px; background: #E0EAFF;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 21px; color: var(--blue); margin-bottom: 18px;
+    }
+    .eco-card h3 { font-size: 18px; font-weight: 800; color: var(--dark2); margin-bottom: 8px; }
+    .eco-card p { font-size: 13.5px; color: var(--text-muted); line-height: 1.65; margin-bottom: 18px; min-height: 66px; }
+    .eco-card-link { font-size: 13.5px; font-weight: 700; color: var(--blue); display: inline-flex; align-items: center; gap: 7px; }
+    @media (max-width: 900px) {
+      .eco-section { padding: 56px 24px 64px; }
+      .eco-grid { grid-template-columns: 1fr 1fr; }
+      .eco-card p { min-height: 0; }
+    }
+    @media (max-width: 560px) {
+      .eco-grid { grid-template-columns: 1fr; }
+      .eco-header h2 { font-size: 28px; }
+    }
+  </style>
+  <section class="eco-section">
+    <div class="eco-header">
+      <div class="section-badge"><span class="dot"></span> The JTES Ecosystem</div>
+      <h2>Four Destinations, <span>One Platform</span></h2>
+      <p>Everything JTES does lives under one roof — pick where you want to start.</p>
+    </div>
+    <div class="eco-grid">
+      <a href="projects.html" class="eco-card">
+        <div class="eco-card-icon"><i class="fas fa-rocket"></i></div>
+        <h3>Project Space</h3>
+        <p>Start a research, technical or engineering project and track it through to delivery.</p>
+        <span class="eco-card-link">Explore <i class="fas fa-arrow-right"></i></span>
+      </a>
+      <a href="sales.html" class="eco-card">
+        <div class="eco-card-icon"><i class="fas fa-bag-shopping"></i></div>
+        <h3>My Store</h3>
+        <p>Shop STEM kits, robotics components and tools, with order tracking built in.</p>
+        <span class="eco-card-link">Shop Now <i class="fas fa-arrow-right"></i></span>
+      </a>
+      <a href="gallery.html" class="eco-card">
+        <div class="eco-card-icon"><i class="fas fa-wand-magic-sparkles"></i></div>
+        <h3>Animation-Dot</h3>
+        <p>Browse our creative portfolio and request design, animation or 3D work.</p>
+        <span class="eco-card-link">View Gallery <i class="fas fa-arrow-right"></i></span>
+      </a>
+      <a href="prime-aide.html" class="eco-card">
+        <div class="eco-card-icon"><i class="fas fa-bolt"></i></div>
+        <h3>Prime Aide</h3>
+        <p>Request electrical installation, repair or maintenance from certified technicians.</p>
+        <span class="eco-card-link">Request Service <i class="fas fa-arrow-right"></i></span>
+      </a>
+    </div>
+  </section>
+
   <!-- ABOUT (Home) -->
   <section class="about-home" id="about-preview">
     <div class="about-home-grid">
