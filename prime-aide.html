@@ -965,7 +965,7 @@
 </nav>
 
 <!-- PRIME AIDE HERO -->
-<section class="ad-hero">
+<section class="ad-hero" id="prime-aide-hero">
   <div class="ad-hero-inner">
     <div class="section-badge dark"><span class="dot"></span> JTES · Prime Aide</div>
     <h1>Electrical <span>Installation</span> &amp; Appliance Repair</h1>
@@ -1114,7 +1114,7 @@
 </section>
 
 <!-- NEWSLETTER -->
-<div class="newsletter-section">
+<div class="newsletter-section" id="newsletter-preview">
   <div class="nl-inner">
     <div class="nl-icon-wrap"><i class="fas fa-envelope-open-text"></i></div>
     <h2>Stay Ahead with <span>JTES</span></h2>
@@ -1811,6 +1811,548 @@ async function lookupRequest() {
   btn.disabled = false;
   btn.innerHTML = '<i class="fas fa-search"></i> Track';
 }
+</script>
+
+<script>
+// ═══════════════════════════════════════════
+//  PRIME AIDE PAGE CONTENT + VISUAL EDIT MODE (?edit=1)
+//  Same pattern as index.html/about.html/contact.html: siteContent/prime-aide
+//  drives rendering (data null → keep hardcoded HTML for visitors), every
+//  bound element carries data-cms-path/data-cms-mode, edit mode makes text/
+//  images directly clickable and checklist/perk lists add/remove-able.
+//  The hero here is a single static section (not a carousel like the other
+//  pages), so it gets its own simple render function instead of the
+//  slide-array pattern. The 5 "Get Started"/"Request Service" buttons keep
+//  their onclick wiring to the request modal and are left out of CMS
+//  editing — only their surrounding content (heading/body/checklist/image)
+//  is editable, since those buttons' destinations are functional, not
+//  content.
+// ═══════════════════════════════════════════
+var CMS_FB_URL = 'https://jtes-website-default-rtdb.firebaseio.com';
+var pageContentDraft = null;
+function cmsText(v) { return v == null ? '' : v; }
+function cmsSetVisible(el, visible) { if (el) el.style.display = (visible === false) ? 'none' : ''; }
+function isEditMode() { return new URLSearchParams(window.location.search).get('edit') === '1'; }
+
+var SVC_DETAIL_KEYS = ['stem', 'rd', 'electrical', 'iot', 'curriculum', 'components'];
+
+var PRIMEAIDE_DEFAULTS = {
+  sectionOrder: ['hero', 'stem', 'rd', 'electrical', 'iot', 'curriculum', 'components', 'newsletter'],
+  sections: {
+    hero: {
+      visible: true, badge: 'JTES · Prime Aide',
+      headingHtml: 'Electrical <span>Installation</span> & Appliance Repair',
+      body: 'Fast, certified electrical help for homes and businesses — installations, repairs, panel upgrades and emergency call-outs, done right the first time.'
+    },
+    stem: {
+      visible: true, icon: 'fas fa-graduation-cap', headingHtml: 'STEM, STEAM & Robotics Education',
+      body: 'Comprehensive hands-on learning programs that equip students and professionals with practical technology skills aligned with industry demands and global standards.',
+      checklist: ['Robotics workshops', 'Arduino & programming', 'Electronics fundamentals', 'Project-based learning', 'Competition training', 'School STEM programs'],
+      image: 'https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000224939.jpg'
+    },
+    rd: {
+      visible: true, icon: 'fas fa-microchip', headingHtml: 'Research & Product Development',
+      body: 'Custom hardware and software solutions developed through rigorous research methodologies and innovative engineering approaches.',
+      checklist: ['Prototype development', 'Product design & engineering', 'PCB design & fabrication', 'Firmware development', 'Testing & validation', 'Documentation & training'],
+      image: 'https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000224876.jpg'
+    },
+    electrical: {
+      visible: true, icon: 'fas fa-bolt', headingHtml: 'Electrical & Electronics Services',
+      body: 'Professional electrical services including installations, maintenance, repairs, electronics system design, troubleshooting, testing and safety compliance checks.',
+      checklist: ['Electrical installations', 'Panel upgrades & maintenance', 'Wiring & rewiring', 'Safety inspections', 'Emergency repairs', 'Industrial electrical work'],
+      image: 'https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000224884.jpg'
+    },
+    iot: {
+      visible: true, icon: 'fas fa-wifi', headingHtml: 'IoT & Smart Automation',
+      body: 'We design and integrate smart home automation, smart security systems, energy management solutions and smart agriculture/monitoring systems — custom solutions for homes, offices, schools and industries.',
+      checklist: ['Smart home automation systems', 'Smart security systems', 'Energy management solutions', 'Smart agriculture & monitoring', 'Industrial IoT systems', 'Custom solutions for homes, offices & schools'],
+      image: 'https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000224942.jpg'
+    },
+    curriculum: {
+      visible: true, icon: 'fas fa-book-open', headingHtml: 'Curriculum Development & Consulting',
+      body: 'We collaborate with schools, academies and training institutions to develop custom technology curricula aligned with school culture, teaching style and local and international standards.',
+      checklist: ['Custom STEM curriculum design', 'Teacher training & capacity building', 'Assessment frameworks', 'Learning resource development', 'Program evaluation', 'Alignment with local & international standards'],
+      image: 'https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000226843.jpg'
+    },
+    components: {
+      visible: true, icon: 'fas fa-shopping-bag', headingHtml: 'Sales of Electrical & Electronics Components',
+      body: 'We supply quality electrical components, electronic components, robotics kits, sensors, modules, controllers and STEM learning kits — for schools, companies and research projects at competitive prices.',
+      checklist: ['Microcontrollers & boards', 'Sensors & modules', 'Electronic components', 'Tools & equipment', 'Kits & starter packs', 'Industrial components'],
+      image: 'https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000224946.jpg'
+    },
+    newsletter: {
+      visible: true, headingHtml: 'Stay Ahead with <span>JTES</span>',
+      body: "Join our exclusive community. Get event invites, new blog posts, STEM breakthroughs and tech insights from Ghana's leading technology team — straight to your inbox.",
+      perks: [
+        { icon: 'fas fa-calendar-star', label: 'Exclusive Events' },
+        { icon: 'fas fa-newspaper', label: 'Latest Articles' },
+        { icon: 'fas fa-bolt', label: 'Tech Insights' },
+        { icon: 'fas fa-trophy', label: 'STEM News' }
+      ],
+      fineprint: '🔒 Zero spam. Unsubscribe with one click, anytime.'
+    }
+  }
+};
+
+function applyPageContent(data) {
+  var s = data.sections || {};
+  if (s.hero) renderPrimeAideHero(s.hero);
+  SVC_DETAIL_KEYS.forEach(function(key) { if (s[key]) renderSvcDetail(key, s[key]); });
+  if (s.newsletter) renderSvcNewsletter(s.newsletter);
+  if (data.sectionOrder) reorderPageSections(data.sectionOrder, CMS_SECTION_ID_MAP);
+}
+
+async function loadPageContent() {
+  try {
+    var res = await fetch(CMS_FB_URL + '/siteContent/prime-aide.json');
+    var data = await res.json();
+    if (!data) {
+      if (isEditMode()) { pageContentDraft = JSON.parse(JSON.stringify(PRIMEAIDE_DEFAULTS)); applyPageContent(pageContentDraft); }
+      return;
+    }
+    pageContentDraft = data;
+    applyPageContent(data);
+  } catch (e) {
+    console.error('Failed to load Prime Aide page content, keeping built-in defaults:', e);
+    if (isEditMode()) { pageContentDraft = JSON.parse(JSON.stringify(PRIMEAIDE_DEFAULTS)); applyPageContent(pageContentDraft); }
+  }
+}
+
+function renderPrimeAideHero(hero) {
+  var section = document.getElementById(CMS_SECTION_ID_MAP.hero);
+  if (!section) return;
+  cmsSetVisible(section, hero.visible);
+  if (hero.visible === false) return;
+  var badgeWrap = section.querySelector('.section-badge');
+  if (badgeWrap) badgeWrap.innerHTML = '<span class="dot"></span> <span data-cms-path="sections.hero.badge">' + cmsText(hero.badge) + '</span>';
+  var heading = section.querySelector('h1');
+  if (heading) { heading.innerHTML = cmsText(hero.headingHtml); heading.setAttribute('data-cms-path', 'sections.hero.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
+  var body = section.querySelector('.ad-hero-inner > p');
+  if (body) { body.textContent = cmsText(hero.body); body.setAttribute('data-cms-path', 'sections.hero.body'); }
+}
+
+function renderSvcDetail(key, s) {
+  var section = document.getElementById(CMS_SECTION_ID_MAP[key]);
+  if (!section) return;
+  cmsSetVisible(section, s.visible);
+  if (s.visible === false) return;
+  var iconEl = section.querySelector('.svc-icon-box i');
+  if (iconEl && s.icon) iconEl.className = s.icon;
+  var heading = section.querySelector('.svc-text h2');
+  if (heading) { heading.innerHTML = cmsText(s.headingHtml); heading.setAttribute('data-cms-path', 'sections.' + key + '.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
+  var body = section.querySelector('.svc-text > p');
+  if (body) { body.textContent = cmsText(s.body); body.setAttribute('data-cms-path', 'sections.' + key + '.body'); }
+  var checklistWrap = section.querySelector('.svc-checklist');
+  if (checklistWrap && s.checklist) {
+    checklistWrap.innerHTML = s.checklist.map(function(item, i) {
+      return '<div class="svc-check-item"><i class="fas fa-check-circle"></i> <span data-cms-path="sections.' + key + '.checklist[' + i + ']">' + cmsText(item) + '</span></div>';
+    }).join('');
+  }
+  var img = section.querySelector('.svc-img-box img');
+  if (img) { if (s.image) img.src = s.image; img.setAttribute('data-cms-path', 'sections.' + key + '.image'); }
+}
+
+function renderSvcNewsletter(s) {
+  var section = document.getElementById('newsletter-preview');
+  cmsSetVisible(section, s.visible);
+  if (s.visible === false) return;
+  var heading = section.querySelector('h2');
+  if (heading) { heading.innerHTML = cmsText(s.headingHtml); heading.setAttribute('data-cms-path', 'sections.newsletter.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
+  var body = section.querySelector('.nl-inner > p');
+  if (body) { body.textContent = cmsText(s.body); body.setAttribute('data-cms-path', 'sections.newsletter.body'); }
+  var perksWrap = section.querySelector('.nl-perks');
+  if (perksWrap && s.perks) {
+    perksWrap.innerHTML = s.perks.map(function(p, i) {
+      return '<div class="nl-perk"><i class="' + cmsText(p.icon) + '"></i> <span data-cms-path="sections.newsletter.perks[' + i + '].label">' + cmsText(p.label) + '</span></div>';
+    }).join('');
+  }
+  var fine = section.querySelector('.nl-fine');
+  if (fine) { if (s.fineprint) fine.textContent = s.fineprint; fine.setAttribute('data-cms-path', 'sections.newsletter.fineprint'); }
+}
+
+function reorderPageSections(order, idMap) {
+  var footer = document.querySelector('footer');
+  if (!footer) return;
+  order.forEach(function(key) {
+    var id = idMap[key];
+    var el = id && document.getElementById(id);
+    if (el) footer.parentNode.insertBefore(el, footer);
+  });
+}
+
+// ═══════════════════════════════════════════
+//  VISUAL EDIT MODE — generic engine, identical to index.html's/about.html's.
+// ═══════════════════════════════════════════
+var CMS_CLD_CLOUD = 'dx8ziypwz';
+var CMS_CLD_PRESET = 'JASSAN';
+var cmsDirty = false;
+
+var CMS_SECTION_ID_MAP = {
+  hero: 'prime-aide-hero', stem: 'svc-stem', rd: 'svc-rd', electrical: 'svc-electrical',
+  iot: 'svc-iot', curriculum: 'svc-curriculum', components: 'svc-components', newsletter: 'newsletter-preview'
+};
+var CMS_SECTION_LABELS = {
+  hero: 'Hero', stem: 'STEM & Robotics', rd: 'Research & Development', electrical: 'Electrical Services',
+  iot: 'IoT & Automation', curriculum: 'Curriculum Development', components: 'Component Sales', newsletter: 'Newsletter'
+};
+var CMS_TEMPLATES = {
+  checklistItem: 'New checklist item',
+  perk: { icon: 'fas fa-star', label: 'New Perk' }
+};
+
+function cmsGetByPath(obj, path) {
+  var parts = path.replace(/\[(\d+)\]/g, '.$1').split('.');
+  var cur = obj;
+  for (var i = 0; i < parts.length; i++) { if (cur == null) return undefined; cur = cur[parts[i]]; }
+  return cur;
+}
+function cmsSetByPath(obj, path, value) {
+  var parts = path.replace(/\[(\d+)\]/g, '.$1').split('.');
+  var cur = obj;
+  for (var i = 0; i < parts.length - 1; i++) {
+    var key = parts[i];
+    if (cur[key] == null) cur[key] = /^\d+$/.test(parts[i + 1]) ? [] : {};
+    cur = cur[key];
+  }
+  cur[parts[parts.length - 1]] = value;
+}
+function markDirty() {
+  cmsDirty = true;
+  var el = document.getElementById('cms-dirty-indicator');
+  if (el) el.style.display = 'inline';
+}
+function injectEditModeStyles() {
+  var style = document.createElement('style');
+  style.textContent =
+    '.cms-editable-text{outline:2px dashed transparent;outline-offset:3px;cursor:text;transition:outline-color .15s,background-color .15s;border-radius:4px;}' +
+    '.cms-editable-text:hover{outline-color:rgba(37,99,235,0.55);}' +
+    '.cms-editable-text.cms-focused{outline-color:#2563EB;outline-style:solid;background-color:rgba(37,99,235,0.06);}' +
+    '.cms-image-edit-btn{opacity:0.92;}.cms-image-edit-btn:hover{background:#2563EB !important;opacity:1;}' +
+    '.cms-section-toolbar button:hover{color:#3B82F6;}';
+  document.head.appendChild(style);
+}
+function enableTextEditing(root) {
+  (root || document).querySelectorAll('[data-cms-path]').forEach(function(el) {
+    if (el.tagName === 'IMG' || el.getAttribute('data-cms-mode') === 'bgimage') return;
+    if (el.closest('a[data-cms-href-path]')) return; // handled by the link editor popover instead
+    if (el.classList.contains('cms-editable-text')) return;
+    el.contentEditable = 'true';
+    el.spellcheck = false;
+    el.classList.add('cms-editable-text');
+    el.addEventListener('focus', function() { el.classList.add('cms-focused'); });
+    el.addEventListener('blur', function() {
+      el.classList.remove('cms-focused');
+      var path = el.getAttribute('data-cms-path');
+      var mode = el.getAttribute('data-cms-mode');
+      var value = mode === 'html' ? el.innerHTML : el.textContent;
+      cmsSetByPath(pageContentDraft, path, value);
+      markDirty();
+    });
+    if (el.tagName !== 'P') {
+      el.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } });
+    }
+  });
+}
+function cmsShowToast(msg) {
+  var el = document.createElement('div');
+  el.style.cssText = 'position:fixed;top:80px;right:20px;z-index:10000;background:#0A0F1E;color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;font-family:Manrope,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,0.3);';
+  el.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + msg;
+  document.body.appendChild(el);
+  return el;
+}
+function cmsResolveToast(el, msg, success) {
+  el.innerHTML = '<i class="fas fa-' + (success ? 'check-circle' : 'exclamation-circle') + '"></i> ' + msg;
+  el.style.background = success ? '#16a34a' : '#dc2626';
+  setTimeout(function() { el.remove(); }, 2500);
+}
+async function cmsUploadImage(file) {
+  var fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CMS_CLD_PRESET);
+  var res = await fetch('https://api.cloudinary.com/v1_1/' + CMS_CLD_CLOUD + '/upload', { method: 'POST', body: fd });
+  var data = await res.json();
+  if (!data.secure_url) throw new Error('Upload did not return a URL');
+  return data.secure_url;
+}
+function cmsPickImage(el) {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async function() {
+    if (!input.files[0]) return;
+    var toast = cmsShowToast('Uploading image…');
+    try {
+      var url = await cmsUploadImage(input.files[0]);
+      var path = el.getAttribute('data-cms-path');
+      var mode = el.getAttribute('data-cms-mode');
+      cmsSetByPath(pageContentDraft, path, url);
+      if (mode === 'bgimage') { el.style.backgroundImage = "url('" + url + "')"; }
+      else { el.src = url; }
+      markDirty();
+      cmsResolveToast(toast, 'Image updated', true);
+    } catch (e) {
+      console.error(e);
+      cmsResolveToast(toast, 'Upload failed', false);
+    }
+  };
+  input.click();
+}
+function enableImageEditing(root) {
+  (root || document).querySelectorAll('[data-cms-path]').forEach(function(el) {
+    var isImg = el.tagName === 'IMG';
+    var isBg  = el.getAttribute('data-cms-mode') === 'bgimage';
+    if (!isImg && !isBg) return;
+    var posEl = isImg ? el.parentElement : el;
+    if (!posEl || posEl.querySelector('.cms-image-edit-btn')) return;
+    if (getComputedStyle(posEl).position === 'static') posEl.style.position = 'relative';
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'cms-image-edit-btn';
+    btn.innerHTML = '<i class="fas fa-camera"></i> Change Image';
+    btn.style.cssText = 'position:absolute;left:8px;bottom:8px;z-index:5;background:rgba(10,15,30,0.85);color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:Manrope,sans-serif;';
+    btn.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); cmsPickImage(el); });
+    posEl.appendChild(btn);
+  });
+}
+function cmsEnableListEditing(containerSelector, sectionKey, listKey, cardSelector, templateKey, addLabel, rerenderFn) {
+  var container = document.querySelector(containerSelector);
+  if (!container) return;
+  container.querySelectorAll(cardSelector).forEach(function(card, i) {
+    if (getComputedStyle(card).position === 'static') card.style.position = 'relative';
+    var rm = document.createElement('button');
+    rm.type = 'button';
+    rm.title = 'Remove';
+    rm.innerHTML = '<i class="fas fa-times"></i>';
+    rm.style.cssText = 'position:absolute;top:-10px;right:-10px;z-index:6;width:26px;height:26px;border-radius:50%;background:#dc2626;color:#fff;border:2px solid #fff;cursor:pointer;font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,0.25);';
+    rm.addEventListener('click', function(e) {
+      e.preventDefault(); e.stopPropagation();
+      if (!confirm('Remove this?')) return;
+      pageContentDraft.sections[sectionKey][listKey].splice(i, 1);
+      markDirty();
+      rerenderFn();
+    });
+    card.appendChild(rm);
+  });
+  var addBtn = document.createElement('button');
+  addBtn.type = 'button';
+  addBtn.innerHTML = '<i class="fas fa-plus"></i> ' + addLabel;
+  addBtn.style.cssText = 'display:inline-flex;align-items:center;gap:8px;background:#eff6ff;color:#2563EB;border:2px dashed #2563EB;border-radius:12px;padding:14px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;margin-top:14px;';
+  addBtn.addEventListener('click', function() {
+    pageContentDraft.sections[sectionKey][listKey].push(JSON.parse(JSON.stringify(CMS_TEMPLATES[templateKey])));
+    markDirty();
+    rerenderFn();
+  });
+  container.appendChild(addBtn);
+}
+function cmsForceVisibleInEditMode() {
+  Object.keys(CMS_SECTION_ID_MAP).forEach(function(key) {
+    var el = document.getElementById(CMS_SECTION_ID_MAP[key]);
+    if (!el) return;
+    var hidden = pageContentDraft.sections[key] && pageContentDraft.sections[key].visible === false;
+    el.style.display = '';
+    el.style.opacity = hidden ? '0.35' : '';
+    el.style.outline = hidden ? '3px dashed #ef4444' : '';
+    el.style.outlineOffset = hidden ? '-3px' : '';
+  });
+}
+function cmsMoveSection(key, dir) {
+  var order = pageContentDraft.sectionOrder;
+  var idx = order.indexOf(key);
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= order.length) return;
+  var tmp = order[idx]; order[idx] = order[newIdx]; order[newIdx] = tmp;
+  reorderPageSections(order, CMS_SECTION_ID_MAP);
+  markDirty();
+}
+function cmsToggleSectionVisible(key) {
+  var section = pageContentDraft.sections[key];
+  section.visible = section.visible === false ? true : false;
+  cmsForceVisibleInEditMode();
+  markDirty();
+}
+function enableSectionControls() {
+  (pageContentDraft.sectionOrder || Object.keys(CMS_SECTION_ID_MAP)).forEach(function(key) {
+    var el = document.getElementById(CMS_SECTION_ID_MAP[key]);
+    if (!el) return;
+    var bar = document.createElement('div');
+    bar.className = 'cms-section-toolbar';
+    bar.style.cssText = 'display:flex;align-items:center;gap:10px;background:#0A0F1E;color:#fff;padding:8px 16px;font-size:12px;font-weight:700;font-family:Manrope,sans-serif;';
+    bar.innerHTML =
+      '<span><i class="fas fa-grip-lines"></i> ' + CMS_SECTION_LABELS[key] + ' section</span>' +
+      '<button type="button" data-act="up" title="Move section up" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px 6px;"><i class="fas fa-arrow-up"></i> Move Up</button>' +
+      '<button type="button" data-act="down" title="Move section down" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px 6px;"><i class="fas fa-arrow-down"></i> Move Down</button>' +
+      '<button type="button" data-act="hide" title="Show or hide this section" style="background:none;border:none;color:#fff;cursor:pointer;padding:2px 6px;"><i class="fas fa-eye-slash"></i> Show/Hide</button>';
+    bar.querySelector('[data-act="up"]').onclick = function() { cmsMoveSection(key, -1); };
+    bar.querySelector('[data-act="down"]').onclick = function() { cmsMoveSection(key, 1); };
+    bar.querySelector('[data-act="hide"]').onclick = function() { cmsToggleSectionVisible(key); };
+    el.insertBefore(bar, el.firstChild);
+  });
+}
+function cmsRefreshHero() {
+  renderPrimeAideHero(pageContentDraft.sections.hero);
+  var root = document.getElementById(CMS_SECTION_ID_MAP.hero);
+  enableTextEditing(root);
+  enableImageEditing(root);
+}
+function cmsRefreshSvcDetail(key) {
+  renderSvcDetail(key, pageContentDraft.sections[key]);
+  var root = document.getElementById(CMS_SECTION_ID_MAP[key]);
+  enableTextEditing(root); enableImageEditing(root);
+  cmsEnableListEditing('#' + CMS_SECTION_ID_MAP[key] + ' .svc-checklist', key, 'checklist', '.svc-check-item', 'checklistItem', 'Add Item', function() { cmsRefreshSvcDetail(key); });
+}
+function cmsRefreshNewsletter() {
+  renderSvcNewsletter(pageContentDraft.sections.newsletter);
+  var root = document.getElementById('newsletter-preview');
+  enableTextEditing(root); enableImageEditing(root);
+  cmsEnableListEditing('.nl-perks', 'newsletter', 'perks', '.nl-perk', 'perk', 'Add Perk', cmsRefreshNewsletter);
+}
+function buildEditModeChrome() {
+  var bar = document.createElement('div');
+  bar.id = 'cms-edit-bar';
+  bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#0A0F1E;color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 -4px 20px rgba(0,0,0,0.3);font-family:Manrope,sans-serif;';
+  bar.innerHTML =
+    '<div style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;"><i class="fas fa-pen" style="color:#3B82F6;"></i> Editing this page — click any text or image to change it.' +
+    '<span id="cms-dirty-indicator" style="display:none;color:#f59e0b;">● Unsaved changes</span></div>' +
+    '<div style="display:flex;gap:10px;">' +
+      '<button type="button" id="cms-exit-btn" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:8px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;font-family:Manrope,sans-serif;">Exit</button>' +
+      '<button type="button" id="cms-save-btn" style="background:#2563EB;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;"><i class="fas fa-save"></i> Save Changes</button>' +
+    '</div>';
+  document.body.appendChild(bar);
+  document.body.style.paddingBottom = '76px';
+  document.getElementById('cms-exit-btn').onclick = function() {
+    if (cmsDirty && !confirm('Discard unsaved changes?')) return;
+    window.location.href = window.location.pathname;
+  };
+  document.getElementById('cms-save-btn').onclick = cmsSavePageContent;
+}
+async function cmsSavePageContent() {
+  var btn = document.getElementById('cms-save-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+  try {
+    var res = await fetch(CMS_FB_URL + '/siteContent/prime-aide.json', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pageContentDraft)
+    });
+    if (!res.ok) throw new Error('Save failed with status ' + res.status);
+    cmsDirty = false;
+    var dirtyEl = document.getElementById('cms-dirty-indicator');
+    if (dirtyEl) dirtyEl.style.display = 'none';
+    btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+    setTimeout(function() { btn.innerHTML = '<i class="fas fa-save"></i> Save Changes'; btn.disabled = false; }, 1800);
+  } catch (e) {
+    console.error(e);
+    btn.innerHTML = '<i class="fas fa-exclamation-circle"></i> Save failed — try again';
+    btn.disabled = false;
+    setTimeout(function() { btn.innerHTML = '<i class="fas fa-save"></i> Save Changes'; }, 2200);
+  }
+}
+// ── LINK EDITOR: buttons/links become inert in edit mode; content
+// buttons (tagged data-cms-href-path) open a rename + destination
+// popover instead of navigating away and losing unsaved edits. ──
+var CMS_SITE_PAGES = [
+  { label: 'Home', href: 'index.html' },
+  { label: 'About', href: 'about.html' },
+  { label: 'Prime Aide', href: 'prime-aide.html' },
+  { label: 'Prime Aide — STEM & Robotics', href: 'prime-aide.html#svc-stem' },
+  { label: 'Prime Aide — Research & Development', href: 'prime-aide.html#svc-rd' },
+  { label: 'Prime Aide — Electrical Services', href: 'prime-aide.html#svc-electrical' },
+  { label: 'Prime Aide — IoT & Automation', href: 'prime-aide.html#svc-iot' },
+  { label: 'Prime Aide — Curriculum Development', href: 'prime-aide.html#svc-curriculum' },
+  { label: 'Prime Aide — Component Sales', href: 'prime-aide.html#svc-components' },
+  { label: 'Contact', href: 'contact.html' },
+  { label: 'Animation-Dot', href: 'gallery.html' },
+  { label: 'Project Space', href: 'projects.html' },
+  { label: 'My Store', href: 'sales.html' },
+  { label: 'Blog', href: 'blog.html' },
+  { label: 'Portal', href: 'portal.html' }
+];
+function cmsInstallLinkGuard() {
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.nav-logo')) { e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); return; }
+    var a = e.target.closest('a[href]');
+    if (!a) return;
+    if (a.closest('#cms-edit-bar, #cms-auth-overlay, #cms-link-editor-overlay')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var hrefPath = a.getAttribute('data-cms-href-path');
+    if (hrefPath) cmsOpenLinkEditor(a, hrefPath);
+  }, true);
+}
+function cmsOpenLinkEditor(a, hrefPath) {
+  var labelEl = a.querySelector('[data-cms-path]');
+  var labelPath = labelEl ? labelEl.getAttribute('data-cms-path') : null;
+  var currentLabel = labelEl ? labelEl.textContent : '';
+  var currentHref = cmsGetByPath(pageContentDraft, hrefPath) || a.getAttribute('href') || '';
+  var matchedPage = CMS_SITE_PAGES.filter(function(p) { return p.href === currentHref; })[0];
+
+  var overlay = document.createElement('div');
+  overlay.id = 'cms-link-editor-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10002;background:rgba(10,15,30,0.55);display:flex;align-items:center;justify-content:center;padding:20px;';
+  var pageOptionsHtml = CMS_SITE_PAGES.map(function(p) {
+    return '<option value="' + p.href + '"' + (p.href === currentHref ? ' selected' : '') + '>' + p.label + '</option>';
+  }).join('');
+  overlay.innerHTML =
+    '<div style="background:#fff;border-radius:18px;padding:32px;max-width:420px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.35);font-family:Manrope,sans-serif;">' +
+      '<h3 style="font-size:18px;font-weight:900;color:#0F172A;margin-bottom:18px;"><i class="fas fa-link" style="color:#2563EB;"></i> Edit Button</h3>' +
+      (labelPath ? '<label style="display:block;font-size:13px;font-weight:700;color:#334155;margin-bottom:6px;">Button text</label>' +
+        '<input type="text" id="cms-link-label" value="' + String(currentLabel).replace(/"/g, '&quot;') + '" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14px;margin-bottom:16px;box-sizing:border-box;font-family:Manrope,sans-serif;">' : '') +
+      '<label style="display:block;font-size:13px;font-weight:700;color:#334155;margin-bottom:6px;">Goes to</label>' +
+      '<select id="cms-link-page-select" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14px;margin-bottom:12px;box-sizing:border-box;font-family:Manrope,sans-serif;">' +
+        pageOptionsHtml + '<option value="__custom__"' + (matchedPage ? '' : ' selected') + '>Custom URL…</option>' +
+      '</select>' +
+      '<input type="text" id="cms-link-custom-url" placeholder="https:// or a page like prime-aide.html#svc-stem" value="' + (matchedPage ? '' : String(currentHref).replace(/"/g, '&quot;')) + '" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14px;margin-bottom:20px;box-sizing:border-box;font-family:Manrope,sans-serif;display:' + (matchedPage ? 'none' : 'block') + ';">' +
+      '<div style="display:flex;gap:10px;justify-content:flex-end;">' +
+        '<button type="button" id="cms-link-cancel" style="background:#f1f5f9;color:#334155;border:none;border-radius:9px;padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Cancel</button>' +
+        '<button type="button" id="cms-link-save" style="background:#2563EB;color:#fff;border:none;border-radius:9px;padding:11px 22px;font-size:14px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Save</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+
+  var select = document.getElementById('cms-link-page-select');
+  var customInput = document.getElementById('cms-link-custom-url');
+  select.addEventListener('change', function() {
+    customInput.style.display = select.value === '__custom__' ? 'block' : 'none';
+  });
+  document.getElementById('cms-link-cancel').onclick = function() { overlay.remove(); };
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  document.getElementById('cms-link-save').onclick = function() {
+    var newHref = select.value === '__custom__' ? customInput.value.trim() : select.value;
+    if (!newHref) { customInput.focus(); return; }
+    cmsSetByPath(pageContentDraft, hrefPath, newHref);
+    a.setAttribute('href', newHref);
+    if (labelPath) {
+      var newLabel = document.getElementById('cms-link-label').value;
+      cmsSetByPath(pageContentDraft, labelPath, newLabel);
+      if (labelEl) labelEl.textContent = newLabel;
+    }
+    markDirty();
+    overlay.remove();
+  };
+}
+
+function startEditMode() {
+  if (!pageContentDraft) return;
+  injectEditModeStyles();
+  buildEditModeChrome();
+  enableTextEditing();
+  enableImageEditing();
+  enableSectionControls();
+  cmsForceVisibleInEditMode();
+  cmsInstallLinkGuard();
+  SVC_DETAIL_KEYS.forEach(function(key) {
+    cmsEnableListEditing('#' + CMS_SECTION_ID_MAP[key] + ' .svc-checklist', key, 'checklist', '.svc-check-item', 'checklistItem', 'Add Item', function() { cmsRefreshSvcDetail(key); });
+  });
+  cmsEnableListEditing('.nl-perks', 'newsletter', 'perks', '.nl-perk', 'perk', 'Add Perk', cmsRefreshNewsletter);
+}
+function initEditModeIfRequested() {
+  if (!isEditMode()) return;
+  startEditMode();
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadPageContent();
+  initEditModeIfRequested();
+});
 </script>
 
 </body>
