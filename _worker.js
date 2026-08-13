@@ -14,7 +14,16 @@
 //   POST /api/drive-share   — set an existing Drive file to "anyone with link can view"
 //   POST /api/place-order   — validate cart stock server-side, decrement it, and write
 //                             the order — sales.html no longer writes orders to Firebase
-//                             directly
+//                             directly. Used for the Cash on Delivery payment method.
+//   POST /api/paystack-prepare — validates the cart the same way, stashes a pending
+//                             order under a fresh reference (stock is NOT touched yet),
+//                             and returns the trusted amount for the Paystack popup to
+//                             charge. Used for the "Pay Now" payment method.
+//   POST /api/paystack-verify  — confirms the transaction with Paystack itself (never
+//                             trusts the client's "it succeeded" claim), then completes
+//                             the same stock-decrement + order-write flow as Cash on
+//                             Delivery, using the pending order stashed by
+//                             /api/paystack-prepare rather than anything in this request.
 //
 // ── ONE-TIME SETUP ──
 //
@@ -48,6 +57,15 @@
 //                                      determined attacker reading the page source.
 //                                      Real protection requires a real backend;
 //                                      see the platform rebuild plan.)
+//      PAYSTACK_SECRET_KEY           (type: Secret — required for online store
+//                                      checkout. From the Paystack dashboard
+//                                      (Settings → API Keys & Webhooks). Starts
+//                                      with sk_test_ or sk_live_. NEVER put this
+//                                      in wrangler.jsonc or any file that ships
+//                                      to the browser — sales.html only ever
+//                                      gets the separate *public* key, which is
+//                                      safe to expose. Set with:
+//                                        wrangler secret put PAYSTACK_SECRET_KEY)
 //
 // 3. wrangler.jsonc (in this same repo root) tells Cloudflare to use this file as
 //    the Worker's entry point and to serve everything else as static assets.
@@ -86,6 +104,8 @@ const ADMIN_ORIGIN = 'https://jtes-admin.jassan.workers.dev';
 // client-side trust.
 const STORE_DB_URL = 'https://jtes-website-default-rtdb.firebaseio.com';
 
+const PAYSTACK_API = 'https://api.paystack.co';
+
 const DRIVE_API_PATHS = ['/api/drive-upload', '/api/drive-list', '/api/drive-share'];
 
 function corsHeaders() {
@@ -120,6 +140,12 @@ export default {
     }
     if (url.pathname === '/api/place-order' && request.method === 'POST') {
       return handlePlaceOrder(request, env);
+    }
+    if (url.pathname === '/api/paystack-prepare' && request.method === 'POST') {
+      return handlePaystackPrepare(request, env);
+    }
+    if (url.pathname === '/api/paystack-verify' && request.method === 'POST') {
+      return handlePaystackVerify(request, env);
     }
     if (url.pathname === '/api/debug-composio' && request.method === 'GET') {
       return handleDebugComposio(request, env);
@@ -167,9 +193,29 @@ async function handlePlaceOrder(request, env) {
   if (!phone)   return jsonResponse({ error: 'Phone number is required.' }, 400);
   if (!address) return jsonResponse({ error: 'Delivery address is required.' }, 400);
   if (!items.length) return jsonResponse({ error: 'Cart is empty.' }, 400);
+
+  const validation = await validateCartAgainstCatalog(items);
+  if (validation.error) return jsonResponse(validation.error, validation.status);
+
+  const result = await reserveStockAndWriteOrder(validation.items, validation.products, {
+    name: name, phone: phone, email: email, address: address,
+    region: region, payment: payment, notes: notes, paymentStatus: 'Unpaid'
+  });
+  if (result.error) return jsonResponse(result.error, result.status);
+
+  return jsonResponse({ order: result.order });
+}
+
+// Shared by /api/place-order, /api/paystack-prepare and /api/paystack-verify:
+// checks each cart item against the product's current `stock` field
+// (products with no stock value are treated as unlimited, matching
+// sales.html's own "In stock" display logic), and always trusts the
+// catalog's price over whatever the client sent — a tampered request could
+// otherwise submit a real product at a fabricated price.
+async function validateCartAgainstCatalog(items) {
   for (const it of items) {
     if (!it || !it.id || !it.name || typeof it.price !== 'number' || !(it.qty > 0)) {
-      return jsonResponse({ error: 'Cart contains an invalid item — please refresh and try again.' }, 400);
+      return { error: { error: 'Cart contains an invalid item — please refresh and try again.' }, status: 400 };
     }
   }
 
@@ -179,29 +225,41 @@ async function handlePlaceOrder(request, env) {
     const val = await res.json();
     products = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
   } catch (err) {
-    return jsonResponse({ error: 'Could not check product availability. Please try again.' }, 502);
+    return { error: { error: 'Could not check product availability. Please try again.' }, status: 502 };
   }
 
   const productById = {};
   products.forEach(function(p) { if (p && p.id) productById[p.id] = p; });
 
   const issues = [];
-  items.forEach(function(it) {
+  const validatedItems = items.map(function(it) {
     const p = productById[it.id];
-    if (!p) { issues.push({ id: it.id, name: it.name, reason: 'no_longer_available' }); return; }
+    if (!p) { issues.push({ id: it.id, name: it.name, reason: 'no_longer_available' }); return it; }
     if (typeof p.stock === 'number' && p.stock < it.qty) {
       issues.push({ id: it.id, name: it.name, reason: 'insufficient_stock', available: p.stock, requested: it.qty });
     }
-    // Trust the catalog's price, not whatever the client sent — a tampered
-    // request could otherwise submit a real product at a fabricated price.
-    if (typeof p.price === 'number') it.price = p.price;
+    return Object.assign({}, it, { price: typeof p.price === 'number' ? p.price : it.price });
   });
   if (issues.length) {
-    return jsonResponse({ error: 'Some items in your cart are no longer available in the requested quantity.', issues: issues }, 409);
+    return { error: { error: 'Some items in your cart are no longer available in the requested quantity.', issues: issues }, status: 409 };
   }
 
+  const total = validatedItems.reduce(function(s, i) { return s + i.price * i.qty; }, 0);
+  return { items: validatedItems, products: products, total: total };
+}
+
+// Shared by /api/place-order and /api/paystack-verify: decrements stock for
+// the validated items and writes the final order record.
+//
+// NOTE — this is read-check-write over two plain REST calls, not a Firebase
+// transaction, so two orders racing for the last unit of the same product
+// within milliseconds of each other could both pass validation. Given this
+// project's current traffic and the fact nothing else here is transactional
+// either, that's an accepted gap, not an oversight — a real fix would need
+// Firebase's transaction/ETag support or a move off client-writable RTDB.
+async function reserveStockAndWriteOrder(validatedItems, products, orderFields) {
   const updatedProducts = products.map(function(p) {
-    const it = items.find(function(i) { return i.id === p.id; });
+    const it = validatedItems.find(function(i) { return i.id === p.id; });
     if (it && typeof p.stock === 'number') {
       return Object.assign({}, p, { stock: Math.max(0, p.stock - it.qty) });
     }
@@ -215,17 +273,15 @@ async function handlePlaceOrder(request, env) {
       body: JSON.stringify(updatedProducts)
     });
   } catch (err) {
-    return jsonResponse({ error: 'Could not reserve stock. Please try again.' }, 502);
+    return { error: { error: 'Could not reserve stock. Please try again.' }, status: 502 };
   }
 
-  const itemsText = items.map(function(i) { return i.name + ' x' + i.qty + ' = GHS ' + (i.price * i.qty).toFixed(2); }).join('; ');
-  const total = items.reduce(function(s, i) { return s + i.price * i.qty; }, 0);
-  const order = {
+  const itemsText = validatedItems.map(function(i) { return i.name + ' x' + i.qty + ' = GHS ' + (i.price * i.qty).toFixed(2); }).join('; ');
+  const total = validatedItems.reduce(function(s, i) { return s + i.price * i.qty; }, 0);
+  const order = Object.assign({
     id: 'ORD-' + Date.now(), date: new Date().toISOString(),
-    name: name, phone: phone, email: email, address: address,
-    region: region, payment: payment, notes: notes,
     items: itemsText, total: 'GHS ' + total.toFixed(2), status: 'Pending'
-  };
+  }, orderFields);
 
   try {
     await fetch(STORE_DB_URL + '/store/orders.json', {
@@ -234,10 +290,131 @@ async function handlePlaceOrder(request, env) {
       body: JSON.stringify(order)
     });
   } catch (err) {
-    return jsonResponse({ error: 'Stock was reserved but the order could not be saved. Please contact us directly.' }, 502);
+    return { error: { error: 'Stock was reserved but the order could not be saved. Please contact us directly.' }, status: 502 };
   }
 
-  return jsonResponse({ order: order });
+  return { order: order };
+}
+
+// Step 1 of the Paystack flow: validate the cart, compute a trusted total,
+// and stash it under a fresh reference in Firebase (NOT yet a real order —
+// stock isn't touched until /api/paystack-verify confirms real payment).
+// The client uses the returned amount+reference to open the Paystack popup.
+async function handlePaystackPrepare(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch (err) {
+    return jsonResponse({ error: 'Invalid request body.' }, 400);
+  }
+
+  const name    = (body.name || '').trim();
+  const phone   = (body.phone || '').trim();
+  const email   = (body.email || '').trim();
+  const address = (body.address || '').trim();
+  const region  = body.region || '';
+  const notes   = (body.notes || '').trim();
+  const items   = Array.isArray(body.items) ? body.items : [];
+
+  if (!name)    return jsonResponse({ error: 'Full name is required.' }, 400);
+  if (!phone)   return jsonResponse({ error: 'Phone number is required.' }, 400);
+  if (!email || !email.includes('@')) return jsonResponse({ error: 'A valid email is required for online payment.' }, 400);
+  if (!address) return jsonResponse({ error: 'Delivery address is required.' }, 400);
+  if (!items.length) return jsonResponse({ error: 'Cart is empty.' }, 400);
+
+  const validation = await validateCartAgainstCatalog(items);
+  if (validation.error) return jsonResponse(validation.error, validation.status);
+
+  const reference = 'PSK-' + Date.now();
+  const pending = {
+    reference: reference, name: name, phone: phone, email: email, address: address,
+    region: region, notes: notes, items: validation.items, total: validation.total,
+    createdAt: new Date().toISOString()
+  };
+
+  try {
+    await fetch(STORE_DB_URL + '/store/pendingPayments/' + reference + '.json', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pending)
+    });
+  } catch (err) {
+    return jsonResponse({ error: 'Could not start the payment session. Please try again.' }, 502);
+  }
+
+  return jsonResponse({ reference: reference, amount: Math.round(validation.total * 100), email: email });
+}
+
+// Step 2 of the Paystack flow: confirms the transaction with Paystack's own
+// API using the secret key (never trusts the client's success callback by
+// itself — that callback only tells the browser to ask us to check), checks
+// the paid amount matches what was locked in at prepare-time, then reserves
+// stock and writes the real order using the pending record's own data —
+// nothing from this request body except the reference is trusted.
+async function handlePaystackVerify(request, env) {
+  if (!env.PAYSTACK_SECRET_KEY) {
+    return jsonResponse({ error: 'Server is missing PAYSTACK_SECRET_KEY env var.' }, 500);
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch (err) {
+    return jsonResponse({ error: 'Invalid request body.' }, 400);
+  }
+  const reference = (body.reference || '').trim();
+  if (!reference) return jsonResponse({ error: 'Missing payment reference.' }, 400);
+
+  let pending;
+  try {
+    const res = await fetch(STORE_DB_URL + '/store/pendingPayments/' + reference + '.json');
+    pending = await res.json();
+  } catch (err) {
+    return jsonResponse({ error: 'Could not look up this payment session. Please contact us directly.' }, 502);
+  }
+  if (!pending) {
+    return jsonResponse({ error: 'This payment has already been processed, or the session expired. If you were charged, please contact us with your reference: ' + reference }, 409);
+  }
+
+  let verifyResult;
+  try {
+    const verifyRes = await fetch(PAYSTACK_API + '/transaction/verify/' + encodeURIComponent(reference), {
+      headers: { 'Authorization': 'Bearer ' + env.PAYSTACK_SECRET_KEY }
+    });
+    verifyResult = await verifyRes.json();
+  } catch (err) {
+    return jsonResponse({ error: 'Could not confirm payment with Paystack. Please try again.' }, 502);
+  }
+
+  const txn = verifyResult && verifyResult.data;
+  if (!verifyResult || !verifyResult.status || !txn || txn.status !== 'success') {
+    return jsonResponse({ error: 'Payment was not successful.', details: verifyResult && verifyResult.message }, 402);
+  }
+
+  const expectedPesewas = Math.round(pending.total * 100);
+  if (txn.amount !== expectedPesewas) {
+    return jsonResponse({ error: 'Payment amount does not match the order total. Please contact us with your reference: ' + reference }, 402);
+  }
+
+  // Re-check stock only (not price — the customer already paid the total
+  // that was locked in at /api/paystack-prepare time; if a listed price
+  // changed in the few minutes since, that's not the paying customer's
+  // problem to absorb after the fact).
+  const stockCheck = await validateCartAgainstCatalog(pending.items);
+  if (stockCheck.error) {
+    return jsonResponse({ error: 'Payment was confirmed, but stock changed before the order could be completed. Please contact us with your reference: ' + reference + ' — you may be due a refund.', details: stockCheck.error }, 409);
+  }
+
+  const result = await reserveStockAndWriteOrder(pending.items, stockCheck.products, {
+    name: pending.name, phone: pending.phone, email: pending.email, address: pending.address,
+    region: pending.region, payment: 'Paystack', notes: pending.notes,
+    paymentStatus: 'Paid', paymentReference: reference
+  });
+  if (result.error) return jsonResponse(result.error, result.status);
+
+  try {
+    await fetch(STORE_DB_URL + '/store/pendingPayments/' + reference + '.json', { method: 'DELETE' });
+  } catch (err) { /* order already placed; a leftover pending record is harmless */ }
+
+  return jsonResponse({ order: result.order });
 }
 
 async function handleDriveUpload(request, env) {

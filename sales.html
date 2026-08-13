@@ -1064,6 +1064,7 @@
     .modal-box { padding: 40px 24px 32px; }
   }
 </style>
+<script src="https://js.paystack.co/v1/inline.js"></script>
 </head>
 <body>
 
@@ -1484,28 +1485,10 @@
           <div class="order-section-label"><i class="fas fa-credit-card" style="font-size:10px;"></i>&nbsp; Payment Method</div>
           <select id="ord-payment" style="display:none;"></select>
           <div class="payment-methods" id="paymentMethodCards">
-            <label class="payment-method-card selected" onclick="selectPayment(this,'Mobile Money (MTN)')">
-              <input type="radio" name="payment" value="mtn" checked>
-              <div class="payment-method-icon"><i class="fas fa-mobile-alt"></i></div>
-              <div class="payment-method-label">MTN MoMo</div>
-              <div class="payment-method-check"><i class="fas fa-check"></i></div>
-            </label>
-            <label class="payment-method-card" onclick="selectPayment(this,'Mobile Money (Vodafone)')">
-              <input type="radio" name="payment" value="vodafone">
-              <div class="payment-method-icon"><i class="fas fa-mobile-alt"></i></div>
-              <div class="payment-method-label">Vodafone Cash</div>
-              <div class="payment-method-check"><i class="fas fa-check"></i></div>
-            </label>
-            <label class="payment-method-card" onclick="selectPayment(this,'Mobile Money (AirtelTigo)')">
-              <input type="radio" name="payment" value="airteltigo">
-              <div class="payment-method-icon"><i class="fas fa-mobile-alt"></i></div>
-              <div class="payment-method-label">AirtelTigo Money</div>
-              <div class="payment-method-check"><i class="fas fa-check"></i></div>
-            </label>
-            <label class="payment-method-card" onclick="selectPayment(this,'Bank Transfer')">
-              <input type="radio" name="payment" value="bank">
-              <div class="payment-method-icon"><i class="fas fa-university"></i></div>
-              <div class="payment-method-label">Bank Transfer</div>
+            <label class="payment-method-card selected" onclick="selectPayment(this,'Paystack')">
+              <input type="radio" name="payment" value="paystack" checked>
+              <div class="payment-method-icon"><i class="fas fa-credit-card"></i></div>
+              <div class="payment-method-label">Pay Now<br><span style="font-weight:600;font-size:10.5px;color:inherit;opacity:0.75;">Card / MoMo / Bank</span></div>
               <div class="payment-method-check"><i class="fas fa-check"></i></div>
             </label>
             <label class="payment-method-card" onclick="selectPayment(this,'Cash on Delivery')">
@@ -1776,7 +1759,7 @@ function closeOrderModal() {
 
 
 // ===== PAYMENT METHOD CARD SELECTION =====
-var _selectedPayment = 'Mobile Money (MTN)';
+var _selectedPayment = 'Paystack';
 function selectPayment(card, method) {
   _selectedPayment = method;
   document.querySelectorAll('.payment-method-card').forEach(function(c) { c.classList.remove('selected'); });
@@ -1784,6 +1767,13 @@ function selectPayment(card, method) {
   var sel = document.getElementById('ord-payment');
   if (sel) sel.value = method;
 }
+
+// ===== PAYSTACK =====
+// Public key — safe to expose client-side (that's the whole point of a
+// "public" key). The secret key that actually verifies payments lives only
+// in the Cloudflare Worker's environment (see _worker.js's setup notes),
+// never here. PLACEHOLDER — replace with the real pk_live_/pk_test_ key.
+var PAYSTACK_PUBLIC_KEY = 'pk_test_REPLACE_WITH_REAL_PAYSTACK_PUBLIC_KEY';
 
 // ===== STORE PRODUCTS — FIREBASE =====
 var FB_CONFIG = {
@@ -2337,7 +2327,11 @@ async function placeOrder() {
     closeOrderModal(); return;
   }
 
-  var total = items.reduce(function(s,i){ return s + i.price * i.qty; }, 0);
+  if (payment === 'Paystack') {
+    if (!email || !email.includes('@')) { alert('Please enter a valid email address — Paystack needs it for your receipt.'); return; }
+    payWithPaystack(name, phone, email, address, region, notes, items);
+    return;
+  }
 
   var btn = document.getElementById('placeOrderBtn');
   btn.disabled = true;
@@ -2356,59 +2350,145 @@ async function placeOrder() {
     var result = await res.json();
 
     if (res.status === 409 && result.issues) {
-      var lines = result.issues.map(function(iss) {
-        return iss.reason === 'insufficient_stock'
-          ? iss.name + ' — only ' + iss.available + ' left (you asked for ' + iss.requested + ')'
-          : iss.name + ' — no longer available';
-      });
-      alert('Some items in your cart changed:\n\n' + lines.join('\n') + '\n\nPlease update your cart and try again.');
+      showCartIssues(result.issues);
       btn.disabled = false;
       btn.innerHTML = '<i class="fas fa-paper-plane"></i> Place Order';
       return;
     }
     if (!res.ok) throw new Error(result.error || 'Order failed');
 
-    var order = result.order;
-
-    // Build WhatsApp message for admin
-    var waLines = [];
-    waLines.push('🛒 *NEW ORDER — ' + order.id + '*');
-    waLines.push('━━━━━━━━━━━━━━━━━━━━');
-    waLines.push('👤 *Name:* ' + name);
-    waLines.push('📞 *Phone:* ' + phone);
-    if (email) waLines.push('📧 *Email:* ' + email);
-    waLines.push('📍 *Address:* ' + address);
-    if (region)  waLines.push('🗺️ *Region:* ' + region);
-    if (payment) waLines.push('💳 *Payment:* ' + payment);
-    waLines.push('━━━━━━━━━━━━━━━━━━━━');
-    waLines.push('🧾 *Items:*');
-    items.forEach(function(i) { waLines.push('  • ' + i.name + ' x' + i.qty + ' = GHS ' + (i.price * i.qty).toFixed(2)); });
-    waLines.push('━━━━━━━━━━━━━━━━━━━━');
-    waLines.push('💰 *TOTAL: GHS ' + total.toFixed(2) + '*');
-    if (notes) waLines.push('📝 *Notes:* ' + notes);
-    var waUrl = 'https://wa.me/233548029027?text=' + encodeURIComponent(waLines.join('\n'));
-    var waBtn = document.getElementById('successWaBtn');
-    if (waBtn) waBtn.href = waUrl;
-    var refEl = document.getElementById('successOrderRef');
-    if (refEl) refEl.textContent = order.id;
-    if (typeof trkSaveOrderToDevice === 'function') trkSaveOrderToDevice(order.id);
-
-    cart = {};
-    updateCartUI();
-    ['ord-name','ord-phone','ord-email','ord-address','ord-notes'].forEach(function(id) {
-      var el = document.getElementById(id); if (el) el.value = '';
-    });
-    var rg = document.getElementById('ord-region');  if (rg) rg.value = '';
-    var py = document.getElementById('ord-payment'); if (py) py.value = '';
-    var cb = document.getElementById('ord-consent'); if (cb) cb.checked = false;
-    closeOrderModal();
-    document.getElementById('successModal').classList.add('open');
-    document.body.style.overflow = 'hidden';
+    finishOrderSuccess(result.order, name, phone, email, address, region, payment, notes, items);
   } catch(e) {
     alert('Something went wrong. Please try again or contact us directly.');
   }
   btn.disabled = false;
   btn.innerHTML = '<i class="fas fa-paper-plane"></i> Place Order';
+}
+
+function showCartIssues(issues) {
+  var lines = issues.map(function(iss) {
+    return iss.reason === 'insufficient_stock'
+      ? iss.name + ' — only ' + iss.available + ' left (you asked for ' + iss.requested + ')'
+      : iss.name + ' — no longer available';
+  });
+  alert('Some items in your cart changed:\n\n' + lines.join('\n') + '\n\nPlease update your cart and try again.');
+}
+
+// ===== PAYSTACK CHECKOUT =====
+// 1. /api/paystack-prepare validates the cart server-side and returns a
+//    trusted amount + reference (stock isn't touched yet).
+// 2. The Paystack popup collects payment for that exact amount/reference.
+// 3. On success, /api/paystack-verify confirms the payment with Paystack
+//    itself and only then reserves stock and writes the real order — the
+//    popup's "it succeeded" callback is just a cue to go check, it's never
+//    trusted on its own.
+async function payWithPaystack(name, phone, email, address, region, notes, items) {
+  var btn = document.getElementById('placeOrderBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing payment...';
+
+  try {
+    var prepRes = await fetch('/api/paystack-prepare', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name, phone: phone, email: email, address: address, region: region, notes: notes,
+        items: items.map(function(i){ return { id: i.id, name: i.name, price: i.price, qty: i.qty }; })
+      })
+    });
+    var prep = await prepRes.json();
+
+    if (prepRes.status === 409 && prep.issues) {
+      showCartIssues(prep.issues);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Place Order';
+      return;
+    }
+    if (!prepRes.ok) throw new Error(prep.error || 'Could not start payment');
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Place Order';
+
+    var handler = PaystackPop.setup({
+      key: PAYSTACK_PUBLIC_KEY,
+      email: prep.email,
+      amount: prep.amount,
+      currency: 'GHS',
+      ref: prep.reference,
+      onClose: function() { /* customer closed the popup — nothing was charged, nothing to undo */ },
+      callback: function(response) {
+        verifyPaystackPayment(response.reference, name, phone, email, address, region, notes, items);
+      }
+    });
+    handler.openIframe();
+  } catch (e) {
+    alert((e.message || 'Something went wrong starting payment.') + ' Please try again or contact us directly.');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Place Order';
+  }
+}
+
+async function verifyPaystackPayment(reference, name, phone, email, address, region, notes, items) {
+  var btn = document.getElementById('placeOrderBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Confirming payment...';
+
+  try {
+    var res = await fetch('/api/paystack-verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reference: reference })
+    });
+    var result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Payment could not be confirmed');
+
+    finishOrderSuccess(result.order, name, phone, email, address, region, 'Paystack', notes, items);
+  } catch (e) {
+    alert((e.message || 'Something went wrong confirming your payment.') + '\n\nIf you were charged, please contact us with reference: ' + reference);
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-paper-plane"></i> Place Order';
+}
+
+// Shared by both payment paths once a real order record comes back from the
+// server: builds the admin WhatsApp handoff message, resets the form/cart,
+// and shows the success modal.
+function finishOrderSuccess(order, name, phone, email, address, region, payment, notes, items) {
+  var total = items.reduce(function(s,i){ return s + i.price * i.qty; }, 0);
+
+  var waLines = [];
+  waLines.push('🛒 *NEW ORDER — ' + order.id + '*');
+  waLines.push('━━━━━━━━━━━━━━━━━━━━');
+  waLines.push('👤 *Name:* ' + name);
+  waLines.push('📞 *Phone:* ' + phone);
+  if (email) waLines.push('📧 *Email:* ' + email);
+  waLines.push('📍 *Address:* ' + address);
+  if (region)  waLines.push('🗺️ *Region:* ' + region);
+  if (payment) waLines.push('💳 *Payment:* ' + payment);
+  waLines.push('━━━━━━━━━━━━━━━━━━━━');
+  waLines.push('🧾 *Items:*');
+  items.forEach(function(i) { waLines.push('  • ' + i.name + ' x' + i.qty + ' = GHS ' + (i.price * i.qty).toFixed(2)); });
+  waLines.push('━━━━━━━━━━━━━━━━━━━━');
+  waLines.push('💰 *TOTAL: GHS ' + total.toFixed(2) + '*');
+  if (notes) waLines.push('📝 *Notes:* ' + notes);
+  var waUrl = 'https://wa.me/233548029027?text=' + encodeURIComponent(waLines.join('\n'));
+  var waBtn = document.getElementById('successWaBtn');
+  if (waBtn) waBtn.href = waUrl;
+  var refEl = document.getElementById('successOrderRef');
+  if (refEl) refEl.textContent = order.id;
+  if (typeof trkSaveOrderToDevice === 'function') trkSaveOrderToDevice(order.id);
+
+  cart = {};
+  updateCartUI();
+  ['ord-name','ord-phone','ord-email','ord-address','ord-notes'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  var rg = document.getElementById('ord-region');  if (rg) rg.value = '';
+  var py = document.getElementById('ord-payment'); if (py) py.value = '';
+  var cb = document.getElementById('ord-consent'); if (cb) cb.checked = false;
+  closeOrderModal();
+  document.getElementById('successModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
 
 function closeSuccessModal() {
