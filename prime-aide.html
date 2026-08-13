@@ -164,30 +164,31 @@
   .feature-card .card-bar { height: 3px; background: var(--blue); border-radius: 2px; margin-top: 16px; width: 0; transition: width 0.4s; }
   .feature-card.highlighted .card-bar { width: 100%; }
 
-  .services-section { background: #0A0F1E; padding: 100px 80px; color: #fff; }
-  .services-header { text-align: center; margin-bottom: 64px; }
-  .services-header h2 { font-size: 48px; font-weight: 900; color: #fff; max-width: 700px; margin: 0 auto 16px; }
-  .services-header p { font-size: 16px; color: rgba(255,255,255,0.6); max-width: 600px; margin: 0 auto; }
-  .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .services-section { background: #0A0F1E; padding: 56px 60px; color: #fff; }
+  .services-header { text-align: center; margin-bottom: 36px; }
+  .services-header h2 { font-size: 30px; font-weight: 900; color: #fff; max-width: 700px; margin: 0 auto 10px; }
+  .services-header p { font-size: 14px; color: rgba(255,255,255,0.6); max-width: 600px; margin: 0 auto; }
+  .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
   .service-card {
-    background: #131929; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px;
+    background: #131929; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px;
     overflow: hidden; transition: all 0.3s;
   }
   .service-card:hover { transform: translateY(-4px); }
-  .service-card-img { width: 100%; height: 180px; object-fit: cover; display: block; }
+  .service-card-img { width: 100%; height: 110px; object-fit: cover; display: block; }
   .service-card-img-placeholder {
-    width: 100%; height: 180px;
+    width: 100%; height: 110px;
     background: linear-gradient(135deg, #1a2744, #1e3a5f);
     display: flex; align-items: center; justify-content: center;
   }
-  .service-card-body { padding: 28px 24px; }
+  .service-card-img-placeholder i { font-size: 26px !important; }
+  .service-card-body { padding: 16px 16px; }
   .service-icon-box {
-    width: 52px; height: 52px; border-radius: 14px; background: rgba(37,99,235,0.2);
+    width: 38px; height: 38px; border-radius: 11px; background: rgba(37,99,235,0.2);
     display: flex; align-items: center; justify-content: center;
-    font-size: 22px; color: var(--blue-light); margin-bottom: 16px;
+    font-size: 16px; color: var(--blue-light); margin-bottom: 10px;
   }
-  .service-card h3 { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 10px; }
-  .service-card p { font-size: 14px; color: rgba(255,255,255,0.55); line-height: 1.7; }
+  .service-card h3 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 5px; }
+  .service-card p { font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.55; }
   .service-arrow-btn {
     width: 38px; height: 38px; border-radius: 50%; background: var(--blue);
     display: flex; align-items: center; justify-content: center; color: #fff;
@@ -201,24 +202,24 @@
   }
   .view-all-link:hover { color: #fff; }
 
-  .why-section { padding: 100px 80px; background: #fff; }
-  .why-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+  .why-section { padding: 56px 60px; background: #fff; }
+  .why-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
   .why-image-wrap { position: relative; }
   .why-image {
-    width: 100%; border-radius: 20px; overflow: hidden;
-    box-shadow: 0 24px 80px rgba(37,99,235,0.18); border: 4px solid var(--blue);
+    width: 100%; border-radius: 16px; overflow: hidden;
+    box-shadow: 0 16px 48px rgba(37,99,235,0.16); border: 3px solid var(--blue);
   }
-  .why-image img { width: 100%; display: block; height: 480px; object-fit: cover; }
-  .why-right h2 { font-size: 44px; font-weight: 900; color: var(--dark2); margin-bottom: 32px; line-height: 1.15; }
+  .why-image img { width: 100%; display: block; height: 300px; object-fit: cover; }
+  .why-right h2 { font-size: 28px; font-weight: 900; color: var(--dark2); margin-bottom: 18px; line-height: 1.15; }
   .why-right h2 span { color: var(--blue); }
-  .why-item { display: flex; gap: 16px; margin-bottom: 24px; align-items: flex-start; }
+  .why-item { display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start; }
   .why-check {
-    width: 24px; height: 24px; min-width: 24px; border-radius: 50%;
+    width: 20px; height: 20px; min-width: 20px; border-radius: 50%;
     background: #EFF6FF; display: flex; align-items: center; justify-content: center; margin-top: 2px;
   }
-  .why-check i { font-size: 11px; color: var(--blue); }
-  .why-item h4 { font-size: 16px; font-weight: 700; color: var(--dark2); margin-bottom: 4px; }
-  .why-item p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+  .why-check i { font-size: 10px; color: var(--blue); }
+  .why-item h4 { font-size: 14px; font-weight: 700; color: var(--dark2); margin-bottom: 2px; }
+  .why-item p { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
 
   .projects-section { background: #060D1F; padding: 100px 80px; }
   .projects-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 48px; }
@@ -940,7 +941,6 @@
 <!-- SERVICES -->
 <section class="services-section">
   <div class="services-header">
-    <div class="section-badge dark"><span class="dot"></span> What We Do</div>
     <h2>Electrical Services We Provide</h2>
     <p>Certified technicians handling residential, commercial and industrial electrical work across Ghana.</p>
   </div>
@@ -993,6 +993,9 @@
         <p>Larger-scale installation, maintenance and troubleshooting for industrial sites.</p>
       </div>
     </div>
+  </div>
+  <div style="text-align:center;margin-top:32px;">
+    <button type="button" class="ad-hero-cta" onclick="openServiceRequestModal()" style="margin-top:0;box-shadow:none;"><i class="fas fa-bolt"></i> Request Service</button>
   </div>
 </section>
 
