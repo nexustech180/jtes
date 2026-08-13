@@ -67,46 +67,60 @@
 
   /* ===== LEGAL PAGE HEADER ===== */
   .legal-header {
-    padding: 150px 24px 56px; text-align: center;
-    background: linear-gradient(160deg, #0c1225 0%, #0a0f1e 100%);
+    padding: 156px 24px 40px; background: #fff; border-bottom: 1px solid var(--border);
   }
-  .legal-header i { font-size: 34px; color: var(--blue-light); margin-bottom: 18px; display: block; }
-  .legal-header h1 { font-size: 40px; font-weight: 900; color: #fff; letter-spacing: -0.5px; margin-bottom: 12px; }
-  .legal-header p { font-size: 15px; color: rgba(255,255,255,0.55); max-width: 560px; margin: 0 auto; line-height: 1.6; }
+  .legal-header-inner { max-width: 820px; margin: 0 auto; }
+  .legal-header .legal-eyebrow {
+    font-size: 11.5px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: 2px; margin-bottom: 14px;
+  }
+  .legal-header h1 { font-size: 34px; font-weight: 800; color: var(--dark2); letter-spacing: -0.4px; margin-bottom: 10px; }
+  .legal-header p { font-size: 14.5px; color: var(--text-muted); max-width: 620px; line-height: 1.6; }
 
   /* ===== LEGAL CONTENT ===== */
-  .legal-wrap { max-width: 780px; margin: 0 auto; padding: 64px 24px 100px; }
+  .legal-wrap { max-width: 820px; margin: 0 auto; padding: 48px 24px 110px; }
   .legal-updated {
-    font-size: 12.5px; font-weight: 700; color: var(--blue); text-transform: uppercase;
-    letter-spacing: 1px; margin-bottom: 40px; display: flex; align-items: center; gap: 8px;
+    font-size: 12.5px; font-weight: 600; color: var(--text-muted);
+    margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1px solid var(--border);
   }
+
+  .legal-toc {
+    border: 1px solid var(--border); border-radius: 8px; padding: 22px 26px; margin-bottom: 48px;
+  }
+  .legal-toc h4 { font-size: 11.5px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; }
+  .legal-toc-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .legal-toc-group-label { font-size: 11.5px; font-weight: 800; color: var(--dark2); margin-bottom: 8px; }
+  .legal-toc ol { list-style: none; counter-reset: toc; }
+  .legal-toc li { counter-increment: toc; margin-bottom: 9px; font-size: 14px; }
+  .legal-toc li:last-child { margin-bottom: 0; }
+  .legal-toc li::before { content: counter(toc) ". "; color: var(--text-muted); font-weight: 600; }
+  .legal-toc a { color: var(--text); text-decoration: none; }
+  .legal-toc a:hover { color: var(--blue); text-decoration: underline; }
+
   .legal-group-title {
-    font-size: 13px; font-weight: 800; color: var(--blue); text-transform: uppercase; letter-spacing: 1.5px;
-    margin: 56px 0 24px; padding-bottom: 14px; border-bottom: 2px solid var(--border);
+    font-size: 22px; font-weight: 800; color: var(--dark2);
+    margin: 56px 0 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
   }
   .legal-group-title:first-of-type { margin-top: 0; }
-  .legal-section { margin-bottom: 40px; }
+  .legal-section { margin-bottom: 34px; padding-bottom: 34px; border-bottom: 1px solid var(--border); }
+  .legal-section:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
   .legal-section h2 {
-    font-size: 21px; font-weight: 800; color: var(--dark2); margin-bottom: 14px;
-    display: flex; align-items: center; gap: 12px;
+    font-size: 17px; font-weight: 700; color: var(--dark2); margin-bottom: 12px;
   }
-  .legal-section h2 .num {
-    width: 30px; height: 30px; border-radius: 8px; background: #EFF6FF; color: var(--blue);
-    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; flex-shrink: 0;
-  }
-  .legal-section p { font-size: 15px; color: var(--text-muted); line-height: 1.8; margin-bottom: 14px; }
+  .legal-section h2 .num { color: var(--text-muted); font-weight: 700; margin-right: 6px; }
+  .legal-section p { font-size: 15px; color: var(--text); line-height: 1.75; margin-bottom: 12px; }
   .legal-section p:last-child { margin-bottom: 0; }
   .legal-section a { color: var(--blue); text-decoration: none; font-weight: 600; }
   .legal-section a:hover { text-decoration: underline; }
   .legal-contact-box {
-    background: var(--gray-light); border: 1px solid var(--border); border-radius: 16px;
-    padding: 28px 30px; margin-top: 48px;
+    background: var(--gray-light); border-left: 3px solid var(--blue); border-radius: 4px;
+    padding: 22px 26px; margin-top: 44px;
   }
-  .legal-contact-box h3 { font-size: 16px; font-weight: 800; color: var(--dark2); margin-bottom: 14px; }
-  .legal-contact-row { display: flex; align-items: center; gap: 12px; font-size: 14.5px; color: var(--text-muted); margin-bottom: 10px; }
+  .legal-contact-box h3 { font-size: 12.5px; font-weight: 800; color: var(--dark2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+  .legal-contact-row { font-size: 14px; color: var(--text); margin-bottom: 8px; line-height: 1.6; }
   .legal-contact-row:last-child { margin-bottom: 0; }
-  .legal-contact-row i { color: var(--blue); width: 16px; text-align: center; }
-  .legal-contact-row a { color: var(--text-muted); text-decoration: none; }
+  .legal-contact-row strong { color: var(--dark2); font-weight: 700; margin-right: 6px; }
+  .legal-contact-row a { color: var(--text); text-decoration: none; }
   .legal-contact-row a:hover { color: var(--blue); }
 
   /* ===== FOOTER ===== */
@@ -152,8 +166,10 @@
     .nav-dropdown-menu { position: static; box-shadow: none; border: none; border-radius: 0; padding: 0 0 0 16px; background: transparent; display: none; }
     .nav-dropdown.open .nav-dropdown-menu { display: block; }
     .nav-dropdown-menu a { padding: 10px 20px; font-size: 0.97rem; border-bottom: 1px solid var(--border); }
-    .legal-header { padding: 130px 20px 44px; }
-    .legal-header h1 { font-size: 30px; }
+    .legal-header { padding: 128px 20px 32px; }
+    .legal-header h1 { font-size: 26px; }
+    .legal-toc { padding: 18px 20px; }
+    .legal-toc-groups { grid-template-columns: 1fr; }
     footer { padding: 48px 24px 0; }
     .footer-grid { grid-template-columns: 1fr; gap: 24px; }
     .footer-bottom { flex-direction: column; gap: 10px; text-align: center; }
@@ -189,13 +205,42 @@
 </nav>
 
 <div class="legal-header">
-  <i class="fas fa-file-contract"></i>
-  <h1>Terms of Service</h1>
-  <p>The terms that apply when you use the JTES website, engage our services, or shop the JTES Store.</p>
+  <div class="legal-header-inner">
+    <div class="legal-eyebrow">Jassan Technologies &amp; Electrical Services</div>
+    <h1>Terms of Service</h1>
+    <p>The terms that apply when you use the JTES website, engage our services, or shop the JTES Store.</p>
+  </div>
 </div>
 
 <div class="legal-wrap">
-  <div class="legal-updated"><i class="fas fa-clock"></i> Last updated: August 13, 2026</div>
+  <div class="legal-updated">Last updated: August 13, 2026</div>
+
+  <div class="legal-toc">
+    <h4>Contents</h4>
+    <div class="legal-toc-groups">
+      <div>
+        <div class="legal-toc-group-label">Terms of Service</div>
+        <ol>
+          <li><a href="#services">Our Services</a></li>
+          <li><a href="#client-resp">Client Responsibilities</a></li>
+          <li><a href="#project-changes">Project Changes</a></li>
+          <li><a href="#ip">Intellectual Property</a></li>
+          <li><a href="#law">Governing Law</a></li>
+        </ol>
+      </div>
+      <div>
+        <div class="legal-toc-group-label">Store Terms &amp; Conditions</div>
+        <ol>
+          <li><a href="#products">Products</a></li>
+          <li><a href="#pricing">Pricing &amp; Orders</a></li>
+          <li><a href="#delivery">Delivery</a></li>
+          <li><a href="#compatibility">Product Use &amp; Compatibility</a></li>
+          <li><a href="#returns">Returns, Exchanges &amp; Warranties</a></li>
+          <li><a href="#custom">Custom Orders</a></li>
+        </ol>
+      </div>
+    </div>
+  </div>
 
   <div class="legal-group-title">Terms of Service</div>
 
@@ -203,68 +248,68 @@
     <p>By using the JTES website or engaging our services, you agree to these Terms of Service.</p>
   </div>
 
-  <div class="legal-section">
-    <h2><span class="num">1</span> Our Services</h2>
+  <div class="legal-section" id="services">
+    <h2><span class="num">1.</span>Our Services</h2>
     <p>JTES provides electrical and electronic services, IoT and automation solutions, STEM/STEAM and robotics training, technical consultancy, prototype development, research/project support, and related technology services.</p>
   </div>
 
-  <div class="legal-section">
-    <h2><span class="num">2</span> Client Responsibilities</h2>
+  <div class="legal-section" id="client-resp">
+    <h2><span class="num">2.</span>Client Responsibilities</h2>
     <p>Clients are responsible for providing accurate project requirements and making agreed payments on time. Project costs, timelines, deliverables, and payment schedules may be specified in a quotation, invoice, or separate agreement.</p>
   </div>
 
-  <div class="legal-section">
-    <h2><span class="num">3</span> Project Changes</h2>
+  <div class="legal-section" id="project-changes">
+    <h2><span class="num">3.</span>Project Changes</h2>
     <p>Changes to an approved project scope may result in additional costs or delivery time. JTES | Project Space provides technical and research support but does not guarantee academic grades, competition results, institutional approval, or research acceptance.</p>
   </div>
 
-  <div class="legal-section">
-    <h2><span class="num">4</span> Intellectual Property</h2>
+  <div class="legal-section" id="ip">
+    <h2><span class="num">4.</span>Intellectual Property</h2>
     <p>Unless otherwise agreed in writing, JTES retains ownership of its pre-existing designs, templates, methods, training materials, and proprietary systems.</p>
   </div>
 
-  <div class="legal-section">
-    <h2><span class="num">5</span> Governing Law</h2>
+  <div class="legal-section" id="law">
+    <h2><span class="num">5.</span>Governing Law</h2>
     <p>These terms are governed by applicable laws of the Republic of Ghana.</p>
   </div>
 
   <div class="legal-group-title">Store Terms &amp; Conditions</div>
 
-  <div class="legal-section">
-    <h2><span class="num">1</span> Products</h2>
+  <div class="legal-section" id="products">
+    <h2><span class="num">1.</span>Products</h2>
     <p>Products sold through the JTES Store may include electrical and electronic components, sensors, microcontrollers, robotics materials, STEM kits, IoT devices, tools, and related technology products.</p>
   </div>
 
-  <div class="legal-section">
-    <h2><span class="num">2</span> Pricing &amp; Orders</h2>
+  <div class="legal-section" id="pricing">
+    <h2><span class="num">2.</span>Pricing &amp; Orders</h2>
     <p>All prices are generally stated in Ghana Cedis (GH₵) unless otherwise indicated. Orders are subject to product availability and payment confirmation.</p>
   </div>
 
-  <div class="legal-section">
-    <h2><span class="num">3</span> Delivery</h2>
+  <div class="legal-section" id="delivery">
+    <h2><span class="num">3.</span>Delivery</h2>
     <p>Customers must provide accurate contact and delivery information. Delivery charges and timelines may vary depending on location, product availability, and delivery method.</p>
   </div>
 
-  <div class="legal-section">
-    <h2><span class="num">4</span> Product Use &amp; Compatibility</h2>
+  <div class="legal-section" id="compatibility">
+    <h2><span class="num">4.</span>Product Use &amp; Compatibility</h2>
     <p>Customers should verify product specifications, voltage, current, polarity, and compatibility before installation. JTES may not accept responsibility for components damaged through incorrect wiring, reverse polarity, excessive voltage/current, modification, misuse, or improper handling.</p>
   </div>
 
-  <div class="legal-section">
-    <h2><span class="num">5</span> Returns, Exchanges &amp; Warranties</h2>
+  <div class="legal-section" id="returns">
+    <h2><span class="num">5.</span>Returns, Exchanges &amp; Warranties</h2>
     <p>Damaged, incorrect, or defective products should be reported promptly after delivery. Returns, exchanges, refunds, and warranties will be assessed according to the product condition, applicable warranty terms, and relevant consumer-protection requirements.</p>
   </div>
 
-  <div class="legal-section">
-    <h2><span class="num">6</span> Custom Orders</h2>
+  <div class="legal-section" id="custom">
+    <h2><span class="num">6.</span>Custom Orders</h2>
     <p>Custom-built systems, specially sourced components, programmed devices, and customized project materials may have separate payment, cancellation, and return conditions.</p>
   </div>
 
   <div class="legal-contact-box">
-    <h3><i class="fas fa-circle-question" style="color:var(--blue);margin-right:8px;"></i>Questions About These Terms</h3>
-    <div class="legal-contact-row"><i class="fas fa-envelope"></i> <a href="mailto:jassantechnologies@gmail.com">jassantechnologies@gmail.com</a></div>
-    <div class="legal-contact-row"><i class="fas fa-phone"></i> +233 548 029 027 &nbsp;|&nbsp; +233 203 212 915</div>
-    <div class="legal-contact-row"><i class="fas fa-location-dot"></i> Kumasi, Ghana</div>
+    <h3>Questions About These Terms</h3>
+    <div class="legal-contact-row"><strong>Email:</strong> <a href="mailto:jassantechnologies@gmail.com">jassantechnologies@gmail.com</a></div>
+    <div class="legal-contact-row"><strong>Phone:</strong> +233 548 029 027 &nbsp;|&nbsp; +233 203 212 915</div>
+    <div class="legal-contact-row"><strong>Address:</strong> Kumasi, Ghana</div>
   </div>
 </div>
 
