@@ -1662,7 +1662,7 @@ function renderHomeServicesPreview(s) {
   var heading = section.querySelector('.services-header h2');
   if (heading) { heading.innerHTML = cmsText(s.headingHtml); heading.setAttribute('data-cms-path', 'sections.services.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
   var body = section.querySelector('.services-header p');
-  if (body) { body.textContent = cmsText(s.body); body.setAttribute('data-cms-path', 'sections.services.body'); }
+  if (body) { body.innerHTML = cmsText(s.body); body.setAttribute('data-cms-path', 'sections.services.body'); }
   var grid = section.querySelector('.services-grid');
   if (grid && s.cards) {
     grid.innerHTML = s.cards.map(function(c, i) {
@@ -1744,7 +1744,7 @@ function renderHomeBlogPreview(s) {
   var heading = section.querySelector('.blog-header h2');
   if (heading) { heading.innerHTML = cmsText(s.headingHtml); heading.setAttribute('data-cms-path', 'sections.blog.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
   var body = section.querySelector('.blog-header p');
-  if (body) { body.textContent = cmsText(s.body); body.setAttribute('data-cms-path', 'sections.blog.body'); }
+  if (body) { body.innerHTML = cmsText(s.body); body.setAttribute('data-cms-path', 'sections.blog.body'); }
   var grid = section.querySelector('.blog-grid');
   if (grid && s.cards) {
     grid.innerHTML = s.cards.map(function(c, i) {
@@ -1772,7 +1772,7 @@ function renderHomeNewsletter(s) {
   var heading = section.querySelector('h2');
   if (heading) { heading.innerHTML = cmsText(s.headingHtml); heading.setAttribute('data-cms-path', 'sections.newsletter.headingHtml'); heading.setAttribute('data-cms-mode', 'html'); }
   var body = section.querySelector('.nl-inner > p');
-  if (body) { body.textContent = cmsText(s.body); body.setAttribute('data-cms-path', 'sections.newsletter.body'); }
+  if (body) { body.innerHTML = cmsText(s.body); body.setAttribute('data-cms-path', 'sections.newsletter.body'); }
   var perksWrap = section.querySelector('.nl-perks');
   if (perksWrap && s.perks) {
     perksWrap.innerHTML = s.perks.map(function(p, i) {
@@ -1948,6 +1948,61 @@ function injectEditModeStyles() {
   document.head.appendChild(style);
 }
 
+// ── FORMAT TOOLBAR: bold/italic/underline + a color palette, shown above
+// whatever text field currently has focus — the "standard palette of your
+// usual text editor" for the click-to-edit fields. Uses execCommand, which
+// is deprecated but still functional everywhere for contentEditable and is
+// the simplest fit for this vanilla-JS, no-build-step codebase. ──
+var CMS_TEXT_COLORS = ['#0F172A', '#2563EB', '#DC2626', '#16A34A', '#F59E0B', '#7C3AED', '#64748B', '#FFFFFF'];
+var cmsFormatBar = null;
+function cmsBuildFormatBar() {
+  if (cmsFormatBar) return cmsFormatBar;
+  var bar = document.createElement('div');
+  bar.id = 'cms-format-bar';
+  bar.style.cssText = 'position:fixed;z-index:10001;display:none;align-items:center;gap:4px;background:#0A0F1E;border-radius:10px;padding:6px 8px;box-shadow:0 8px 24px rgba(0,0,0,0.35);font-family:Manrope,sans-serif;';
+  function makeBtn(html, title, cmd, val) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.title = title;
+    b.innerHTML = html;
+    b.style.cssText = 'background:rgba(255,255,255,0.08);color:#fff;border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+    b.addEventListener('mousedown', function(e) { e.preventDefault(); });
+    b.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); document.execCommand(cmd, false, val); });
+    return b;
+  }
+  bar.appendChild(makeBtn('<b>B</b>', 'Bold', 'bold'));
+  bar.appendChild(makeBtn('<i>I</i>', 'Italic', 'italic'));
+  bar.appendChild(makeBtn('<u>U</u>', 'Underline', 'underline'));
+  var sep = document.createElement('div');
+  sep.style.cssText = 'width:1px;height:18px;background:rgba(255,255,255,0.2);margin:0 4px;flex-shrink:0;';
+  bar.appendChild(sep);
+  CMS_TEXT_COLORS.forEach(function(color) {
+    var sw = document.createElement('button');
+    sw.type = 'button';
+    sw.title = color;
+    sw.style.cssText = 'width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,0.5);cursor:pointer;background:' + color + ';padding:0;flex-shrink:0;';
+    sw.addEventListener('mousedown', function(e) { e.preventDefault(); });
+    sw.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); document.execCommand('foreColor', false, color); });
+    bar.appendChild(sw);
+  });
+  bar.appendChild(makeBtn('<i class="fas fa-eraser"></i>', 'Clear formatting', 'removeFormat'));
+  document.body.appendChild(bar);
+  cmsFormatBar = bar;
+  return bar;
+}
+function cmsShowFormatBar(el) {
+  var bar = cmsBuildFormatBar();
+  bar.style.display = 'flex';
+  var rect = el.getBoundingClientRect();
+  var barH = bar.offsetHeight || 40;
+  var top = rect.top - barH - 10;
+  if (top < 8) top = rect.bottom + 10;
+  var left = Math.max(8, Math.min(rect.left, window.innerWidth - 280));
+  bar.style.top = top + 'px';
+  bar.style.left = left + 'px';
+}
+function cmsHideFormatBar() { if (cmsFormatBar) cmsFormatBar.style.display = 'none'; }
+
 function enableTextEditing(root) {
   (root || document).querySelectorAll('[data-cms-path]').forEach(function(el) {
     if (el.tagName === 'IMG' || el.getAttribute('data-cms-mode') === 'bgimage') return;
@@ -1956,12 +2011,13 @@ function enableTextEditing(root) {
     el.contentEditable = 'true';
     el.spellcheck = false;
     el.classList.add('cms-editable-text');
-    el.addEventListener('focus', function() { el.classList.add('cms-focused'); });
+    el.setAttribute('data-cms-mode', 'html');
+    el.addEventListener('focus', function() { el.classList.add('cms-focused'); cmsShowFormatBar(el); });
     el.addEventListener('blur', function() {
       el.classList.remove('cms-focused');
+      cmsHideFormatBar();
       var path = el.getAttribute('data-cms-path');
-      var mode = el.getAttribute('data-cms-mode');
-      var value = mode === 'html' ? el.innerHTML : el.textContent;
+      var value = el.innerHTML;
       cmsSetByPath(homeContentDraft, path, value);
       markDirty();
     });
