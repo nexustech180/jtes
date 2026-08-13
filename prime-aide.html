@@ -189,6 +189,11 @@
   }
   .service-card h3 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 5px; }
   .service-card p { font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.55; }
+  .service-request-link {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 8px;
+    font-size: 12px; font-weight: 700; color: var(--blue-light); cursor: pointer; transition: color 0.2s;
+  }
+  .service-request-link:hover { color: #fff; }
   .service-arrow-btn {
     width: 38px; height: 38px; border-radius: 50%; background: var(--blue);
     display: flex; align-items: center; justify-content: center; color: #fff;
@@ -946,45 +951,45 @@
   </div>
   <div class="services-grid">
     <div class="service-card">
-      <div class="service-card-img-placeholder"><i class="fas fa-plug-circle-bolt" style="font-size:40px;color:rgba(255,255,255,0.85);"></i></div>
       <div class="service-card-body">
         <div class="service-icon-box"><i class="fas fa-house-signal"></i></div>
         <h3>Electrical installations</h3>
+        <span class="service-request-link" onclick="openServiceRequestModal('Electrical installations')"><i class="fas fa-bolt"></i> Request this service</span>
       </div>
     </div>
     <div class="service-card">
-      <div class="service-card-img-placeholder"><i class="fas fa-charging-station" style="font-size:40px;color:rgba(255,255,255,0.85);"></i></div>
       <div class="service-card-body">
         <div class="service-icon-box"><i class="fas fa-charging-station"></i></div>
         <h3>Panel upgrades &amp; maintenance</h3>
+        <span class="service-request-link" onclick="openServiceRequestModal('Panel upgrades &amp; maintenance')"><i class="fas fa-bolt"></i> Request this service</span>
       </div>
     </div>
     <div class="service-card">
-      <div class="service-card-img-placeholder"><i class="fas fa-plug" style="font-size:40px;color:rgba(255,255,255,0.85);"></i></div>
       <div class="service-card-body">
         <div class="service-icon-box"><i class="fas fa-plug"></i></div>
         <h3>Wiring &amp; rewiring</h3>
+        <span class="service-request-link" onclick="openServiceRequestModal('Wiring &amp; rewiring')"><i class="fas fa-bolt"></i> Request this service</span>
       </div>
     </div>
     <div class="service-card">
-      <div class="service-card-img-placeholder"><i class="fas fa-clipboard-check" style="font-size:40px;color:rgba(255,255,255,0.85);"></i></div>
       <div class="service-card-body">
         <div class="service-icon-box"><i class="fas fa-shield-halved"></i></div>
         <h3>Safety inspections</h3>
+        <span class="service-request-link" onclick="openServiceRequestModal('Safety inspections')"><i class="fas fa-bolt"></i> Request this service</span>
       </div>
     </div>
     <div class="service-card">
-      <div class="service-card-img-placeholder"><i class="fas fa-bolt-lightning" style="font-size:40px;color:rgba(255,255,255,0.85);"></i></div>
       <div class="service-card-body">
         <div class="service-icon-box"><i class="fas fa-truck-fast"></i></div>
         <h3>Emergency repairs</h3>
+        <span class="service-request-link" onclick="openServiceRequestModal('Emergency repairs')"><i class="fas fa-bolt"></i> Request this service</span>
       </div>
     </div>
     <div class="service-card">
-      <div class="service-card-img-placeholder"><i class="fas fa-industry" style="font-size:40px;color:rgba(255,255,255,0.85);"></i></div>
       <div class="service-card-body">
         <div class="service-icon-box"><i class="fas fa-industry"></i></div>
         <h3>Industrial electrical work</h3>
+        <span class="service-request-link" onclick="openServiceRequestModal('Industrial electrical work')"><i class="fas fa-bolt"></i> Request this service</span>
       </div>
     </div>
   </div>
@@ -1366,12 +1371,12 @@ async function subscribeNewsletter() {
         <label><span class="req">*</span> Service Type</label>
         <select id="psa-type">
           <option value="">Select a service</option>
-          <option>Electrical Installation</option>
-          <option>Repairs &amp; Maintenance</option>
-          <option>Panel Upgrade</option>
-          <option>Safety Inspection</option>
-          <option>Emergency Repair</option>
-          <option>Industrial Electrical Work</option>
+          <option>Electrical installations</option>
+          <option>Panel upgrades &amp; maintenance</option>
+          <option>Wiring &amp; rewiring</option>
+          <option>Safety inspections</option>
+          <option>Emergency repairs</option>
+          <option>Industrial electrical work</option>
           <option>Other</option>
         </select>
       </div>
@@ -1417,11 +1422,12 @@ async function psaFbPush(path, data) {
   });
   return res.json();
 }
-function openServiceRequestModal() {
+function openServiceRequestModal(presetType) {
   document.getElementById('psaFormView').style.display = 'block';
   document.getElementById('psaSuccessView').style.display = 'none';
   document.getElementById('psaModalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+  if (presetType) document.getElementById('psa-type').value = presetType;
 }
 function closeServiceRequestModal() {
   document.getElementById('psaModalOverlay').classList.remove('open');
