@@ -496,7 +496,7 @@
       <h4>Quick Links</h4>
       <a href="index.html">Home</a>
       <a href="about.html">About Us</a>
-      <a href="services.html">Our Services</a>
+      <a href="prime-aide.html">Our Services</a>
           <a href="gallery.html">Animation-Dot</a>
       <a href="projects.html">Project Space</a>
       <a href="blog.html">Blog</a>
@@ -505,12 +505,12 @@
     </div>
     <div class="footer-col">
       <h4>Our Services</h4>
-      <a href="services.html#svc-stem">STEM &amp; Robotics Education</a>
-      <a href="services.html#svc-rd">Research &amp; Development</a>
-      <a href="services.html#svc-electrical">Electrical Services</a>
-      <a href="services.html#svc-iot">IoT &amp; Smart Automation</a>
-      <a href="services.html#svc-curriculum">Curriculum Development</a>
-      <a href="services.html#svc-components">Component Sales</a>
+      <a href="prime-aide.html#svc-stem">STEM &amp; Robotics Education</a>
+      <a href="prime-aide.html#svc-rd">Research &amp; Development</a>
+      <a href="prime-aide.html#svc-electrical">Electrical Services</a>
+      <a href="prime-aide.html#svc-iot">IoT &amp; Smart Automation</a>
+      <a href="prime-aide.html#svc-curriculum">Curriculum Development</a>
+      <a href="prime-aide.html#svc-components">Component Sales</a>
     </div>
     <div class="footer-col">
       <h4>Contact Us</h4>
@@ -611,7 +611,7 @@ function closePopup() {
 
 // ═══════════════════════════════════════════
 //  CONTACT PAGE CONTENT + VISUAL EDIT MODE (?edit=1)
-//  Same pattern as index.html/about.html/services.html: siteContent/contact
+//  Same pattern as index.html/about.html/prime-aide.html: siteContent/contact
 //  drives rendering (data null → keep hardcoded HTML for visitors), every
 //  bound element carries data-cms-path/data-cms-mode, edit mode makes
 //  text/images directly clickable and card lists add/remove-able.
@@ -769,7 +769,7 @@ function reorderPageSections(order, idMap) {
 }
 
 // ═══════════════════════════════════════════
-//  VISUAL EDIT MODE — generic engine, identical to index.html's/about.html's/services.html's.
+//  VISUAL EDIT MODE — generic engine, identical to index.html's/about.html's/prime-aide.html's.
 // ═══════════════════════════════════════════
 var CMS_CLD_CLOUD = 'dx8ziypwz';
 var CMS_CLD_PRESET = 'JASSAN';
@@ -1069,13 +1069,13 @@ async function cmsSavePageContent() {
 var CMS_SITE_PAGES = [
   { label: 'Home', href: 'index.html' },
   { label: 'About', href: 'about.html' },
-  { label: 'Services', href: 'services.html' },
-  { label: 'Services — STEM & Robotics', href: 'services.html#svc-stem' },
-  { label: 'Services — Research & Development', href: 'services.html#svc-rd' },
-  { label: 'Services — Electrical Services', href: 'services.html#svc-electrical' },
-  { label: 'Services — IoT & Automation', href: 'services.html#svc-iot' },
-  { label: 'Services — Curriculum Development', href: 'services.html#svc-curriculum' },
-  { label: 'Services — Component Sales', href: 'services.html#svc-components' },
+  { label: 'Services', href: 'prime-aide.html' },
+  { label: 'Services — STEM & Robotics', href: 'prime-aide.html#svc-stem' },
+  { label: 'Services — Research & Development', href: 'prime-aide.html#svc-rd' },
+  { label: 'Services — Electrical Services', href: 'prime-aide.html#svc-electrical' },
+  { label: 'Services — IoT & Automation', href: 'prime-aide.html#svc-iot' },
+  { label: 'Services — Curriculum Development', href: 'prime-aide.html#svc-curriculum' },
+  { label: 'Services — Component Sales', href: 'prime-aide.html#svc-components' },
   { label: 'Contact', href: 'contact.html' },
   { label: 'Gallery (Animation-Dot)', href: 'gallery.html' },
   { label: 'Project Space', href: 'projects.html' },
@@ -1118,7 +1118,7 @@ function cmsOpenLinkEditor(a, hrefPath) {
       '<select id="cms-link-page-select" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14px;margin-bottom:12px;box-sizing:border-box;font-family:Manrope,sans-serif;">' +
         pageOptionsHtml + '<option value="__custom__"' + (matchedPage ? '' : ' selected') + '>Custom URL…</option>' +
       '</select>' +
-      '<input type="text" id="cms-link-custom-url" placeholder="https:// or a page like services.html#svc-stem" value="' + (matchedPage ? '' : String(currentHref).replace(/"/g, '&quot;')) + '" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14px;margin-bottom:20px;box-sizing:border-box;font-family:Manrope,sans-serif;display:' + (matchedPage ? 'none' : 'block') + ';">' +
+      '<input type="text" id="cms-link-custom-url" placeholder="https:// or a page like prime-aide.html#svc-stem" value="' + (matchedPage ? '' : String(currentHref).replace(/"/g, '&quot;')) + '" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14px;margin-bottom:20px;box-sizing:border-box;font-family:Manrope,sans-serif;display:' + (matchedPage ? 'none' : 'block') + ';">' +
       '<div style="display:flex;gap:10px;justify-content:flex-end;">' +
         '<button type="button" id="cms-link-cancel" style="background:#f1f5f9;color:#334155;border:none;border-radius:9px;padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Cancel</button>' +
         '<button type="button" id="cms-link-save" style="background:#2563EB;color:#fff;border:none;border-radius:9px;padding:11px 22px;font-size:14px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Save</button>' +
