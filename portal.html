@@ -134,6 +134,39 @@ main { padding-top: 64px; min-height: 100vh; }
 .toast.show { display: flex; align-items: center; gap: 10px; }
 .toast.error { background: var(--red); }
 
+/* ── MESSAGES (chat with JTES) ── */
+.chat-box { background: #fff; border: 1px solid var(--border); border-radius: 16px; display: flex; flex-direction: column; height: 520px; margin-bottom: 40px; overflow: hidden; }
+.chat-thread { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: #f8fafc; }
+.chat-bubble-row { display: flex; flex-direction: column; max-width: 78%; }
+.chat-bubble-row.mine { align-self: flex-end; align-items: flex-end; }
+.chat-bubble-row.theirs { align-self: flex-start; align-items: flex-start; }
+.chat-bubble { padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.5; word-break: break-word; }
+.chat-bubble-row.mine .chat-bubble { background: var(--blue); color: #fff; border-bottom-right-radius: 4px; }
+.chat-bubble-row.theirs .chat-bubble { background: #fff; color: var(--text); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+.chat-bubble-time { font-size: 10.5px; color: var(--text-muted); margin-top: 4px; padding: 0 4px; }
+.chat-input-row { display: flex; gap: 10px; padding: 14px 16px; border-top: 1px solid var(--border); background: #fff; flex-shrink: 0; }
+.chat-input-row input { flex: 1; padding: 11px 15px; border: 1.5px solid var(--border); border-radius: 24px; font-size: 14px; font-family: 'Manrope', sans-serif; outline: none; }
+.chat-input-row input:focus { border-color: var(--blue); }
+.chat-input-row button { width: 42px; height: 42px; border-radius: 50%; background: var(--blue); color: #fff; border: none; cursor: pointer; flex-shrink: 0; }
+.chat-input-row button:hover { background: var(--blue-dark); }
+.chat-empty { flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: var(--text-muted); }
+.chat-empty i { font-size: 34px; opacity: 0.4; }
+
+/* ── SEND FEEDBACK ── */
+.feedback-box { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 40px; }
+.feedback-box textarea {
+  width: 100%; min-height: 120px; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 12px;
+  font-size: 14px; font-family: 'Manrope', sans-serif; color: var(--text); outline: none; resize: vertical; transition: border-color 0.2s;
+}
+.feedback-box textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+.btn-send-feedback { margin-top: 14px; background: var(--blue); color: #fff; border: none; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Manrope', sans-serif; display: inline-flex; align-items: center; gap: 8px; transition: background 0.2s; }
+.btn-send-feedback:hover { background: var(--blue-dark); }
+.btn-send-feedback:disabled { opacity: 0.6; cursor: not-allowed; }
+
+@media (max-width: 560px) {
+  .chat-box { height: 440px; }
+}
+
 footer { background: #0A0F1E; padding: 48px 80px 24px; text-align: center; color: rgba(255,255,255,0.4); }
 .footer-bottom-simple { font-size: 13px; }
 .footer-bottom-simple a { color: rgba(255,255,255,0.4); text-decoration: none; margin-left: 16px; }
@@ -240,6 +273,27 @@ footer { background: #0A0F1E; padding: 48px 80px 24px; text-align: center; color
       <div id="portal-docs-container">
         <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Loading your documents...</p></div>
       </div>
+
+      <div class="portal-section-header">
+        <h2><i class="fas fa-comments"></i> Messages</h2>
+      </div>
+      <div class="chat-box">
+        <div class="chat-thread" id="portal-chat-thread">
+          <div class="chat-empty"><i class="fas fa-comment-dots"></i><p>No messages yet — send us a message any time.</p></div>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" id="portal-chat-input" placeholder="Type a message…" onkeypress="if(event.key==='Enter') sendPortalChatMessage()">
+          <button onclick="sendPortalChatMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+      </div>
+
+      <div class="portal-section-header">
+        <h2><i class="fas fa-envelope-open-text"></i> Send Feedback</h2>
+      </div>
+      <div class="feedback-box">
+        <textarea id="portal-feedback-text" placeholder="Tell us what's on your mind — a comment, a concern, a suggestion..."></textarea>
+        <button class="btn-send-feedback" id="portal-feedback-btn" onclick="submitPortalFeedback()"><i class="fas fa-paper-plane"></i> Send Feedback</button>
+      </div>
     </div>
   </div>
 
@@ -327,6 +381,95 @@ function enterDashboard(username, data) {
   portalDocs.sort((a, b) => new Date(b.addedAt || 0) - new Date(a.addedAt || 0));
   renderPortalDocs();
   renderPortalProgress(data.progress);
+  startPortalChatPoll();
+}
+
+// ═══════════════════════════════════════════
+//  MESSAGES (chat with JTES)
+//  Firebase shape: portalChats/{username}/{pushId} = { from: 'admin'|'client', text, timestamp }
+//  No real-time backend here (same posture as the rest of this site), so the
+//  thread just polls every few seconds while the dashboard is open.
+// ═══════════════════════════════════════════
+let portalChatPollTimer = null;
+
+function startPortalChatPoll() {
+  loadPortalChatThread();
+  stopPortalChatPoll();
+  portalChatPollTimer = setInterval(loadPortalChatThread, 4000);
+}
+function stopPortalChatPoll() {
+  if (portalChatPollTimer) { clearInterval(portalChatPollTimer); portalChatPollTimer = null; }
+}
+
+async function loadPortalChatThread() {
+  if (!portalKey) return;
+  try {
+    const res = await fetch(`${FB_DB_URL}/portalChats/${encodeURIComponent(portalKey)}.json`);
+    const data = await res.json();
+    renderPortalChatThread(data || {});
+  } catch (e) { /* stay silent — will retry on next poll */ }
+}
+
+function renderPortalChatThread(data) {
+  const thread = document.getElementById('portal-chat-thread');
+  const atBottom = thread.scrollTop + thread.clientHeight >= thread.scrollHeight - 40;
+  const msgs = Object.values(data).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  if (!msgs.length) {
+    thread.innerHTML = '<div class="chat-empty"><i class="fas fa-comment-dots"></i><p>No messages yet — send us a message any time.</p></div>';
+    return;
+  }
+  thread.innerHTML = msgs.map(m => {
+    const mine = m.from === 'client';
+    const time = new Date(m.timestamp).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    return `<div class="chat-bubble-row ${mine ? 'mine' : 'theirs'}">
+      <div class="chat-bubble">${escapeHtml(m.text)}</div>
+      <div class="chat-bubble-time">${time}</div>
+    </div>`;
+  }).join('');
+  if (atBottom) thread.scrollTop = thread.scrollHeight;
+}
+
+async function sendPortalChatMessage() {
+  const input = document.getElementById('portal-chat-input');
+  const text = input.value.trim();
+  if (!text || !portalKey) return;
+  input.value = '';
+  try {
+    await fetch(`${FB_DB_URL}/portalChats/${encodeURIComponent(portalKey)}.json`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: 'client', text: text, timestamp: new Date().toISOString() })
+    });
+    loadPortalChatThread();
+  } catch (e) {
+    showToast('Failed to send message. Please try again.', true);
+  }
+}
+
+// ═══════════════════════════════════════════
+//  SEND FEEDBACK
+//  Firebase shape: portalFeedback/{pushId} = { from: username, message, timestamp }
+// ═══════════════════════════════════════════
+async function submitPortalFeedback() {
+  const textEl = document.getElementById('portal-feedback-text');
+  const btn = document.getElementById('portal-feedback-btn');
+  const message = textEl.value.trim();
+  if (!message) { showToast('Please write something before sending.', true); return; }
+  if (!portalKey) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+  try {
+    await fetch(`${FB_DB_URL}/portalFeedback.json`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: portalKey, message: message, timestamp: new Date().toISOString() })
+    });
+    textEl.value = '';
+    showToast('Thanks — your feedback has been sent!');
+  } catch (e) {
+    showToast('Failed to send feedback. Please try again.', true);
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Feedback';
 }
 
 function renderPortalProgress(progress) {
@@ -470,6 +613,7 @@ function closeViewer() {
 }
 
 function portalLogout() {
+  stopPortalChatPoll();
   sessionStorage.removeItem('jtes_portal_username');
   portalKey = null;
   portalDocs = [];
