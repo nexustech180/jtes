@@ -1554,6 +1554,19 @@ function applyHomeContent(data) {
   if (sections.blog) renderHomeBlogPreview(sections.blog);
   if (sections.newsletter) renderHomeNewsletter(sections.newsletter);
   if (data.sectionOrder) reorderHomeSections(data.sectionOrder);
+  pinEcosystemBelowHero();
+}
+
+// The ecosystem block isn't part of the CMS's reorderable section set (see
+// reorderHomeSections) — it always pulls hero/aboutPreview/etc out of the DOM
+// and reinserts them right before the footer, which left this section
+// stranded wherever it happened to sit in the raw markup (effectively above
+// the hero once reordering ran). Re-anchor it after the hero on every render
+// instead of relying on DOM order alone.
+function pinEcosystemBelowHero() {
+  var hero = document.getElementById('carousel-home');
+  var eco  = document.querySelector('.eco-section');
+  if (hero && eco) hero.parentNode.insertBefore(eco, hero.nextSibling);
 }
 
 async function loadHomeContent() {
