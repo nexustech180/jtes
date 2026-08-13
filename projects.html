@@ -920,7 +920,7 @@ footer { background: #0A0F1E; padding: 48px 80px 24px; text-align: center; color
         <h1>Research <span>Components</span> &amp; Technical Assistance</h1>
         <p>Need electrical or electronic components for your research project? Or expert technical assistance to bring your project to life? We have you covered.</p>
         <div class="slide-cta">
-          <a href="contact.html" class="btn-slide-primary"><i class="fas fa-envelope"></i> Get in Touch</a>
+          <button type="button" onclick="openProjectRequestModal()" class="btn-slide-primary" style="border:none;cursor:pointer;font-family:inherit;"><i class="fas fa-rocket"></i> Start a Project</button>
           <a href="#folders-container" class="btn-slide-secondary">Browse Projects <i class="fas fa-arrow-right"></i></a>
         </div>
         <div class="slide-contact">
@@ -971,6 +971,13 @@ footer { background: #0A0F1E; padding: 48px 80px 24px; text-align: center; color
 </section>
 
 <div class="project-container">
+  <div class="psp-intake-banner">
+    <div class="psp-intake-banner-text">
+      <h3>Have a project in mind?</h3>
+      <p>Tell us what you're building and we'll get back to you with next steps.</p>
+    </div>
+    <button type="button" class="psp-intake-banner-btn" onclick="openProjectRequestModal()"><i class="fas fa-paper-plane"></i> Start a Project</button>
+  </div>
   <div id="folders-container">
     <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Loading projects...</p></div>
   </div>
@@ -1592,6 +1599,220 @@ document.querySelectorAll('.nav-dropdown > a').forEach(function(link) {
     </span>
   </span>
 </a>
+
+<!-- ===== START A PROJECT — INTAKE FORM ===== -->
+<style>
+  .psp-intake-banner {
+    display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+    background: linear-gradient(135deg, #0F172A 0%, #1D4ED8 140%);
+    border-radius: 18px; padding: 26px 32px; margin: 0 0 32px;
+    box-shadow: 0 12px 32px rgba(29,78,216,0.25);
+  }
+  .psp-intake-banner-text h3 { color: #fff; font-size: 19px; font-weight: 800; margin: 0 0 4px; }
+  .psp-intake-banner-text p { color: rgba(255,255,255,0.72); font-size: 13.5px; margin: 0; }
+  .psp-intake-banner-btn {
+    background: #fff; color: var(--blue-dark); border: none; padding: 13px 24px; border-radius: 10px;
+    font-size: 14px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'Manrope', sans-serif; white-space: nowrap; transition: transform 0.2s;
+  }
+  .psp-intake-banner-btn:hover { transform: translateY(-2px); }
+
+  .psp-modal-overlay {
+    position: fixed; inset: 0; background: rgba(5,7,14,0.72); backdrop-filter: blur(6px); z-index: 6000;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  .psp-modal-overlay.open { opacity: 1; pointer-events: all; }
+  .psp-modal-box {
+    background: #fff; border-radius: 20px; max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto;
+    padding: 32px 30px; transform: scale(0.94); transition: transform 0.25s;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+  }
+  .psp-modal-overlay.open .psp-modal-box { transform: scale(1); }
+  .psp-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+  .psp-modal-head h3 { font-size: 21px; font-weight: 900; color: var(--dark2); margin: 0; }
+  .psp-modal-close {
+    background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; color: var(--text-muted);
+    cursor: pointer; flex-shrink: 0; font-size: 14px;
+  }
+  .psp-modal-close:hover { background: #fee2e2; color: #ef4444; }
+  .psp-modal-sub { font-size: 13.5px; color: var(--text-muted); margin: 0 0 22px; }
+  .psp-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .psp-group { margin-bottom: 14px; }
+  .psp-group label { display: block; font-size: 12.5px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .psp-group .req { color: #ef4444; }
+  .psp-group input, .psp-group select, .psp-group textarea {
+    width: 100%; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: 9px;
+    font-size: 14px; font-family: 'Manrope', sans-serif; box-sizing: border-box; color: var(--text);
+  }
+  .psp-group input:focus, .psp-group select:focus, .psp-group textarea:focus { outline: none; border-color: var(--blue); }
+  .psp-group textarea { resize: vertical; min-height: 90px; }
+  .psp-submit-btn {
+    width: 100%; background: var(--blue); color: #fff; border: none; padding: 14px; border-radius: 11px;
+    font-size: 15px; font-weight: 800; cursor: pointer; font-family: 'Manrope', sans-serif; margin-top: 4px;
+    display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s;
+  }
+  .psp-submit-btn:hover { background: var(--blue-dark); }
+  .psp-submit-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+  .psp-modal-note { font-size: 11.5px; color: #94a3b8; text-align: center; margin-top: 12px; }
+  .psp-success { text-align: center; padding: 10px 0 4px; }
+  .psp-success i { font-size: 46px; color: #10B981; margin-bottom: 14px; display: block; }
+  .psp-success h4 { font-size: 19px; font-weight: 800; color: var(--dark2); margin: 0 0 8px; }
+  .psp-success p { font-size: 13.5px; color: var(--text-muted); margin: 0 0 22px; line-height: 1.6; }
+  @media (max-width: 560px) {
+    .psp-form-row { grid-template-columns: 1fr; gap: 0; }
+    .psp-intake-banner { padding: 22px; }
+  }
+</style>
+
+<div class="psp-modal-overlay" id="pspModalOverlay">
+  <div class="psp-modal-box">
+    <div id="pspFormView">
+      <div class="psp-modal-head">
+        <h3><i class="fas fa-rocket" style="color:var(--blue);"></i> Start a Project</h3>
+        <button type="button" class="psp-modal-close" onclick="closeProjectRequestModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <p class="psp-modal-sub">Tell us about your project and a JTES agent will follow up with next steps.</p>
+
+      <div class="psp-form-row">
+        <div class="psp-group">
+          <label><span class="req">*</span> Full Name</label>
+          <input type="text" id="psp-name" placeholder="e.g. Kofi Mensah">
+        </div>
+        <div class="psp-group">
+          <label><span class="req">*</span> Phone Number</label>
+          <input type="tel" id="psp-phone" placeholder="e.g. 0548029027">
+        </div>
+      </div>
+      <div class="psp-group">
+        <label><span class="req">*</span> Email Address</label>
+        <input type="email" id="psp-email" placeholder="your@email.com">
+      </div>
+      <div class="psp-group">
+        <label>Organization / School (optional)</label>
+        <input type="text" id="psp-org" placeholder="e.g. Achimota School">
+      </div>
+      <div class="psp-group">
+        <label><span class="req">*</span> Project Type</label>
+        <select id="psp-type">
+          <option value="">Select a project type</option>
+          <option>Research Components &amp; Technical Assistance</option>
+          <option>STEM / Robotics Curriculum Project</option>
+          <option>Electrical Installation or Repair (Prime Aide)</option>
+          <option>Custom Build / Prototype</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="psp-group">
+        <label><span class="req">*</span> Project Description</label>
+        <textarea id="psp-desc" placeholder="What are you trying to build or solve? Include scope, timeline, and any constraints."></textarea>
+      </div>
+      <div class="psp-group">
+        <label>Estimated Budget (optional)</label>
+        <select id="psp-budget">
+          <option value="">Prefer not to say</option>
+          <option>Under GHS 500</option>
+          <option>GHS 500 – 2,000</option>
+          <option>GHS 2,000 – 10,000</option>
+          <option>Above GHS 10,000</option>
+        </select>
+      </div>
+
+      <button type="button" class="psp-submit-btn" id="pspSubmitBtn" onclick="submitProjectRequest()">
+        <i class="fas fa-paper-plane"></i> Submit Request
+      </button>
+      <p class="psp-modal-note"><i class="fas fa-lock"></i> Your information is kept private. We'll respond within 24 hours.</p>
+    </div>
+
+    <div id="pspSuccessView" style="display:none;">
+      <div class="psp-success">
+        <i class="fas fa-check-circle"></i>
+        <h4>Request Received!</h4>
+        <p>Thanks — a JTES agent will reach out shortly. Your reference is <strong id="pspRefCode"></strong>.</p>
+        <a id="pspSuccessWaBtn" href="#" target="_blank" rel="noopener"
+          style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px;background:linear-gradient(135deg,#25D366,#1DA851);color:#fff;border-radius:11px;font-size:14px;font-weight:700;text-decoration:none;margin-bottom:10px;">
+          <i class="fab fa-whatsapp"></i> Message Us on WhatsApp
+        </a>
+        <button type="button" class="psp-modal-close" style="width:100%;border-radius:11px;padding:12px;" onclick="closeProjectRequestModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function fbPushProjects(path, data) {
+  var res = await fetch(FB_DB_URL + '/' + path + '.json', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+  });
+  return res.json();
+}
+function openProjectRequestModal() {
+  document.getElementById('pspFormView').style.display = 'block';
+  document.getElementById('pspSuccessView').style.display = 'none';
+  document.getElementById('pspModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeProjectRequestModal() {
+  document.getElementById('pspModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+async function submitProjectRequest() {
+  var name  = (document.getElementById('psp-name').value  || '').trim();
+  var phone = (document.getElementById('psp-phone').value || '').trim();
+  var email = (document.getElementById('psp-email').value || '').trim();
+  var org   = (document.getElementById('psp-org').value   || '').trim();
+  var type  = document.getElementById('psp-type').value;
+  var desc  = (document.getElementById('psp-desc').value  || '').trim();
+  var budget = document.getElementById('psp-budget').value;
+
+  if (!name)  { showToast('Please enter your full name.', true); return; }
+  if (!phone) { showToast('Please enter your phone number.', true); return; }
+  if (!email || !email.includes('@')) { showToast('Please enter a valid email address.', true); return; }
+  if (!type)  { showToast('Please select a project type.', true); return; }
+  if (!desc)  { showToast('Please describe your project.', true); return; }
+
+  var btn = document.getElementById('pspSubmitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+  var refCode = 'PRJ-' + Date.now();
+  try {
+    await fbPushProjects('projectRequests', {
+      ref: refCode, date: new Date().toISOString(), status: 'New',
+      name: name, phone: phone, email: email, organization: org,
+      type: type, description: desc, budget: budget
+    });
+
+    var waLines = [
+      '🚀 *NEW PROJECT REQUEST — ' + refCode + '*',
+      '━━━━━━━━━━━━━━━━━━━━',
+      '👤 *Name:* ' + name,
+      '📞 *Phone:* ' + phone,
+      '📧 *Email:* ' + email
+    ];
+    if (org) waLines.push('🏢 *Organization:* ' + org);
+    waLines.push('🗂️ *Type:* ' + type);
+    if (budget) waLines.push('💰 *Budget:* ' + budget);
+    waLines.push('━━━━━━━━━━━━━━━━━━━━');
+    waLines.push('📝 *Description:* ' + desc);
+    var waBtn = document.getElementById('pspSuccessWaBtn');
+    if (waBtn) waBtn.href = 'https://wa.me/233548029027?text=' + encodeURIComponent(waLines.join('\n'));
+
+    document.getElementById('pspRefCode').textContent = refCode;
+    document.getElementById('pspFormView').style.display = 'none';
+    document.getElementById('pspSuccessView').style.display = 'block';
+    ['psp-name','psp-phone','psp-email','psp-org','psp-desc'].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.value = '';
+    });
+    document.getElementById('psp-type').value = '';
+    document.getElementById('psp-budget').value = '';
+  } catch (e) {
+    showToast('Something went wrong. Please try again.', true);
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Request';
+}
+</script>
 
 </body>
 </html>

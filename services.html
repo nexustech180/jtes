@@ -1486,7 +1486,6 @@ function reorderPageSections(order, idMap) {
 // ═══════════════════════════════════════════
 //  VISUAL EDIT MODE — generic engine, identical to index.html's/about.html's.
 // ═══════════════════════════════════════════
-var EDIT_ADMIN_PASS = 'JTES@2025';
 var CMS_CLD_CLOUD = 'dx8ziypwz';
 var CMS_CLD_PRESET = 'JASSAN';
 var cmsDirty = false;
@@ -1781,36 +1780,6 @@ async function cmsSavePageContent() {
     setTimeout(function() { btn.innerHTML = '<i class="fas fa-save"></i> Save Changes'; }, 2200);
   }
 }
-function showEditAuthGate(onSuccess) {
-  var overlay = document.createElement('div');
-  overlay.id = 'cms-auth-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:10001;background:linear-gradient(135deg,#0A0F1E 0%,#1E3A8A 100%);display:flex;align-items:center;justify-content:center;padding:20px;';
-  overlay.innerHTML =
-    '<div style="background:#fff;border-radius:20px;padding:40px 32px;max-width:380px;width:100%;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,0.3);font-family:Manrope,sans-serif;">' +
-      '<div style="width:56px;height:56px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;"><i class="fas fa-pen" style="font-size:22px;color:#2563EB;"></i></div>' +
-      '<h2 style="font-size:22px;font-weight:900;color:#0F172A;margin-bottom:6px;">Edit This Page</h2>' +
-      '<p style="font-size:14px;color:#64748b;margin-bottom:24px;">Enter the admin password to start editing.</p>' +
-      '<input type="password" id="cms-auth-pass" placeholder="Password" style="width:100%;padding:13px 16px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:16px;text-align:center;margin-bottom:12px;font-family:Manrope,sans-serif;box-sizing:border-box;">' +
-      '<p id="cms-auth-error" style="display:none;color:#ef4444;font-size:13px;margin-bottom:12px;">Incorrect password.</p>' +
-      '<button type="button" id="cms-auth-submit" style="width:100%;background:#2563EB;color:#fff;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Continue</button>' +
-    '</div>';
-  document.body.appendChild(overlay);
-  var input = document.getElementById('cms-auth-pass');
-  input.focus();
-  function attempt() {
-    if (input.value === EDIT_ADMIN_PASS) {
-      sessionStorage.setItem('jtes_edit_auth', input.value);
-      overlay.remove();
-      onSuccess();
-    } else {
-      document.getElementById('cms-auth-error').style.display = 'block';
-      input.value = '';
-      input.focus();
-    }
-  }
-  document.getElementById('cms-auth-submit').onclick = attempt;
-  input.addEventListener('keydown', function(e) { if (e.key === 'Enter') attempt(); });
-}
 // ── LINK EDITOR: buttons/links become inert in edit mode; content
 // buttons (tagged data-cms-href-path) open a rename + destination
 // popover instead of navigating away and losing unsaved edits. ──
@@ -1912,8 +1881,7 @@ function startEditMode() {
 }
 function initEditModeIfRequested() {
   if (!isEditMode()) return;
-  if (sessionStorage.getItem('jtes_edit_auth') === EDIT_ADMIN_PASS) startEditMode();
-  else showEditAuthGate(startEditMode);
+  startEditMode();
 }
 
 // ===== INIT ALL CAROUSELS =====

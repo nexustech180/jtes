@@ -942,6 +942,7 @@
     <div class="section-badge dark"><span class="dot"></span> JTES Creative Studio</div>
     <h1>Animation<span>-Dot</span></h1>
     <p>A curated showcase of images, videos, 3D works and creative projects from the JTES team.</p>
+    <button type="button" class="ad-hero-cta" onclick="openDesignRequestModal()"><i class="fas fa-magic"></i> Request Design / Get a Quote</button>
   </div>
 </section>
 
@@ -1790,6 +1791,221 @@ window.initModelViewer = function(containerId, modelUrl, ext, mtlUrl) {
     </span>
   </span>
 </a>
+
+<!-- ===== REQUEST DESIGN / QUOTE — INTAKE FORM ===== -->
+<style>
+  .ad-hero-cta {
+    margin-top: 26px; background: #fff; color: var(--dark2, #0F172A); border: none; padding: 14px 28px;
+    border-radius: 11px; font-size: 14.5px; font-weight: 800; cursor: pointer; font-family: 'Manrope', sans-serif;
+    display: inline-flex; align-items: center; gap: 9px; transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  }
+  .ad-hero-cta:hover { transform: translateY(-2px); }
+
+  .ad-modal-overlay {
+    position: fixed; inset: 0; background: rgba(5,7,14,0.72); backdrop-filter: blur(6px); z-index: 6000;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  .ad-modal-overlay.open { opacity: 1; pointer-events: all; }
+  .ad-modal-box {
+    background: #fff; border-radius: 20px; max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto;
+    padding: 32px 30px; transform: scale(0.94); transition: transform 0.25s;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+  }
+  .ad-modal-overlay.open .ad-modal-box { transform: scale(1); }
+  .ad-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+  .ad-modal-head h3 { font-size: 21px; font-weight: 900; color: var(--dark2, #0F172A); margin: 0; }
+  .ad-modal-close {
+    background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; color: var(--text-muted, #64748b);
+    cursor: pointer; flex-shrink: 0; font-size: 14px;
+  }
+  .ad-modal-close:hover { background: #fee2e2; color: #ef4444; }
+  .ad-modal-sub { font-size: 13.5px; color: var(--text-muted, #64748b); margin: 0 0 22px; }
+  .ad-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .ad-group { margin-bottom: 14px; }
+  .ad-group label { display: block; font-size: 12.5px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
+  .ad-group .req { color: #ef4444; }
+  .ad-group input, .ad-group select, .ad-group textarea {
+    width: 100%; padding: 11px 13px; border: 1.5px solid var(--border, #e2e8f0); border-radius: 9px;
+    font-size: 14px; font-family: 'Manrope', sans-serif; box-sizing: border-box; color: #1e293b;
+  }
+  .ad-group input:focus, .ad-group select:focus, .ad-group textarea:focus { outline: none; border-color: var(--blue, #2563EB); }
+  .ad-group textarea { resize: vertical; min-height: 90px; }
+  .ad-form-error { display: none; color: #ef4444; font-size: 12.5px; margin: -6px 0 14px; }
+  .ad-submit-btn {
+    width: 100%; background: var(--blue, #2563EB); color: #fff; border: none; padding: 14px; border-radius: 11px;
+    font-size: 15px; font-weight: 800; cursor: pointer; font-family: 'Manrope', sans-serif; margin-top: 4px;
+    display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s;
+  }
+  .ad-submit-btn:hover { background: var(--blue-dark, #1D4ED8); }
+  .ad-submit-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+  .ad-modal-note { font-size: 11.5px; color: #94a3b8; text-align: center; margin-top: 12px; }
+  .ad-success { text-align: center; padding: 10px 0 4px; }
+  .ad-success i { font-size: 46px; color: #10B981; margin-bottom: 14px; display: block; }
+  .ad-success h4 { font-size: 19px; font-weight: 800; color: var(--dark2, #0F172A); margin: 0 0 8px; }
+  .ad-success p { font-size: 13.5px; color: var(--text-muted, #64748b); margin: 0 0 22px; line-height: 1.6; }
+  @media (max-width: 560px) {
+    .ad-form-row { grid-template-columns: 1fr; gap: 0; }
+  }
+</style>
+
+<div class="ad-modal-overlay" id="adModalOverlay">
+  <div class="ad-modal-box">
+    <div id="adFormView">
+      <div class="ad-modal-head">
+        <h3><i class="fas fa-magic" style="color:var(--blue);"></i> Request Design / Quote</h3>
+        <button type="button" class="ad-modal-close" onclick="closeDesignRequestModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <p class="ad-modal-sub">Tell us what you'd like designed, animated or modeled and we'll send a quote.</p>
+
+      <div class="ad-form-row">
+        <div class="ad-group">
+          <label><span class="req">*</span> Full Name</label>
+          <input type="text" id="ad-name" placeholder="e.g. Kofi Mensah">
+        </div>
+        <div class="ad-group">
+          <label><span class="req">*</span> Phone Number</label>
+          <input type="tel" id="ad-phone" placeholder="e.g. 0548029027">
+        </div>
+      </div>
+      <div class="ad-group">
+        <label><span class="req">*</span> Email Address</label>
+        <input type="email" id="ad-email" placeholder="your@email.com">
+      </div>
+      <div class="ad-group">
+        <label><span class="req">*</span> Service Type</label>
+        <select id="ad-type">
+          <option value="">Select a service</option>
+          <option>Logo &amp; Brand Identity</option>
+          <option>Animation / Motion Graphics</option>
+          <option>3D Modeling</option>
+          <option>Print Design (flyers, banners, cards)</option>
+          <option>Illustration</option>
+          <option>Design Mentorship</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="ad-group">
+        <label><span class="req">*</span> Project Description</label>
+        <textarea id="ad-desc" placeholder="What do you need designed? Include style references, dimensions, or use case."></textarea>
+      </div>
+      <div class="ad-form-row">
+        <div class="ad-group">
+          <label>Estimated Budget (optional)</label>
+          <select id="ad-budget">
+            <option value="">Prefer not to say</option>
+            <option>Under GHS 300</option>
+            <option>GHS 300 – 1,000</option>
+            <option>GHS 1,000 – 5,000</option>
+            <option>Above GHS 5,000</option>
+          </select>
+        </div>
+        <div class="ad-group">
+          <label>Needed By (optional)</label>
+          <input type="date" id="ad-deadline">
+        </div>
+      </div>
+
+      <p class="ad-form-error" id="adFormError"></p>
+      <button type="button" class="ad-submit-btn" id="adSubmitBtn" onclick="submitDesignRequest()">
+        <i class="fas fa-paper-plane"></i> Submit Request
+      </button>
+      <p class="ad-modal-note"><i class="fas fa-lock"></i> Your information is kept private. We'll respond within 24 hours.</p>
+    </div>
+
+    <div id="adSuccessView" style="display:none;">
+      <div class="ad-success">
+        <i class="fas fa-check-circle"></i>
+        <h4>Request Received!</h4>
+        <p>Thanks — a JTES designer will reach out with a quote. Your reference is <strong id="adRefCode"></strong>.</p>
+        <a id="adSuccessWaBtn" href="#" target="_blank" rel="noopener"
+          style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px;background:linear-gradient(135deg,#25D366,#1DA851);color:#fff;border-radius:11px;font-size:14px;font-weight:700;text-decoration:none;margin-bottom:10px;">
+          <i class="fab fa-whatsapp"></i> Message Us on WhatsApp
+        </a>
+        <button type="button" class="ad-modal-close" style="width:100%;border-radius:11px;padding:12px;" onclick="closeDesignRequestModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function adFbPush(path, data) {
+  var res = await fetch(AD_FB_URL + '/' + path + '.json', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+  });
+  return res.json();
+}
+function openDesignRequestModal() {
+  document.getElementById('adFormView').style.display = 'block';
+  document.getElementById('adSuccessView').style.display = 'none';
+  document.getElementById('adModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeDesignRequestModal() {
+  document.getElementById('adModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+async function submitDesignRequest() {
+  var name  = (document.getElementById('ad-name').value  || '').trim();
+  var phone = (document.getElementById('ad-phone').value || '').trim();
+  var email = (document.getElementById('ad-email').value || '').trim();
+  var type  = document.getElementById('ad-type').value;
+  var desc  = (document.getElementById('ad-desc').value  || '').trim();
+  var budget = document.getElementById('ad-budget').value;
+  var deadline = document.getElementById('ad-deadline').value;
+  var errEl = document.getElementById('adFormError');
+  errEl.style.display = 'none';
+
+  function fail(msg) { errEl.textContent = msg; errEl.style.display = 'block'; }
+  if (!name)  { fail('Please enter your full name.'); return; }
+  if (!phone) { fail('Please enter your phone number.'); return; }
+  if (!email || !email.includes('@')) { fail('Please enter a valid email address.'); return; }
+  if (!type)  { fail('Please select a service type.'); return; }
+  if (!desc)  { fail('Please describe what you need designed.'); return; }
+
+  var btn = document.getElementById('adSubmitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+  var refCode = 'AD-' + Date.now();
+  try {
+    await adFbPush('designRequests', {
+      ref: refCode, date: new Date().toISOString(), status: 'New',
+      name: name, phone: phone, email: email,
+      type: type, description: desc, budget: budget, deadline: deadline
+    });
+
+    var waLines = [
+      '🎨 *NEW DESIGN REQUEST — ' + refCode + '*',
+      '━━━━━━━━━━━━━━━━━━━━',
+      '👤 *Name:* ' + name,
+      '📞 *Phone:* ' + phone,
+      '📧 *Email:* ' + email,
+      '🗂️ *Service:* ' + type
+    ];
+    if (budget)   waLines.push('💰 *Budget:* ' + budget);
+    if (deadline) waLines.push('📅 *Needed by:* ' + deadline);
+    waLines.push('━━━━━━━━━━━━━━━━━━━━');
+    waLines.push('📝 *Description:* ' + desc);
+    var waBtn = document.getElementById('adSuccessWaBtn');
+    if (waBtn) waBtn.href = 'https://wa.me/233548029027?text=' + encodeURIComponent(waLines.join('\n'));
+
+    document.getElementById('adRefCode').textContent = refCode;
+    document.getElementById('adFormView').style.display = 'none';
+    document.getElementById('adSuccessView').style.display = 'block';
+    ['ad-name','ad-phone','ad-email','ad-desc','ad-deadline'].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.value = '';
+    });
+    document.getElementById('ad-type').value = '';
+    document.getElementById('ad-budget').value = '';
+  } catch (e) {
+    fail('Something went wrong. Please try again.');
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Request';
+}
+</script>
 
 </body>
 </html>
