@@ -990,7 +990,7 @@
         <div class="svc-check-item"><i class="fas fa-check-circle"></i> Competition training</div>
         <div class="svc-check-item"><i class="fas fa-check-circle"></i> School STEM programs</div>
       </div>
-      <a class="btn-blue" href="contact.html">Get Started <i class="fas fa-arrow-right"></i></a>
+      <button type="button" class="btn-blue" style="border:none;cursor:pointer;font-family:inherit;" onclick="openServiceRequestModal('STEM, STEAM &amp; Robotics Education')">Get Started <i class="fas fa-arrow-right"></i></button>
     </div>
     <div class="svc-img-box">
       <img src="https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000224939.jpg" alt="STEM Education">
@@ -1013,7 +1013,7 @@
         <div class="svc-check-item"><i class="fas fa-check-circle"></i> Testing &amp; validation</div>
         <div class="svc-check-item"><i class="fas fa-check-circle"></i> Documentation &amp; training</div>
       </div>
-      <a class="btn-blue" href="contact.html">Get Started <i class="fas fa-arrow-right"></i></a>
+      <button type="button" class="btn-blue" style="border:none;cursor:pointer;font-family:inherit;" onclick="openServiceRequestModal('Research &amp; Product Development')">Get Started <i class="fas fa-arrow-right"></i></button>
     </div>
     <div class="svc-img-box">
       <img src="https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000224876.jpg" alt="Research & Development">
@@ -1059,7 +1059,7 @@
         <div class="svc-check-item"><i class="fas fa-check-circle"></i> Industrial IoT systems</div>
         <div class="svc-check-item"><i class="fas fa-check-circle"></i> Custom solutions for homes, offices &amp; schools</div>
       </div>
-      <a class="btn-blue" href="contact.html">Get Started <i class="fas fa-arrow-right"></i></a>
+      <button type="button" class="btn-blue" style="border:none;cursor:pointer;font-family:inherit;" onclick="openServiceRequestModal('IoT &amp; Smart Automation')">Get Started <i class="fas fa-arrow-right"></i></button>
     </div>
     <div class="svc-img-box">
       <img src="https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000224942.jpg" alt="IoT">
@@ -1082,7 +1082,7 @@
         <div class="svc-check-item"><i class="fas fa-check-circle"></i> Program evaluation</div>
         <div class="svc-check-item"><i class="fas fa-check-circle"></i> Alignment with local &amp; international standards</div>
       </div>
-      <a class="btn-blue" href="contact.html">Get Started <i class="fas fa-arrow-right"></i></a>
+      <button type="button" class="btn-blue" style="border:none;cursor:pointer;font-family:inherit;" onclick="openServiceRequestModal('Curriculum Development &amp; Consulting')">Get Started <i class="fas fa-arrow-right"></i></button>
     </div>
     <div class="svc-img-box">
       <img src="https://uploads.onecompiler.io/43nezjdbt/44gb4q75g/1000226843.jpg" alt="Curriculum Development">
@@ -1455,12 +1455,16 @@ async function subscribeNewsletter() {
         <label><span class="req">*</span> Service Type</label>
         <select id="psa-type">
           <option value="">Select a service</option>
+          <option>STEM, STEAM &amp; Robotics Education</option>
+          <option>Research &amp; Product Development</option>
           <option>Electrical installations</option>
           <option>Panel upgrades &amp; maintenance</option>
           <option>Wiring &amp; rewiring</option>
           <option>Safety inspections</option>
           <option>Emergency repairs</option>
           <option>Industrial electrical work</option>
+          <option>IoT &amp; Smart Automation</option>
+          <option>Curriculum Development &amp; Consulting</option>
           <option>Other</option>
         </select>
       </div>
