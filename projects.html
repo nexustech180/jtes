@@ -1663,6 +1663,11 @@ document.querySelectorAll('.nav-dropdown > a').forEach(function(link) {
   .psp-submit-btn:hover { background: var(--blue-dark); }
   .psp-submit-btn:disabled { opacity: 0.65; cursor: not-allowed; }
   .psp-modal-note { font-size: 11.5px; color: #94a3b8; text-align: center; margin-top: 12px; }
+  .psp-consent-row { display: flex; align-items: flex-start; gap: 10px; margin: 6px 0 16px; cursor: pointer; }
+  .psp-consent-row input[type=checkbox] { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--blue); cursor: pointer; flex-shrink: 0; }
+  .psp-consent-row span { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+  .psp-consent-row a { color: var(--blue); font-weight: 700; text-decoration: none; }
+  .psp-consent-row a:hover { text-decoration: underline; }
   .psp-success { text-align: center; }
   .psp-success i { font-size: 46px; color: #10B981; margin-bottom: 14px; display: block; }
   .psp-success h4 { font-size: 19px; font-weight: 800; color: var(--dark2); margin: 0 0 8px; }
@@ -1729,6 +1734,10 @@ document.querySelectorAll('.nav-dropdown > a').forEach(function(link) {
         </select>
       </div>
 
+      <label class="psp-consent-row">
+        <input type="checkbox" id="psp-consent">
+        <span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms &amp; Conditions</a> and <a href="privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a></span>
+      </label>
       <button type="button" class="psp-submit-btn" id="pspSubmitBtn" onclick="submitProjectRequest()">
         <i class="fas fa-paper-plane"></i> Submit Request
       </button>
@@ -1785,6 +1794,7 @@ async function submitProjectRequest() {
   if (!email || !email.includes('@')) { showToast('Please enter a valid email address.', true); return; }
   if (!type)  { showToast('Please select a project type.', true); return; }
   if (!desc)  { showToast('Please describe your project.', true); return; }
+  if (!document.getElementById('psp-consent').checked) { showToast('Please agree to the Terms & Conditions and Privacy Policy.', true); return; }
 
   var btn = document.getElementById('pspSubmitBtn');
   btn.disabled = true;
@@ -1822,6 +1832,7 @@ async function submitProjectRequest() {
     });
     document.getElementById('psp-type').value = '';
     document.getElementById('psp-budget').value = '';
+    document.getElementById('psp-consent').checked = false;
   } catch (e) {
     showToast('Something went wrong. Please try again.', true);
   }

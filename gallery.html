@@ -1849,6 +1849,11 @@ window.initModelViewer = function(containerId, modelUrl, ext, mtlUrl) {
   .ad-submit-btn:hover { background: var(--blue-dark, #1D4ED8); }
   .ad-submit-btn:disabled { opacity: 0.65; cursor: not-allowed; }
   .ad-modal-note { font-size: 11.5px; color: #94a3b8; text-align: center; margin-top: 12px; }
+  .ad-consent-row { display: flex; align-items: flex-start; gap: 10px; margin: 6px 0 16px; cursor: pointer; }
+  .ad-consent-row input[type=checkbox] { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--blue, #2563EB); cursor: pointer; flex-shrink: 0; }
+  .ad-consent-row span { font-size: 13px; color: var(--text-muted, #64748b); line-height: 1.5; }
+  .ad-consent-row a { color: var(--blue, #2563EB); font-weight: 700; text-decoration: none; }
+  .ad-consent-row a:hover { text-decoration: underline; }
   .ad-success { text-align: center; }
   .ad-success i { font-size: 46px; color: #10B981; margin-bottom: 14px; display: block; }
   .ad-success h4 { font-size: 19px; font-weight: 800; color: var(--dark2, #0F172A); margin: 0 0 8px; }
@@ -1918,6 +1923,10 @@ window.initModelViewer = function(containerId, modelUrl, ext, mtlUrl) {
         </div>
       </div>
 
+      <label class="ad-consent-row">
+        <input type="checkbox" id="ad-consent">
+        <span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms &amp; Conditions</a> and <a href="privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a></span>
+      </label>
       <p class="ad-form-error" id="adFormError"></p>
       <button type="button" class="ad-submit-btn" id="adSubmitBtn" onclick="submitDesignRequest()">
         <i class="fas fa-paper-plane"></i> Submit Request
@@ -1978,6 +1987,7 @@ async function submitDesignRequest() {
   if (!email || !email.includes('@')) { fail('Please enter a valid email address.'); return; }
   if (!type)  { fail('Please select a service type.'); return; }
   if (!desc)  { fail('Please describe what you need designed.'); return; }
+  if (!document.getElementById('ad-consent').checked) { fail('Please agree to the Terms & Conditions and Privacy Policy.'); return; }
 
   var btn = document.getElementById('adSubmitBtn');
   btn.disabled = true;
@@ -2015,6 +2025,7 @@ async function submitDesignRequest() {
     });
     document.getElementById('ad-type').value = '';
     document.getElementById('ad-budget').value = '';
+    document.getElementById('ad-consent').checked = false;
   } catch (e) {
     fail('Something went wrong. Please try again.');
   }

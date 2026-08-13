@@ -1422,6 +1422,11 @@ async function subscribeNewsletter() {
   .psa-submit-btn:hover { background: var(--blue-dark, #1D4ED8); }
   .psa-submit-btn:disabled { opacity: 0.65; cursor: not-allowed; }
   .psa-modal-note { font-size: 11.5px; color: #94a3b8; text-align: center; margin-top: 12px; }
+  .psa-consent-row { display: flex; align-items: flex-start; gap: 10px; margin: 6px 0 16px; cursor: pointer; }
+  .psa-consent-row input[type=checkbox] { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--blue, #2563EB); cursor: pointer; flex-shrink: 0; }
+  .psa-consent-row span { font-size: 13px; color: var(--text-muted, #64748b); line-height: 1.5; }
+  .psa-consent-row a { color: var(--blue, #2563EB); font-weight: 700; text-decoration: none; }
+  .psa-consent-row a:hover { text-decoration: underline; }
   .psa-success { text-align: center; }
   .psa-success i { font-size: 46px; color: #10B981; margin-bottom: 14px; display: block; }
   .psa-success h4 { font-size: 19px; font-weight: 800; color: var(--dark2, #0F172A); margin: 0 0 8px; }
@@ -1487,6 +1492,10 @@ async function subscribeNewsletter() {
         <input type="date" id="psa-date">
       </div>
 
+      <label class="psa-consent-row">
+        <input type="checkbox" id="psa-consent">
+        <span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms &amp; Conditions</a> and <a href="privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a></span>
+      </label>
       <p class="psa-form-error" id="psaFormError"></p>
       <button type="button" class="psa-submit-btn" id="psaSubmitBtn" onclick="submitServiceRequest()">
         <i class="fas fa-paper-plane"></i> Submit Request
@@ -1550,6 +1559,7 @@ async function submitServiceRequest() {
   if (!address) { fail('Please enter the service address.'); return; }
   if (!type)    { fail('Please select a service type.'); return; }
   if (!desc)    { fail('Please describe the issue or job.'); return; }
+  if (!document.getElementById('psa-consent').checked) { fail('Please agree to the Terms & Conditions and Privacy Policy.'); return; }
 
   var btn = document.getElementById('psaSubmitBtn');
   btn.disabled = true;
@@ -1586,6 +1596,7 @@ async function submitServiceRequest() {
       var el = document.getElementById(id); if (el) el.value = '';
     });
     document.getElementById('psa-type').value = '';
+    document.getElementById('psa-consent').checked = false;
   } catch (e) {
     fail('Something went wrong. Please try again.');
   }

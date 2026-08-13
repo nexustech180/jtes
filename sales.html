@@ -917,6 +917,11 @@
   .btn-place-order:hover { transform: translateY(-2px); box-shadow: 0 14px 40px rgba(37,99,235,0.4), inset 0 1px 0 rgba(255,255,255,0.2); }
   .btn-place-order:active { transform: translateY(0); }
   .btn-place-order:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+  .order-consent-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 16px; cursor: pointer; }
+  .order-consent-row input[type=checkbox] { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--blue); cursor: pointer; flex-shrink: 0; }
+  .order-consent-row span { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+  .order-consent-row a { color: var(--blue); font-weight: 700; text-decoration: none; }
+  .order-consent-row a:hover { text-decoration: underline; }
   .order-note {
     font-size: 11.5px; color: var(--text-muted); text-align: center; margin-top: 14px;
     display: flex; align-items: center; justify-content: center; gap: 6px; line-height: 1.5;
@@ -1522,6 +1527,10 @@
 
         <!-- Submit -->
         <div class="order-submit-section">
+          <label class="order-consent-row">
+            <input type="checkbox" id="ord-consent">
+            <span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms &amp; Conditions</a> and <a href="privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a></span>
+          </label>
           <button class="btn-place-order" id="placeOrderBtn" onclick="placeOrder()">
             <i class="fas fa-paper-plane"></i> Place Order
           </button>
@@ -2320,6 +2329,7 @@ async function placeOrder() {
   if (!name)    { alert('Please enter your full name.');     return; }
   if (!phone)   { alert('Please enter your phone number.');  return; }
   if (!address) { alert('Please enter your delivery address.'); return; }
+  if (!document.getElementById('ord-consent').checked) { alert('Please agree to the Terms & Conditions and Privacy Policy.'); return; }
 
   var items = Object.values(cart);
   if (items.length === 0) {
@@ -2390,6 +2400,7 @@ async function placeOrder() {
     });
     var rg = document.getElementById('ord-region');  if (rg) rg.value = '';
     var py = document.getElementById('ord-payment'); if (py) py.value = '';
+    var cb = document.getElementById('ord-consent'); if (cb) cb.checked = false;
     closeOrderModal();
     document.getElementById('successModal').classList.add('open');
     document.body.style.overflow = 'hidden';

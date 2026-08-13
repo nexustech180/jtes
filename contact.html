@@ -123,6 +123,11 @@
   }
   .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
   .form-group textarea { resize: vertical; min-height: 120px; }
+  .contact-consent-row { display: flex; align-items: flex-start; gap: 10px; margin: 4px 0 20px; cursor: pointer; }
+  .contact-consent-row input[type=checkbox] { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--blue); cursor: pointer; flex-shrink: 0; }
+  .contact-consent-row span { font-size: 13.5px; color: var(--text-muted); line-height: 1.5; }
+  .contact-consent-row a { color: var(--blue); font-weight: 700; text-decoration: none; }
+  .contact-consent-row a:hover { text-decoration: underline; }
   .form-submit { text-align: center; margin-top: 8px; }
   .btn-send {
     background: var(--blue); color: #fff; border: none; padding: 15px 40px;
@@ -438,6 +443,10 @@
         <label>Message *</label>
         <textarea id="message" name="message" placeholder="Tell us about your project or inquiry..." required></textarea>
       </div>
+      <label class="contact-consent-row">
+        <input type="checkbox" id="contact-consent">
+        <span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms &amp; Conditions</a> and <a href="privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a></span>
+      </label>
       <div class="form-submit">
         <button type="submit" class="btn-send" id="send-btn">Send Message <i class="fas fa-paper-plane"></i></button>
       </div>
@@ -1197,6 +1206,10 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     if (!name || !email || !message) {
       alert('Please fill in your Name, Email and Message.');
+      return;
+    }
+    if (!document.getElementById('contact-consent').checked) {
+      alert('Please agree to the Terms & Conditions and Privacy Policy.');
       return;
     }
 
