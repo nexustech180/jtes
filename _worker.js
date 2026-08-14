@@ -36,6 +36,31 @@
 //                             Configure it in the Paystack dashboard under
 //                             Settings → API Keys & Webhooks as:
 //                               https://<this-worker's-domain>/api/paystack-webhook
+//   POST /api/portal-login   — real, server-verified Client Portal login. Checks the
+//                             submitted password against a salted SHA-256 hash (never
+//                             a plaintext compare), rate-limits repeated failures per
+//                             username, and issues a signed, expiring session token.
+//   GET  /api/portal-data    — returns the authenticated client's own documents,
+//                             progress and phone — requires a valid Bearer token from
+//                             /api/portal-login.
+//   GET  /api/portal-requests — same auth, returns the client's own project/service/
+//                             design requests (matched by their stored phone number).
+//   GET  /api/portal-chat    — same auth, returns the client's own chat thread.
+//   POST /api/portal-chat-send — same auth, posts a message as that client — the
+//                             'from' field is always forced to 'client' server-side,
+//                             so a client can no longer forge a message that looks
+//                             like it came from admin.
+//   POST /api/portal-feedback-send — same auth, submits feedback as that client —
+//                             the 'from' field comes from the verified token, not the
+//                             request body, so a client can't submit feedback under
+//                             another client's name.
+//   GET  /api/portal-feedback — same auth, returns only the feedback/ticket entries
+//                             that client submitted (with type + admin-set status) —
+//                             the workaround this session used for a full Support
+//                             Tickets module.
+//                             See the "CLIENT PORTAL AUTH" comment block further down
+//                             this file for the full design and its one disclosed
+//                             limitation (no Firebase Security Rules access from here).
 //
 // ── ONE-TIME SETUP ──
 //
@@ -81,6 +106,17 @@
 //                                      *public* key, which is safe to expose.
 //                                      Set with:
 //                                        wrangler secret put PAYSTACK_SECRET_KEY)
+//      PORTAL_SESSION_SECRET         (type: Secret — required for Client Portal
+//                                      login. Signs the session tokens issued by
+//                                      /api/portal-login; anyone who had this value
+//                                      could forge a valid session for any portal
+//                                      username, so treat it like a password. Not
+//                                      used to hash portal account passwords
+//                                      themselves — those are salted per-account in
+//                                      admin.html, no shared secret needed for that
+//                                      part. Set with:
+//                                        wrangler secret put PORTAL_SESSION_SECRET
+//                                      e.g. using a value from `openssl rand -hex 32`.)
 //
 // 3. wrangler.jsonc (in this same repo root) tells Cloudflare to use this file as
 //    the Worker's entry point and to serve everything else as static assets.
@@ -169,8 +205,30 @@ export default {
       return jsonResponse({
         paystackConfigured: !!env.PAYSTACK_SECRET_KEY,
         adminApiConfigured: !!env.ADMIN_API_TOKEN,
-        composioConfigured: !!env.COMPOSIO_API_KEY
+        composioConfigured: !!env.COMPOSIO_API_KEY,
+        portalAuthConfigured: !!env.PORTAL_SESSION_SECRET
       });
+    }
+    if (url.pathname === '/api/portal-login' && request.method === 'POST') {
+      return handlePortalLogin(request, env);
+    }
+    if (url.pathname === '/api/portal-data' && request.method === 'GET') {
+      return handlePortalData(request, env);
+    }
+    if (url.pathname === '/api/portal-requests' && request.method === 'GET') {
+      return handlePortalRequests(request, env);
+    }
+    if (url.pathname === '/api/portal-chat' && request.method === 'GET') {
+      return handlePortalChatGet(request, env);
+    }
+    if (url.pathname === '/api/portal-chat-send' && request.method === 'POST') {
+      return handlePortalChatSend(request, env);
+    }
+    if (url.pathname === '/api/portal-feedback-send' && request.method === 'POST') {
+      return handlePortalFeedbackSend(request, env);
+    }
+    if (url.pathname === '/api/portal-feedback' && request.method === 'GET') {
+      return handlePortalFeedbackGet(request, env);
     }
     if (url.pathname === '/api/debug-composio' && request.method === 'GET') {
       return handleDebugComposio(request, env);
@@ -517,6 +575,300 @@ async function handlePaystackWebhook(request, env) {
   // non-2xx, and outcomes like "already processed" or "stock changed"
   // aren't something a retry would fix.
   return new Response('OK', { status: 200 });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  CLIENT PORTAL AUTH — real, admin-set login instead of a shared
+//  client-side password compare.
+//
+//  What this actually buys over the old model: previously portal.html
+//  fetched portalAccounts/{username}.json directly (plaintext password
+//  included) and compared it in the browser — anyone who knew or guessed
+//  a username could read that account's password, documents and chat
+//  straight from Firebase's open REST API without ever logging in. Now:
+//   - passwords are salted + SHA-256 hashed before they're ever stored
+//     (admin.html hashes on create/reset; the plaintext is shown to the
+//     admin exactly once and never stored anywhere)
+//   - login is verified here, server-side, against the hash
+//   - a signed, expiring session token is issued on success (HMAC-SHA256
+//     keyed with PORTAL_SESSION_SECRET) and portal.html uses it as a
+//     Bearer token on every subsequent request
+//   - every portal data route below re-verifies that token and only ever
+//     returns/accepts data for the username it was issued to
+//
+//  Residual limitation, stated plainly rather than glossed over: the
+//  underlying Firebase RTDB still has no security rules of its own (true
+//  of this entire codebase, not just the portal — there's no Firebase
+//  Console/Admin SDK access available to configure that from here). A
+//  request that bypasses this Worker and hits Firebase's REST API
+//  directly can still read portalAccounts, portalChats, etc. What this
+//  system does guarantee is that the actual portal app — and anything
+//  that behaves like it — can no longer read or act on another client's
+//  data without that client's password. Full defense-in-depth would need
+//  Firebase Security Rules or moving off client-writable RTDB entirely;
+//  that's a platform-level change outside this session's reach, not a
+//  portal-specific gap.
+// ═══════════════════════════════════════════════════════════════════════
+
+function base64UrlEncode(str) {
+  return btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function base64UrlDecode(str) {
+  str = str.replace(/-/g, '+').replace(/_/g, '/');
+  while (str.length % 4) str += '=';
+  return decodeURIComponent(escape(atob(str)));
+}
+
+async function sha256Hex(text) {
+  const enc = new TextEncoder();
+  const buf = await crypto.subtle.digest('SHA-256', enc.encode(text));
+  return Array.from(new Uint8Array(buf)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+}
+
+async function hmacSha256Hex(text, secret) {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sigBuffer = await crypto.subtle.sign('HMAC', key, enc.encode(text));
+  return Array.from(new Uint8Array(sigBuffer)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+}
+
+const PORTAL_SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+
+// 'epoch' is the account's sessionEpoch at the moment this token was
+// issued — admin.html bumps that number every time a password is reset,
+// so every token issued before a reset stops verifying immediately, not
+// just once its 12-hour TTL runs out. Without this, resetting a
+// compromised password wouldn't actually end an attacker's existing
+// session — a real gap a pure signature+expiry token can't close on its
+// own.
+async function createPortalSessionToken(username, secret, epoch) {
+  const payload = JSON.stringify({ u: username, exp: Date.now() + PORTAL_SESSION_TTL_MS, e: epoch || 0 });
+  const payloadB64 = base64UrlEncode(payload);
+  const sig = await hmacSha256Hex(payloadB64, secret);
+  return payloadB64 + '.' + sig;
+}
+
+// Returns { username, epoch }, or null if the token is missing, malformed,
+// tampered with, or expired. Does NOT check the epoch against the account's
+// current value — that requires a Firebase read, which requirePortalAuth
+// does once this returns successfully.
+async function verifyPortalSessionToken(token, secret) {
+  if (!token || token.indexOf('.') === -1) return null;
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+  const [payloadB64, sig] = parts;
+  const expectedSig = await hmacSha256Hex(payloadB64, secret);
+  if (sig !== expectedSig) return null;
+  let payload;
+  try { payload = JSON.parse(base64UrlDecode(payloadB64)); } catch (err) { return null; }
+  if (!payload || !payload.u || !payload.exp || payload.exp < Date.now()) return null;
+  return { username: payload.u, epoch: payload.e || 0 };
+}
+
+// Every portal-data-* route calls this first. Returns the authenticated
+// username, or a 401 Response to return directly if the token is missing,
+// invalid, or was issued before the account's password was last reset.
+async function requirePortalAuth(request, env) {
+  if (!env.PORTAL_SESSION_SECRET) {
+    return { error: jsonResponse({ error: 'Server is missing PORTAL_SESSION_SECRET env var.' }, 500) };
+  }
+  const authHeader = request.headers.get('Authorization') || '';
+  const token = authHeader.indexOf('Bearer ') === 0 ? authHeader.slice(7) : '';
+  const verified = await verifyPortalSessionToken(token, env.PORTAL_SESSION_SECRET);
+  if (!verified) {
+    return { error: jsonResponse({ error: 'Session expired or invalid. Please log in again.' }, 401) };
+  }
+  let account;
+  try {
+    account = await (await fetch(STORE_DB_URL + '/portalAccounts/' + encodeURIComponent(verified.username) + '.json')).json();
+  } catch (err) {
+    return { error: jsonResponse({ error: 'Could not verify your session. Please try again.' }, 502) };
+  }
+  const currentEpoch = (account && account.sessionEpoch) || 0;
+  if (!account || verified.epoch !== currentEpoch) {
+    return { error: jsonResponse({ error: 'Session expired or invalid. Please log in again.' }, 401) };
+  }
+  return { username: verified.username };
+}
+
+async function handlePortalLogin(request, env) {
+  if (!env.PORTAL_SESSION_SECRET) {
+    return jsonResponse({ error: 'Server is missing PORTAL_SESSION_SECRET env var.' }, 500);
+  }
+  let body;
+  try { body = await request.json(); } catch (err) { return jsonResponse({ error: 'Invalid request.' }, 400); }
+  const username = (body.username || '').trim();
+  const password = body.password || '';
+  if (!username || !password) return jsonResponse({ error: 'Username and password are required.' }, 400);
+
+  const attemptsPath = STORE_DB_URL + '/portalLoginAttempts/' + encodeURIComponent(username) + '.json';
+  let attempts = null;
+  try { attempts = await (await fetch(attemptsPath)).json(); } catch (err) { attempts = null; }
+  if (attempts && attempts.lockedUntil && attempts.lockedUntil > Date.now()) {
+    return jsonResponse({ error: 'Too many failed attempts. Please try again in a few minutes.' }, 429);
+  }
+
+  let account = null;
+  try { account = await (await fetch(STORE_DB_URL + '/portalAccounts/' + encodeURIComponent(username) + '.json')).json(); } catch (err) {
+    return jsonResponse({ error: 'Could not check credentials. Please try again.' }, 502);
+  }
+
+  const validAccount = account && account.passwordHash && account.passwordSalt;
+  const computedHash = validAccount ? await sha256Hex(account.passwordSalt + ':' + password) : null;
+
+  if (!validAccount || computedHash !== account.passwordHash) {
+    await recordFailedPortalLogin(attemptsPath, attempts);
+    return jsonResponse({ error: 'Incorrect username or password.' }, 401);
+  }
+
+  try { await fetch(attemptsPath, { method: 'DELETE' }); } catch (err) { /* non-fatal */ }
+
+  const token = await createPortalSessionToken(username, env.PORTAL_SESSION_SECRET, account.sessionEpoch || 0);
+  return jsonResponse({ token: token, username: username, expiresAt: Date.now() + PORTAL_SESSION_TTL_MS });
+}
+
+async function recordFailedPortalLogin(attemptsPath, existing) {
+  const count = (existing && existing.count ? existing.count : 0) + 1;
+  const update = { count: count };
+  // Lock out for 15 minutes after 5 failed attempts in a row.
+  if (count >= 5) update.lockedUntil = Date.now() + 15 * 60 * 1000;
+  try {
+    await fetch(attemptsPath, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update) });
+  } catch (err) { /* non-fatal — worst case, rate limiting is skipped this one time */ }
+}
+
+// Account snapshot: documents, progress, phone. Never includes the
+// password hash/salt.
+async function handlePortalData(request, env) {
+  const auth = await requirePortalAuth(request, env);
+  if (auth.error) return auth.error;
+  let account;
+  try {
+    account = await (await fetch(STORE_DB_URL + '/portalAccounts/' + encodeURIComponent(auth.username) + '.json')).json();
+  } catch (err) {
+    return jsonResponse({ error: 'Could not load your portal data.' }, 502);
+  }
+  if (!account) return jsonResponse({ error: 'Account not found.' }, 404);
+  return jsonResponse({
+    documents: account.documents || {},
+    progress: account.progress || {},
+    phone: account.phone || ''
+  });
+}
+
+// Matches the account's stored phone against project/service/design
+// requests, same logic that used to run client-side — moved server-side
+// so it's gated by the session token like everything else here.
+function normalizePhoneDigits(p) { return (p || '').replace(/\D/g, ''); }
+
+async function handlePortalRequests(request, env) {
+  const auth = await requirePortalAuth(request, env);
+  if (auth.error) return auth.error;
+
+  let account;
+  try {
+    account = await (await fetch(STORE_DB_URL + '/portalAccounts/' + encodeURIComponent(auth.username) + '.json')).json();
+  } catch (err) {
+    return jsonResponse({ error: 'Could not load your requests.' }, 502);
+  }
+  const wanted = normalizePhoneDigits(account && account.phone);
+  if (!wanted || wanted.length < 6) return jsonResponse({ requests: [] });
+
+  try {
+    const [projRes, svcRes, desRes] = await Promise.all([
+      fetch(STORE_DB_URL + '/projectRequests.json').then(function(r) { return r.json(); }),
+      fetch(STORE_DB_URL + '/serviceRequests.json').then(function(r) { return r.json(); }),
+      fetch(STORE_DB_URL + '/designRequests.json').then(function(r) { return r.json(); })
+    ]);
+    const projects = projRes && typeof projRes === 'object' ? Object.values(projRes) : [];
+    const services = svcRes && typeof svcRes === 'object' ? Object.values(svcRes) : [];
+    const designs  = desRes && typeof desRes === 'object' ? Object.values(desRes) : [];
+    const matches = projects.concat(services, designs)
+      .filter(function(r) { return r && normalizePhoneDigits(r.phone) === wanted; })
+      // Strip admin-internal fields (who it's assigned to) before this ever
+      // reaches the client — everything else here is data the client
+      // themselves submitted.
+      .map(function(r) {
+        const copy = Object.assign({}, r);
+        delete copy.assignedTo;
+        return copy;
+      });
+    return jsonResponse({ requests: matches });
+  } catch (err) {
+    return jsonResponse({ error: 'Could not load your requests.' }, 502);
+  }
+}
+
+async function handlePortalChatGet(request, env) {
+  const auth = await requirePortalAuth(request, env);
+  if (auth.error) return auth.error;
+  try {
+    const data = await (await fetch(STORE_DB_URL + '/portalChats/' + encodeURIComponent(auth.username) + '.json')).json();
+    return jsonResponse({ messages: data || {} });
+  } catch (err) {
+    return jsonResponse({ error: 'Could not load messages.' }, 502);
+  }
+}
+
+async function handlePortalChatSend(request, env) {
+  const auth = await requirePortalAuth(request, env);
+  if (auth.error) return auth.error;
+  let body;
+  try { body = await request.json(); } catch (err) { return jsonResponse({ error: 'Invalid request.' }, 400); }
+  const text = (body.text || '').trim();
+  if (!text) return jsonResponse({ error: 'Message text is required.' }, 400);
+  try {
+    // 'from' is always 'client' here, regardless of what the request body
+    // claims — this is the one thing the old direct-to-Firebase POST let a
+    // client forge (posting a message that looked like it came from admin).
+    await fetch(STORE_DB_URL + '/portalChats/' + encodeURIComponent(auth.username) + '.json', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: 'client', text: text, timestamp: new Date().toISOString() })
+    });
+    return jsonResponse({ success: true });
+  } catch (err) {
+    return jsonResponse({ error: 'Failed to send message.' }, 502);
+  }
+}
+
+// Lets a client see the status of feedback/tickets they submitted — the
+// workaround this session used in place of a full Support Tickets module:
+// feedback already has a message/type, and now a status the admin can set
+// (New/In Progress/Resolved), so the client seeing their own list of these
+// is functionally most of what a lightweight ticket view needs.
+async function handlePortalFeedbackGet(request, env) {
+  const auth = await requirePortalAuth(request, env);
+  if (auth.error) return auth.error;
+  try {
+    const data = await (await fetch(STORE_DB_URL + '/portalFeedback.json')).json();
+    const all = data && typeof data === 'object' ? Object.entries(data) : [];
+    const mine = all.filter(function(entry) { return entry[1] && entry[1].from === auth.username; })
+      .map(function(entry) { return Object.assign({ id: entry[0] }, entry[1]); });
+    return jsonResponse({ feedback: mine });
+  } catch (err) {
+    return jsonResponse({ error: 'Could not load your feedback.' }, 502);
+  }
+}
+
+async function handlePortalFeedbackSend(request, env) {
+  const auth = await requirePortalAuth(request, env);
+  if (auth.error) return auth.error;
+  let body;
+  try { body = await request.json(); } catch (err) { return jsonResponse({ error: 'Invalid request.' }, 400); }
+  const message = (body.message || '').trim();
+  const type = ['General', 'Technical Issue', 'Billing', 'Other'].indexOf(body.type) !== -1 ? body.type : 'General';
+  if (!message) return jsonResponse({ error: 'Message is required.' }, 400);
+  try {
+    // 'from' comes from the verified token, never the request body — a
+    // client can no longer submit feedback under another client's name.
+    await fetch(STORE_DB_URL + '/portalFeedback.json', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: auth.username, message: message, type: type, status: 'New', timestamp: new Date().toISOString() })
+    });
+    return jsonResponse({ success: true });
+  } catch (err) {
+    return jsonResponse({ error: 'Failed to send feedback.' }, 502);
+  }
 }
 
 async function handleDriveUpload(request, env) {

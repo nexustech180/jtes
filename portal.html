@@ -197,6 +197,36 @@ main { padding-top: 64px; min-height: 100vh; }
 .btn-send-feedback { margin-top: 14px; background: var(--blue); color: #fff; border: none; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Manrope', sans-serif; display: inline-flex; align-items: center; gap: 8px; transition: background 0.2s; }
 .btn-send-feedback:hover { background: var(--blue-dark); }
 .btn-send-feedback:disabled { opacity: 0.6; cursor: not-allowed; }
+.portal-feedback-type-select { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 13.5px; font-family: 'Manrope', sans-serif; color: var(--text); outline: none; margin-bottom: 12px; background: #f8fafc; cursor: pointer; }
+.portal-feedback-type-select:focus { border-color: var(--blue); }
+
+.portal-tickets-wrap { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+.portal-tickets-label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+.portal-ticket-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.portal-ticket-row:last-child { border-bottom: none; }
+.portal-ticket-main { flex: 1; min-width: 0; }
+.portal-ticket-type { display: block; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--blue); margin-bottom: 3px; }
+.portal-ticket-msg { font-size: 13px; color: var(--text); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.portal-ticket-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+.portal-ticket-status { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 50px; white-space: nowrap; }
+.portal-ticket-status.new { background: #FEF3C7; color: #92400E; }
+.portal-ticket-status.inprogress { background: #DBEAFE; color: #1E40AF; }
+.portal-ticket-status.resolved { background: #D1FAE5; color: #065F46; }
+.portal-ticket-date { font-size: 11px; color: var(--text-muted); }
+
+/* Next Action Required */
+.portal-next-action-card { background: linear-gradient(135deg, #EFF6FF, #F0FDFA); border: 1.5px solid #BFDBFE; border-radius: 16px; padding: 20px 22px; margin-bottom: 32px; display: flex; align-items: flex-start; gap: 14px; }
+.portal-next-action-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
+.portal-next-action-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--blue); margin-bottom: 4px; }
+.portal-next-action-text { font-size: 14px; color: var(--dark2); line-height: 1.5; font-weight: 600; }
+
+/* Recent Activity timeline */
+.portal-timeline-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 40px; }
+.portal-timeline-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.portal-timeline-item:last-child { border-bottom: none; }
+.portal-timeline-icon { width: 30px; height: 30px; border-radius: 50%; background: #EFF6FF; color: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+.portal-timeline-text { font-size: 13.5px; color: var(--text); line-height: 1.5; flex: 1; }
+.portal-timeline-time { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
 
 @media (max-width: 560px) {
   .chat-box { height: 440px; }
@@ -290,13 +320,23 @@ footer { background: #0A0F1E; padding: 48px 80px 24px; text-align: center; color
         <a class="portal-quick-action wa" id="portal-wa-action" href="https://wa.me/233548029027" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp Us</a>
         <a class="portal-quick-action" href="#portal-chat-anchor" id="portal-message-quick-action" onclick="markPortalMessagesSeen()"><i class="fas fa-comments"></i> Message Us <span class="portal-unread-dot" id="portal-unread-dot"></span></a>
         <a class="portal-quick-action" href="#portal-feedback-anchor"><i class="fas fa-envelope-open-text"></i> Send Feedback</a>
+        <a class="portal-quick-action" id="portal-meeting-action" href="https://wa.me/233548029027?text=Hi%2C%20I%27d%20like%20to%20schedule%20a%20meeting%20to%20discuss%20my%20project." target="_blank" rel="noopener"><i class="fas fa-calendar-plus"></i> Request a Meeting</a>
       </div>
+
+      <div id="portal-next-action" style="display:none;"></div>
 
       <div id="portal-requests-section" style="display:none;">
         <div class="portal-section-header">
           <h2><i class="fas fa-list-check"></i> Your Requests</h2>
         </div>
         <div class="portal-requests-list" id="portal-requests-list"></div>
+      </div>
+
+      <div id="portal-timeline-section" style="display:none;">
+        <div class="portal-section-header">
+          <h2><i class="fas fa-clock-rotate-left"></i> Recent Activity</h2>
+        </div>
+        <div class="portal-timeline-list" id="portal-timeline-list"></div>
       </div>
 
       <div id="portal-progress-section" style="display:none;">
@@ -339,8 +379,15 @@ footer { background: #0A0F1E; padding: 48px 80px 24px; text-align: center; color
         <h2><i class="fas fa-envelope-open-text"></i> Send Feedback</h2>
       </div>
       <div class="feedback-box">
+        <select id="portal-feedback-type" class="portal-feedback-type-select">
+          <option value="General">General feedback</option>
+          <option value="Technical Issue">Technical issue</option>
+          <option value="Billing">Billing question</option>
+          <option value="Other">Other</option>
+        </select>
         <textarea id="portal-feedback-text" placeholder="Tell us what's on your mind — a comment, a concern, a suggestion..."></textarea>
         <button class="btn-send-feedback" id="portal-feedback-btn" onclick="submitPortalFeedback()"><i class="fas fa-paper-plane"></i> Send Feedback</button>
+        <div id="portal-tickets-wrap" style="display:none;"></div>
       </div>
     </div>
   </div>
@@ -364,9 +411,10 @@ footer { background: #0A0F1E; padding: 48px 80px 24px; text-align: center; color
 </footer>
 
 <script>
-const FB_DB_URL = 'https://jtes-website-default-rtdb.firebaseio.com';
 let portalKey = null;
+let portalToken = null;
 let portalDocs = [];
+let portalLastRequests = [];
 
 function showToast(msg, isError) {
   const toast = document.getElementById('toastMsg');
@@ -384,6 +432,35 @@ function escapeHtml(str) {
   });
 }
 
+// ═══════════════════════════════════════════
+//  AUTH — real, admin-set login (see _worker.js's "CLIENT PORTAL AUTH"
+//  comment for the full design). Every portal data call goes through this
+//  helper so a 401 (bad/expired session) always drops back to the login
+//  screen instead of silently failing.
+// ═══════════════════════════════════════════
+async function portalAuthFetch(path, options) {
+  options = options || {};
+  options.headers = Object.assign({}, options.headers, { 'Authorization': 'Bearer ' + portalToken });
+  const res = await fetch(path, options);
+  if (res.status === 401) {
+    portalSessionExpired();
+    throw new Error('Session expired');
+  }
+  return res;
+}
+
+function portalSessionExpired() {
+  stopPortalChatPoll();
+  sessionStorage.removeItem('jtes_portal_username');
+  sessionStorage.removeItem('jtes_portal_token');
+  portalKey = null;
+  portalToken = null;
+  document.getElementById('portal-dashboard').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('portal-login-error').textContent = 'Your session expired — please log in again.';
+  document.getElementById('portal-login-error').classList.add('show');
+}
+
 async function attemptPortalLogin() {
   const userInput = document.getElementById('portal-username-input');
   const passInput = document.getElementById('portal-password-input');
@@ -392,6 +469,7 @@ async function attemptPortalLogin() {
   const username = userInput.value.trim();
   const password = passInput.value;
   errorEl.classList.remove('show');
+  errorEl.textContent = 'Incorrect username or password. Please check and try again.';
 
   if (!username || !password) { errorEl.classList.add('show'); return; }
 
@@ -399,10 +477,14 @@ async function attemptPortalLogin() {
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
 
   try {
-    const res = await fetch(`${FB_DB_URL}/portalAccounts/${encodeURIComponent(username)}.json`);
-    const data = await res.json();
+    const res = await fetch('/api/portal-login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const result = await res.json();
 
-    if (!data || data.password !== password) {
+    if (!res.ok || !result.token) {
+      errorEl.textContent = result.error || 'Incorrect username or password. Please check and try again.';
       errorEl.classList.add('show');
       passInput.value = '';
       btn.disabled = false;
@@ -411,7 +493,8 @@ async function attemptPortalLogin() {
     }
 
     sessionStorage.setItem('jtes_portal_username', username);
-    enterDashboard(username, data);
+    sessionStorage.setItem('jtes_portal_token', result.token);
+    await enterDashboard(username, result.token);
   } catch (e) {
     showToast('Something went wrong. Please try again.', true);
     btn.disabled = false;
@@ -419,17 +502,25 @@ async function attemptPortalLogin() {
   }
 }
 
-function enterDashboard(username, data) {
+async function enterDashboard(username, token) {
   portalKey = username;
+  portalToken = token;
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('portal-dashboard').style.display = 'block';
   document.getElementById('portal-client-name').textContent = 'Welcome, ' + username;
 
-  portalDocs = data.documents ? Object.keys(data.documents).map(id => ({ id, ...data.documents[id] })) : [];
-  portalDocs.sort((a, b) => new Date(b.addedAt || 0) - new Date(a.addedAt || 0));
-  renderPortalDocs();
-  renderPortalProgress(data.progress);
-  loadPortalRequests(data.phone);
+  try {
+    const dataRes = await portalAuthFetch('/api/portal-data');
+    const data = await dataRes.json();
+    portalDocs = data.documents ? Object.keys(data.documents).map(id => ({ id, ...data.documents[id] })) : [];
+    portalDocs.sort((a, b) => new Date(b.addedAt || 0) - new Date(a.addedAt || 0));
+    renderPortalDocs();
+    renderPortalProgress(data.progress);
+  } catch (e) { /* portalAuthFetch already handled a 401; anything else, sections just stay empty */ }
+
+  await loadPortalRequests();
+  await loadPortalFeedbackList();
+  buildActivityTimeline();
   startPortalChatPoll();
 }
 
@@ -439,31 +530,19 @@ function enterDashboard(username, data) {
 //  client can see their real request status and progress without a
 //  separate per-project account system.
 // ═══════════════════════════════════════════
-function trkNormalizePhone(p) { return (p || '').replace(/\D/g, ''); }
-
-async function loadPortalRequests(accountPhone) {
+async function loadPortalRequests() {
   const section = document.getElementById('portal-requests-section');
-  const wanted = trkNormalizePhone(accountPhone);
-  if (!wanted || wanted.length < 6) { section.style.display = 'none'; return; }
-
   try {
-    const [projRes, svcRes, desRes] = await Promise.all([
-      fetch(`${FB_DB_URL}/projectRequests.json`).then(r => r.json()),
-      fetch(`${FB_DB_URL}/serviceRequests.json`).then(r => r.json()),
-      fetch(`${FB_DB_URL}/designRequests.json`).then(r => r.json())
-    ]);
-    const projects = projRes && typeof projRes === 'object' ? Object.values(projRes) : [];
-    const services = svcRes && typeof svcRes === 'object' ? Object.values(svcRes) : [];
-    const designs  = desRes && typeof desRes === 'object' ? Object.values(desRes) : [];
-
-    const matches = [...projects, ...services, ...designs]
-      .filter(r => r && trkNormalizePhone(r.phone) === wanted)
-      .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    const res = await portalAuthFetch('/api/portal-requests');
+    const result = await res.json();
+    const matches = (result.requests || []).sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    portalLastRequests = matches;
 
     if (!matches.length) { section.style.display = 'none'; return; }
 
     document.getElementById('portal-requests-list').innerHTML = matches.map(renderPortalRequestCard).join('');
     section.style.display = 'block';
+    renderNextAction();
   } catch (e) {
     section.style.display = 'none';
   }
@@ -498,6 +577,95 @@ function renderPortalRequestCard(r) {
 }
 
 // ═══════════════════════════════════════════
+//  NEXT ACTION REQUIRED — a single, rules-based "here's what needs you"
+//  line derived from data already on the page, not a separate tracked
+//  field. Priority: a quote waiting on the client's response outranks
+//  everything else; an unread message is next; otherwise nothing shows.
+// ═══════════════════════════════════════════
+function renderNextAction() {
+  const box = document.getElementById('portal-next-action');
+  const quoted = portalLastRequests.find(r => r.status === 'Quoted');
+  const unread = document.getElementById('portal-unread-dot')?.classList.contains('show');
+
+  let icon = 'fa-circle-info';
+  let text = null;
+
+  if (quoted) {
+    icon = 'fa-file-invoice-dollar';
+    text = `A quote is ready for <strong>${escapeHtml(quoted.ref || 'your request')}</strong> — reply here or on WhatsApp to confirm you'd like to proceed.`;
+  } else if (unread) {
+    icon = 'fa-comment-dots';
+    text = `You have a new message from JTES — <a href="#portal-chat-anchor" onclick="markPortalMessagesSeen()">read it here</a>.`;
+  }
+
+  if (!text) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  box.innerHTML = `<div class="portal-next-action-card">
+    <div class="portal-next-action-icon"><i class="fas ${icon}"></i></div>
+    <div>
+      <div class="portal-next-action-label">Next Action</div>
+      <div class="portal-next-action-text">${text}</div>
+    </div>
+  </div>`;
+  box.style.display = 'block';
+}
+
+// ═══════════════════════════════════════════
+//  RECENT ACTIVITY — merges status changes, milestone completions, chat
+//  messages, documents and feedback submissions into one time-ordered
+//  feed. Nothing here is a separately-tracked "activity log" record; it's
+//  derived each render from data the portal already has, using timestamps
+//  added this round (statusHistory on requests, doneAt on milestones).
+// ═══════════════════════════════════════════
+function buildActivityTimeline() {
+  const section = document.getElementById('portal-timeline-section');
+  const list = document.getElementById('portal-timeline-list');
+  if (!section || !list) return;
+
+  const events = [];
+
+  portalLastRequests.forEach(r => {
+    (r.statusHistory || []).forEach(h => {
+      events.push({ time: h.changedAt, icon: 'fa-flag', text: `${escapeHtml(r.ref || 'Your request')} status changed to <strong>${escapeHtml(h.status)}</strong>` });
+    });
+    (r.milestones || []).forEach(m => {
+      if (m.done && m.doneAt) {
+        events.push({ time: m.doneAt, icon: 'fa-circle-check', text: `Milestone completed on ${escapeHtml(r.ref || 'your project')}: <strong>${escapeHtml(m.text)}</strong>` });
+      }
+    });
+  });
+
+  portalLastChatMsgs.forEach(m => {
+    events.push({
+      time: m.timestamp,
+      icon: 'fa-comment',
+      text: m.from === 'admin' ? 'JTES sent you a message' : 'You sent a message'
+    });
+  });
+
+  portalDocs.forEach(d => {
+    if (d.addedAt) events.push({ time: d.addedAt, icon: 'fa-file', text: `New document added: <strong>${escapeHtml(d.name || 'document')}</strong>` });
+  });
+
+  portalLastFeedback.forEach(f => {
+    events.push({ time: f.timestamp, icon: 'fa-envelope-open-text', text: `You submitted feedback (${escapeHtml(f.type || 'General')})` });
+  });
+
+  events.sort((a, b) => new Date(b.time) - new Date(a.time));
+  const recent = events.slice(0, 12);
+
+  if (!recent.length) { section.style.display = 'none'; return; }
+  list.innerHTML = recent.map(e => {
+    const time = new Date(e.time).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    return `<div class="portal-timeline-item">
+      <div class="portal-timeline-icon"><i class="fas ${e.icon}"></i></div>
+      <div class="portal-timeline-text">${e.text}</div>
+      <div class="portal-timeline-time">${time}</div>
+    </div>`;
+  }).join('');
+  section.style.display = 'block';
+}
+
+// ═══════════════════════════════════════════
 //  MESSAGES (chat with JTES)
 //  Firebase shape: portalChats/{username}/{pushId} = { from: 'admin'|'client', text, timestamp }
 //  No real-time backend here (same posture as the rest of this site), so the
@@ -514,20 +682,24 @@ function stopPortalChatPoll() {
   if (portalChatPollTimer) { clearInterval(portalChatPollTimer); portalChatPollTimer = null; }
 }
 
+let portalLastChatMsgs = [];
+
 async function loadPortalChatThread() {
   if (!portalKey) return;
   try {
-    const res = await fetch(`${FB_DB_URL}/portalChats/${encodeURIComponent(portalKey)}.json`);
-    const data = await res.json();
-    renderPortalChatThread(data || {});
-  } catch (e) { /* stay silent — will retry on next poll */ }
+    const res = await portalAuthFetch('/api/portal-chat');
+    const result = await res.json();
+    renderPortalChatThread(result.messages || {});
+  } catch (e) { /* stay silent — will retry on next poll, or portalAuthFetch already handled a 401 */ }
 }
 
 function renderPortalChatThread(data) {
   const thread = document.getElementById('portal-chat-thread');
   const atBottom = thread.scrollTop + thread.clientHeight >= thread.scrollHeight - 40;
   const msgs = Object.values(data).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  portalLastChatMsgs = msgs;
   checkPortalUnread(msgs);
+  buildActivityTimeline();
   if (!msgs.length) {
     thread.innerHTML = '<div class="chat-empty"><i class="fas fa-comment-dots"></i><p>No messages yet — send us a message any time.</p></div>';
     return;
@@ -557,6 +729,7 @@ function checkPortalUnread(msgs) {
   const hasUnread = msgs.some(m => m.from === 'admin' && new Date(m.timestamp).getTime() > lastSeenTime);
   const dot = document.getElementById('portal-unread-dot');
   if (dot) dot.classList.toggle('show', hasUnread);
+  renderNextAction();
 }
 
 function markPortalMessagesSeen() {
@@ -564,6 +737,7 @@ function markPortalMessagesSeen() {
   localStorage.setItem(portalLastSeenKey(), new Date().toISOString());
   const dot = document.getElementById('portal-unread-dot');
   if (dot) dot.classList.remove('show');
+  renderNextAction();
 }
 
 async function sendPortalChatMessage() {
@@ -572,9 +746,9 @@ async function sendPortalChatMessage() {
   if (!text || !portalKey) return;
   input.value = '';
   try {
-    await fetch(`${FB_DB_URL}/portalChats/${encodeURIComponent(portalKey)}.json`, {
+    await portalAuthFetch('/api/portal-chat-send', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: 'client', text: text, timestamp: new Date().toISOString() })
+      body: JSON.stringify({ text })
     });
     markPortalMessagesSeen();
     loadPortalChatThread();
@@ -584,30 +758,67 @@ async function sendPortalChatMessage() {
 }
 
 // ═══════════════════════════════════════════
-//  SEND FEEDBACK
-//  Firebase shape: portalFeedback/{pushId} = { from: username, message, timestamp }
+//  SEND FEEDBACK — doubles as a lightweight support ticket: a type,
+//  admin-settable status, and the client can see their own past entries
+//  (see loadPortalFeedbackList below). Not a full Support Tickets module
+//  (no attachments, no assigned agent shown to the client) but covers the
+//  same real need without building a separate system.
 // ═══════════════════════════════════════════
 async function submitPortalFeedback() {
   const textEl = document.getElementById('portal-feedback-text');
+  const typeEl = document.getElementById('portal-feedback-type');
   const btn = document.getElementById('portal-feedback-btn');
   const message = textEl.value.trim();
+  const type = typeEl ? typeEl.value : 'General';
   if (!message) { showToast('Please write something before sending.', true); return; }
   if (!portalKey) return;
 
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
   try {
-    await fetch(`${FB_DB_URL}/portalFeedback.json`, {
+    await portalAuthFetch('/api/portal-feedback-send', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: portalKey, message: message, timestamp: new Date().toISOString() })
+      body: JSON.stringify({ message, type })
     });
     textEl.value = '';
     showToast('Thanks — your feedback has been sent!');
+    loadPortalFeedbackList();
   } catch (e) {
     showToast('Failed to send feedback. Please try again.', true);
   }
   btn.disabled = false;
   btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Feedback';
+}
+
+let portalLastFeedback = [];
+
+async function loadPortalFeedbackList() {
+  const wrap = document.getElementById('portal-tickets-wrap');
+  if (!wrap) return;
+  try {
+    const res = await portalAuthFetch('/api/portal-feedback');
+    const result = await res.json();
+    const entries = (result.feedback || []).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    portalLastFeedback = entries;
+    if (!entries.length) { wrap.innerHTML = ''; wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+    wrap.innerHTML = '<div class="portal-tickets-label">Your Previous Feedback</div>' +
+      entries.map(f => {
+        const status = f.status || 'New';
+        const statusClass = status.toLowerCase().replace(/\s+/g, '');
+        const time = new Date(f.timestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        return `<div class="portal-ticket-row">
+          <div class="portal-ticket-main">
+            <span class="portal-ticket-type">${escapeHtml(f.type || 'General')}</span>
+            <span class="portal-ticket-msg">${escapeHtml(f.message)}</span>
+          </div>
+          <div class="portal-ticket-meta">
+            <span class="portal-ticket-status ${statusClass}">${escapeHtml(status)}</span>
+            <span class="portal-ticket-date">${time}</span>
+          </div>
+        </div>`;
+      }).join('');
+  } catch (e) { /* portalAuthFetch already handled a 401 */ }
 }
 
 function renderPortalProgress(progress) {
@@ -753,7 +964,9 @@ function closeViewer() {
 function portalLogout() {
   stopPortalChatPoll();
   sessionStorage.removeItem('jtes_portal_username');
+  sessionStorage.removeItem('jtes_portal_token');
   portalKey = null;
+  portalToken = null;
   portalDocs = [];
   document.getElementById('portal-dashboard').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
@@ -788,15 +1001,16 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// Restore session if a valid login is already stored for this browser tab
+// Restore session if a valid, unexpired token is already stored for this
+// browser tab. portalAuthFetch inside enterDashboard's /api/portal-data
+// call will itself clear things and fall back to the login screen if the
+// token has expired server-side.
 (async function restoreSession() {
   const savedUsername = sessionStorage.getItem('jtes_portal_username');
-  if (!savedUsername) return;
+  const savedToken = sessionStorage.getItem('jtes_portal_token');
+  if (!savedUsername || !savedToken) return;
   try {
-    const res = await fetch(`${FB_DB_URL}/portalAccounts/${encodeURIComponent(savedUsername)}.json`);
-    const data = await res.json();
-    if (data) enterDashboard(savedUsername, data);
-    else sessionStorage.removeItem('jtes_portal_username');
+    await enterDashboard(savedUsername, savedToken);
   } catch (e) { /* stay on login screen */ }
 })();
 </script>
