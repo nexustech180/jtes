@@ -109,7 +109,15 @@ body.portal-app-mode main { padding-top: 0; }
   position: sticky; top: 0; z-index: 150;
 }
 .portal-topbar-title { font-size: 17px; font-weight: 800; color: var(--dark2); display: flex; align-items: center; gap: 10px; }
-.portal-sidebar-toggle { display: none; align-items: center; justify-content: center; width: 32px; height: 32px; background: none; border: none; font-size: 20px; color: var(--dark2); cursor: pointer; margin-right: 14px; flex-shrink: 0; }
+.portal-sidebar-toggle { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: none; border: none; font-size: 20px; color: var(--dark2); cursor: pointer; margin-right: 14px; flex-shrink: 0; border-radius: 8px; transition: background 0.15s; }
+.portal-sidebar-toggle:hover { background: #f1f5f9; }
+/* Desktop collapse — the same toggle button hides the sidebar entirely
+   and lets the content column reclaim its width, rather than overlaying
+   a drawer (that's the <=900px behavior below, for narrow screens). */
+.portal-sidebar { transition: width 0.22s ease; }
+@media (min-width: 901px) {
+  .portal-shell.sidebar-collapsed .portal-sidebar { width: 0; overflow: hidden; }
+}
 .portal-profile { display: flex; align-items: center; gap: 12px; }
 .portal-profile-text { text-align: right; }
 .portal-profile-name { font-size: 14px; font-weight: 800; color: var(--dark2); letter-spacing: 0.2px; }
@@ -334,7 +342,6 @@ footer { background: #0A0F1E; padding: 48px 80px 24px; text-align: center; color
   .resources-grid { grid-template-columns: 1fr 1fr; }
   footer { padding: 40px 24px 20px; }
 
-  .portal-sidebar-toggle { display: flex; }
   .portal-sidebar {
     position: fixed; left: 0; top: 0; height: 100vh; transform: translateX(-100%);
     transition: transform 0.25s ease; box-shadow: 0 0 40px rgba(0,0,0,0.3);
@@ -1222,9 +1229,18 @@ function togglePortalModulesGroup() {
   document.getElementById('pnav-modules-toggle').classList.toggle('expanded');
 }
 
+// Same button, two behaviors: on narrow screens it slides the sidebar in
+// as an overlay drawer (toggles .open); on desktop there's no room for an
+// overlay to make sense, so it collapses the sidebar to width:0 instead
+// (toggles .sidebar-collapsed on the shell), letting the content column
+// reclaim the space.
 function togglePortalSidebar() {
-  document.getElementById('portalSidebar').classList.toggle('open');
-  document.getElementById('portalSidebarScrim').classList.toggle('show');
+  if (window.matchMedia('(max-width: 900px)').matches) {
+    document.getElementById('portalSidebar').classList.toggle('open');
+    document.getElementById('portalSidebarScrim').classList.toggle('show');
+  } else {
+    document.querySelector('.portal-shell').classList.toggle('sidebar-collapsed');
+  }
 }
 function closePortalSidebar() {
   document.getElementById('portalSidebar').classList.remove('open');
