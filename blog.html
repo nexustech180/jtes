@@ -72,11 +72,11 @@
   .carousel-slide-bg {
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
     background-size: cover; background-position: center;
-    opacity: 0.38; transition: opacity 0.7s;
+    opacity: 0.6; transition: opacity 0.7s;
   }
   .carousel-slide-overlay {
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(to right, rgba(0,0,0,0.88) 50%, rgba(0,0,0,0.25) 100%);
+    background: linear-gradient(100deg, rgba(10,15,30,0.90) 0%, rgba(10,15,30,0.68) 45%, rgba(10,15,30,0.25) 75%, rgba(10,15,30,0.08) 100%);
   }
   .carousel-content {
     position: relative; z-index: 2; max-width: 720px;
@@ -87,6 +87,47 @@
   .carousel-slide.active .carousel-content {
     opacity: 1; transform: translateY(0);
   }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.22);
+    backdrop-filter: blur(8px); color: rgba(255,255,255,0.9);
+    padding: 8px 16px; border-radius: 50px;
+    font-size: 12.5px; font-weight: 700; letter-spacing: 1.3px; text-transform: uppercase;
+    margin-bottom: 22px;
+  }
+  .badge-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex: none;
+    background: var(--blue-light); box-shadow: 0 0 8px var(--blue-light);
+  }
+  .carousel-content h1 {
+    color: #fff; font-size: 52px; font-weight: 900; line-height: 1.15;
+    margin-bottom: 20px; text-shadow: 0 2px 20px rgba(0,0,0,0.4);
+  }
+  .carousel-content h1 span { color: var(--blue-light); }
+  .carousel-content p {
+    color: rgba(255,255,255,0.85); font-size: 18px; line-height: 1.7;
+    max-width: 560px; text-shadow: 0 1px 12px rgba(0,0,0,0.35);
+  }
+  .hero-btns { display: flex; align-items: center; gap: 14px; margin-top: 28px; flex-wrap: wrap; }
+  .btn-white {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #fff; color: var(--dark2);
+    padding: 14px 28px; border-radius: 10px;
+    font-size: 15px; font-weight: 700; text-decoration: none;
+    transition: all 0.2s;
+  }
+  .btn-white:hover {
+    background: var(--blue-light); color: #fff;
+    transform: translateY(-2px); box-shadow: 0 8px 24px rgba(59,130,246,0.4);
+  }
+  .btn-outline-white {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,0.5);
+    padding: 13px 26px; border-radius: 10px;
+    font-size: 15px; font-weight: 600; text-decoration: none;
+    transition: all 0.2s;
+  }
+  .btn-outline-white:hover { border-color: #fff; background: rgba(255,255,255,0.1); }
 
   /* Arrows */
   .carousel-arrow {
@@ -117,7 +158,7 @@
   /* Progress bar */
   .carousel-progress {
     position: absolute; bottom: 0; left: 0; height: 3px;
-    background: var(--blue); z-index: 10;
+    background: linear-gradient(90deg, var(--blue), var(--blue-light)); z-index: 10;
     animation: progress-bar 5s linear infinite;
     transform-origin: left;
   }
