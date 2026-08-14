@@ -91,6 +91,39 @@ main { padding-top: 64px; min-height: 100vh; }
 .portal-log-entry-text { font-size: 13px; color: var(--text); line-height: 1.5; }
 .portal-log-entry-date { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
 
+/* Quick actions */
+.portal-quick-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 36px; }
+.portal-quick-action { display: flex; align-items: center; gap: 8px; background: #fff; border: 1.5px solid var(--border); border-radius: 12px; padding: 12px 18px; font-size: 13.5px; font-weight: 700; color: var(--dark2, #0F172A); cursor: pointer; text-decoration: none; transition: border-color 0.15s, background 0.15s; }
+.portal-quick-action:hover { border-color: var(--blue); background: #EFF6FF; }
+.portal-quick-action i { color: var(--blue); }
+.portal-quick-action.wa { border-color: #25D366; }
+.portal-quick-action.wa i { color: #25D366; }
+.portal-quick-action.wa:hover { background: #ECFDF5; }
+
+/* Your Requests */
+.portal-requests-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 40px; }
+.pr-card { background: #fff; border: 1.5px solid var(--border); border-radius: 14px; padding: 18px 20px; }
+.pr-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.pr-card-ref { font-size: 14.5px; font-weight: 800; color: var(--dark2, #0F172A); }
+.pr-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 800; letter-spacing: 0.02em; padding: 5px 11px; border-radius: 50px; text-transform: uppercase; }
+.pr-badge.new         { background: #FEF3C7; color: #92400E; }
+.pr-badge.reviewing   { background: #DBEAFE; color: #1E40AF; }
+.pr-badge.quoted      { background: #EDE9FE; color: #5B21B6; }
+.pr-badge.inprogress  { background: #CFFAFE; color: #155E75; }
+.pr-badge.completed   { background: #D1FAE5; color: #065F46; }
+.pr-badge.declined    { background: #FEE2E2; color: #991B1B; }
+.pr-card-date { font-size: 12px; color: var(--text-muted); }
+.pr-card-items { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-top: 8px; }
+.pr-milestones { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
+.pr-milestones-label { font-size: 12px; font-weight: 700; color: var(--dark2, #0F172A); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.pr-milestones-label i { color: var(--blue); }
+.pr-milestone-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-muted); padding: 3px 0; }
+.pr-milestone-row i { font-size: 11px; width: 14px; }
+.pr-milestone-row.done { color: var(--dark2, #0F172A); }
+.pr-milestone-row.done i { color: var(--green); }
+.pr-milestone-row:not(.done) i { color: var(--border); }
+.pr-scheduled { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); font-size: 12.5px; font-weight: 700; color: var(--blue); display: flex; align-items: center; gap: 7px; }
+
 .resources-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -251,6 +284,19 @@ footer { background: #0A0F1E; padding: 48px 80px 24px; text-align: center; color
     </div>
     <div class="portal-container">
 
+      <div class="portal-quick-actions">
+        <a class="portal-quick-action wa" id="portal-wa-action" href="https://wa.me/233548029027" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp Us</a>
+        <a class="portal-quick-action" href="#portal-chat-anchor"><i class="fas fa-comments"></i> Message Us</a>
+        <a class="portal-quick-action" href="#portal-feedback-anchor"><i class="fas fa-envelope-open-text"></i> Send Feedback</a>
+      </div>
+
+      <div id="portal-requests-section" style="display:none;">
+        <div class="portal-section-header">
+          <h2><i class="fas fa-list-check"></i> Your Requests</h2>
+        </div>
+        <div class="portal-requests-list" id="portal-requests-list"></div>
+      </div>
+
       <div id="portal-progress-section" style="display:none;">
         <div class="portal-section-header">
           <h2><i class="fas fa-chart-line"></i> Project Progress</h2>
@@ -274,7 +320,7 @@ footer { background: #0A0F1E; padding: 48px 80px 24px; text-align: center; color
         <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Loading your documents...</p></div>
       </div>
 
-      <div class="portal-section-header">
+      <div class="portal-section-header" id="portal-chat-anchor">
         <h2><i class="fas fa-comments"></i> Messages</h2>
       </div>
       <div class="chat-box">
@@ -287,7 +333,7 @@ footer { background: #0A0F1E; padding: 48px 80px 24px; text-align: center; color
         </div>
       </div>
 
-      <div class="portal-section-header">
+      <div class="portal-section-header" id="portal-feedback-anchor">
         <h2><i class="fas fa-envelope-open-text"></i> Send Feedback</h2>
       </div>
       <div class="feedback-box">
@@ -381,7 +427,72 @@ function enterDashboard(username, data) {
   portalDocs.sort((a, b) => new Date(b.addedAt || 0) - new Date(a.addedAt || 0));
   renderPortalDocs();
   renderPortalProgress(data.progress);
+  loadPortalRequests(data.phone);
   startPortalChatPoll();
+}
+
+// ═══════════════════════════════════════════
+//  YOUR REQUESTS — matches this portal account's stored phone number
+//  against projectRequests / serviceRequests / designRequests so the
+//  client can see their real request status and progress without a
+//  separate per-project account system.
+// ═══════════════════════════════════════════
+function trkNormalizePhone(p) { return (p || '').replace(/\D/g, ''); }
+
+async function loadPortalRequests(accountPhone) {
+  const section = document.getElementById('portal-requests-section');
+  const wanted = trkNormalizePhone(accountPhone);
+  if (!wanted || wanted.length < 6) { section.style.display = 'none'; return; }
+
+  try {
+    const [projRes, svcRes, desRes] = await Promise.all([
+      fetch(`${FB_DB_URL}/projectRequests.json`).then(r => r.json()),
+      fetch(`${FB_DB_URL}/serviceRequests.json`).then(r => r.json()),
+      fetch(`${FB_DB_URL}/designRequests.json`).then(r => r.json())
+    ]);
+    const projects = projRes && typeof projRes === 'object' ? Object.values(projRes) : [];
+    const services = svcRes && typeof svcRes === 'object' ? Object.values(svcRes) : [];
+    const designs  = desRes && typeof desRes === 'object' ? Object.values(desRes) : [];
+
+    const matches = [...projects, ...services, ...designs]
+      .filter(r => r && trkNormalizePhone(r.phone) === wanted)
+      .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+    if (!matches.length) { section.style.display = 'none'; return; }
+
+    document.getElementById('portal-requests-list').innerHTML = matches.map(renderPortalRequestCard).join('');
+    section.style.display = 'block';
+  } catch (e) {
+    section.style.display = 'none';
+  }
+}
+
+function renderPortalRequestCard(r) {
+  const statusClass = (r.status || 'new').toLowerCase().replace(/\s+/g, '');
+  const statusLabel = r.status || 'New';
+  const milestones = r.milestones || [];
+
+  let extraHtml = '';
+  if (milestones.length) {
+    const doneCount = milestones.filter(m => m.done).length;
+    extraHtml = `<div class="pr-milestones">
+      <div class="pr-milestones-label"><i class="fas fa-list-check"></i> Progress (${doneCount}/${milestones.length})</div>
+      ${milestones.map(m => `<div class="pr-milestone-row${m.done ? ' done' : ''}"><i class="fas ${m.done ? 'fa-circle-check' : 'fa-circle'}"></i> ${escapeHtml(m.text)}</div>`).join('')}
+    </div>`;
+  } else if (r.scheduledDate) {
+    const dateLabel = new Date(r.scheduledDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    extraHtml = `<div class="pr-scheduled"><i class="fas fa-calendar-check"></i> Scheduled for ${dateLabel}</div>`;
+  }
+
+  return `<div class="pr-card">
+    <div class="pr-card-head">
+      <span class="pr-card-ref">${escapeHtml(r.ref || '—')}</span>
+      <span class="pr-badge ${statusClass}">${escapeHtml(statusLabel)}</span>
+    </div>
+    <div class="pr-card-date">${r.date ? new Date(r.date).toLocaleString() : '—'}</div>
+    <div class="pr-card-items"><strong>${escapeHtml(r.type || '—')}</strong> — ${escapeHtml(r.description || '—')}</div>
+    ${extraHtml}
+  </div>`;
 }
 
 // ═══════════════════════════════════════════
@@ -660,6 +771,22 @@ document.addEventListener('click', function(e) {
     if (data) enterDashboard(savedUsername, data);
     else sessionStorage.removeItem('jtes_portal_username');
   } catch (e) { /* stay on login screen */ }
+})();
+</script>
+
+<script>
+(function() {
+  var SITE_SETTINGS_FB_URL = 'https://jtes-website-default-rtdb.firebaseio.com/siteSettings.json';
+  window.JTES_WA_NUMBER = '233548029027';
+  fetch(SITE_SETTINGS_FB_URL)
+    .then(function(r) { return r.json(); })
+    .then(function(s) {
+      if (!s || !s.whatsapp) return;
+      window.JTES_WA_NUMBER = String(s.whatsapp).replace(/[^0-9]/g, '');
+      var waLink = document.getElementById('portal-wa-action');
+      if (waLink) waLink.href = 'https://wa.me/' + window.JTES_WA_NUMBER;
+    })
+    .catch(function() {});
 })();
 </script>
 

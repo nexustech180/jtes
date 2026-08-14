@@ -28,6 +28,14 @@
 //                             (booleans only, never the values), so admin.html's
 //                             Settings tab can show real "Configured"/"Not confirmed"
 //                             status instead of a client-side guess.
+//   POST /api/paystack-webhook — Paystack calls this directly on payment events, so
+//                             an order still gets completed even if the customer
+//                             closes the tab before /api/paystack-verify's client
+//                             callback runs. Verifies the x-paystack-signature
+//                             header before trusting anything in the payload.
+//                             Configure it in the Paystack dashboard under
+//                             Settings → API Keys & Webhooks as:
+//                               https://<this-worker's-domain>/api/paystack-webhook
 //
 // ── ONE-TIME SETUP ──
 //
@@ -64,11 +72,14 @@
 //      PAYSTACK_SECRET_KEY           (type: Secret — required for online store
 //                                      checkout. From the Paystack dashboard
 //                                      (Settings → API Keys & Webhooks). Starts
-//                                      with sk_test_ or sk_live_. NEVER put this
-//                                      in wrangler.jsonc or any file that ships
-//                                      to the browser — sales.html only ever
-//                                      gets the separate *public* key, which is
-//                                      safe to expose. Set with:
+//                                      with sk_test_ or sk_live_. Used both to
+//                                      call Paystack's verify API and to check
+//                                      the webhook signature — same key, two
+//                                      jobs. NEVER put this in wrangler.jsonc or
+//                                      any file that ships to the browser —
+//                                      sales.html only ever gets the separate
+//                                      *public* key, which is safe to expose.
+//                                      Set with:
 //                                        wrangler secret put PAYSTACK_SECRET_KEY)
 //
 // 3. wrangler.jsonc (in this same repo root) tells Cloudflare to use this file as
@@ -150,6 +161,9 @@ export default {
     }
     if (url.pathname === '/api/paystack-verify' && request.method === 'POST') {
       return handlePaystackVerify(request, env);
+    }
+    if (url.pathname === '/api/paystack-webhook' && request.method === 'POST') {
+      return handlePaystackWebhook(request, env);
     }
     if (url.pathname === '/api/integration-status' && request.method === 'GET') {
       return jsonResponse({
@@ -354,12 +368,76 @@ async function handlePaystackPrepare(request, env) {
   return jsonResponse({ reference: reference, amount: Math.round(validation.total * 100), email: email });
 }
 
-// Step 2 of the Paystack flow: confirms the transaction with Paystack's own
-// API using the secret key (never trusts the client's success callback by
-// itself — that callback only tells the browser to ask us to check), checks
-// the paid amount matches what was locked in at prepare-time, then reserves
-// stock and writes the real order using the pending record's own data —
-// nothing from this request body except the reference is trusted.
+// Shared by /api/paystack-verify (client-triggered, right after the popup
+// closes) and /api/paystack-webhook (Paystack-triggered, fires even if the
+// customer closed the tab before the client callback ran). Both need the
+// exact same "confirm with Paystack, then reserve stock and write the
+// order" logic — the only difference is who calls it and when.
+//
+// Idempotent by construction: the pending record is deleted the moment the
+// order is written, so a second call for the same reference (client retry,
+// webhook redelivery, or the client and the webhook both landing) always
+// finds no pending record and reports alreadyProcessed instead of writing
+// a second order or double-decrementing stock.
+async function completePaystackPayment(reference, env) {
+  let pending;
+  try {
+    const res = await fetch(STORE_DB_URL + '/store/pendingPayments/' + reference + '.json');
+    pending = await res.json();
+  } catch (err) {
+    return { error: { error: 'Could not look up this payment session. Please contact us directly.' }, status: 502 };
+  }
+  if (!pending) {
+    return { alreadyProcessed: true };
+  }
+
+  let verifyResult;
+  try {
+    const verifyRes = await fetch(PAYSTACK_API + '/transaction/verify/' + encodeURIComponent(reference), {
+      headers: { 'Authorization': 'Bearer ' + env.PAYSTACK_SECRET_KEY }
+    });
+    verifyResult = await verifyRes.json();
+  } catch (err) {
+    return { error: { error: 'Could not confirm payment with Paystack. Please try again.' }, status: 502 };
+  }
+
+  const txn = verifyResult && verifyResult.data;
+  if (!verifyResult || !verifyResult.status || !txn || txn.status !== 'success') {
+    return { error: { error: 'Payment was not successful.', details: verifyResult && verifyResult.message }, status: 402 };
+  }
+
+  const expectedPesewas = Math.round(pending.total * 100);
+  if (txn.amount !== expectedPesewas) {
+    return { error: { error: 'Payment amount does not match the order total. Please contact us with your reference: ' + reference }, status: 402 };
+  }
+
+  // Re-check stock only (not price — the customer already paid the total
+  // that was locked in at /api/paystack-prepare time; if a listed price
+  // changed in the few minutes since, that's not the paying customer's
+  // problem to absorb after the fact).
+  const stockCheck = await validateCartAgainstCatalog(pending.items);
+  if (stockCheck.error) {
+    return { error: { error: 'Payment was confirmed, but stock changed before the order could be completed. Please contact us with your reference: ' + reference + ' — you may be due a refund.', details: stockCheck.error }, status: 409 };
+  }
+
+  const result = await reserveStockAndWriteOrder(pending.items, stockCheck.products, {
+    name: pending.name, phone: pending.phone, email: pending.email, address: pending.address,
+    region: pending.region, payment: 'Paystack', notes: pending.notes,
+    paymentStatus: 'Paid', paymentReference: reference
+  });
+  if (result.error) return result;
+
+  try {
+    await fetch(STORE_DB_URL + '/store/pendingPayments/' + reference + '.json', { method: 'DELETE' });
+  } catch (err) { /* order already placed; a leftover pending record is harmless */ }
+
+  return { order: result.order };
+}
+
+// Step 2 of the Paystack flow: the client calls this right after the popup
+// reports success. Never trusts that callback by itself — it only tells the
+// browser to ask us to check — so this confirms with Paystack server-to-
+// server before reserving stock and writing the real order.
 async function handlePaystackVerify(request, env) {
   if (!env.PAYSTACK_SECRET_KEY) {
     return jsonResponse({ error: 'Server is missing PAYSTACK_SECRET_KEY env var.' }, 500);
@@ -374,58 +452,71 @@ async function handlePaystackVerify(request, env) {
   const reference = (body.reference || '').trim();
   if (!reference) return jsonResponse({ error: 'Missing payment reference.' }, 400);
 
-  let pending;
-  try {
-    const res = await fetch(STORE_DB_URL + '/store/pendingPayments/' + reference + '.json');
-    pending = await res.json();
-  } catch (err) {
-    return jsonResponse({ error: 'Could not look up this payment session. Please contact us directly.' }, 502);
-  }
-  if (!pending) {
+  const result = await completePaystackPayment(reference, env);
+  if (result.alreadyProcessed) {
     return jsonResponse({ error: 'This payment has already been processed, or the session expired. If you were charged, please contact us with your reference: ' + reference }, 409);
   }
-
-  let verifyResult;
-  try {
-    const verifyRes = await fetch(PAYSTACK_API + '/transaction/verify/' + encodeURIComponent(reference), {
-      headers: { 'Authorization': 'Bearer ' + env.PAYSTACK_SECRET_KEY }
-    });
-    verifyResult = await verifyRes.json();
-  } catch (err) {
-    return jsonResponse({ error: 'Could not confirm payment with Paystack. Please try again.' }, 502);
-  }
-
-  const txn = verifyResult && verifyResult.data;
-  if (!verifyResult || !verifyResult.status || !txn || txn.status !== 'success') {
-    return jsonResponse({ error: 'Payment was not successful.', details: verifyResult && verifyResult.message }, 402);
-  }
-
-  const expectedPesewas = Math.round(pending.total * 100);
-  if (txn.amount !== expectedPesewas) {
-    return jsonResponse({ error: 'Payment amount does not match the order total. Please contact us with your reference: ' + reference }, 402);
-  }
-
-  // Re-check stock only (not price — the customer already paid the total
-  // that was locked in at /api/paystack-prepare time; if a listed price
-  // changed in the few minutes since, that's not the paying customer's
-  // problem to absorb after the fact).
-  const stockCheck = await validateCartAgainstCatalog(pending.items);
-  if (stockCheck.error) {
-    return jsonResponse({ error: 'Payment was confirmed, but stock changed before the order could be completed. Please contact us with your reference: ' + reference + ' — you may be due a refund.', details: stockCheck.error }, 409);
-  }
-
-  const result = await reserveStockAndWriteOrder(pending.items, stockCheck.products, {
-    name: pending.name, phone: pending.phone, email: pending.email, address: pending.address,
-    region: pending.region, payment: 'Paystack', notes: pending.notes,
-    paymentStatus: 'Paid', paymentReference: reference
-  });
   if (result.error) return jsonResponse(result.error, result.status);
-
-  try {
-    await fetch(STORE_DB_URL + '/store/pendingPayments/' + reference + '.json', { method: 'DELETE' });
-  } catch (err) { /* order already placed; a leftover pending record is harmless */ }
-
   return jsonResponse({ order: result.order });
+}
+
+// Verifies Paystack's webhook signature: HMAC-SHA512 of the raw request
+// body, keyed with the same secret used to talk to Paystack's API, hex-
+// encoded and compared against the x-paystack-signature header. This is
+// the only thing that proves a webhook call actually came from Paystack —
+// without it, anyone who guessed this URL could fabricate "payment
+// succeeded" events.
+async function verifyPaystackSignature(rawBody, signatureHeader, secret) {
+  if (!signatureHeader) return false;
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-512' }, false, ['sign']);
+  const sigBuffer = await crypto.subtle.sign('HMAC', key, enc.encode(rawBody));
+  const hex = Array.from(new Uint8Array(sigBuffer)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+  return hex === signatureHeader;
+}
+
+// Catches payments the client-triggered /api/paystack-verify never got to
+// run for — e.g. the customer paid successfully but closed the tab before
+// the popup's callback fired. Configure this URL as the webhook in the
+// Paystack dashboard (Settings → API Keys & Webhooks) so Paystack calls it
+// directly; completePaystackPayment() is the same idempotent logic either
+// path uses, so a customer who triggers both the client callback and the
+// webhook still only gets one order.
+async function handlePaystackWebhook(request, env) {
+  if (!env.PAYSTACK_SECRET_KEY) return new Response('Server is missing PAYSTACK_SECRET_KEY env var.', { status: 500 });
+
+  const rawBody = await request.text();
+  const signature = request.headers.get('x-paystack-signature');
+  const valid = await verifyPaystackSignature(rawBody, signature, env.PAYSTACK_SECRET_KEY);
+  if (!valid) return new Response('Invalid signature.', { status: 401 });
+
+  let event;
+  try {
+    event = JSON.parse(rawBody);
+  } catch (err) {
+    return new Response('Invalid JSON.', { status: 400 });
+  }
+
+  // Best-effort event log — a failure here should never block processing
+  // the payment itself.
+  try {
+    await fetch(STORE_DB_URL + '/store/paystackWebhookLog.json', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event: event.event, reference: event.data && event.data.reference,
+        receivedAt: new Date().toISOString()
+      })
+    });
+  } catch (err) { /* logging is best-effort */ }
+
+  if (event.event === 'charge.success' && event.data && event.data.reference) {
+    await completePaystackPayment(event.data.reference, env);
+  }
+
+  // Always 200 once the signature checks out — Paystack retries on
+  // non-2xx, and outcomes like "already processed" or "stock changed"
+  // aren't something a retry would fix.
+  return new Response('OK', { status: 200 });
 }
 
 async function handleDriveUpload(request, env) {

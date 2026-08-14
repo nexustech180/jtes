@@ -845,6 +845,7 @@
   .order-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .order-group { display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; }
   .order-group:last-child { margin-bottom: 0; }
+  .delivery-estimate-hint { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; color: var(--blue); background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 10px; padding: 9px 12px; margin-top: 2px; }
   .order-group label {
     font-size: 11.5px; font-weight: 700; color: var(--text-muted);
     letter-spacing: 0.4px; display: flex; align-items: center; gap: 5px;
@@ -1469,7 +1470,7 @@
           </div>
           <div class="order-group">
             <label>Region</label>
-            <select id="ord-region">
+            <select id="ord-region" onchange="updateDeliveryEstimate()">
               <option value="">Select your region</option>
               <option>Greater Accra</option><option>Ashanti</option><option>Central</option>
               <option>Western</option><option>Eastern</option><option>Volta</option>
@@ -1477,6 +1478,7 @@
               <option>Brong-Ahafo</option><option>Oti</option><option>Savannah</option>
               <option>North East</option><option>Western North</option><option>Ahafo</option><option>Bono East</option>
             </select>
+            <div id="ord-delivery-estimate" class="delivery-estimate-hint" style="display:none;"><i class="fas fa-truck-fast"></i> <span id="ord-delivery-estimate-text"></span></div>
           </div>
         </div>
 
@@ -1760,6 +1762,36 @@ function closeOrderModal() {
 
 // ===== PAYMENT METHOD CARD SELECTION =====
 var _selectedPayment = 'Paystack';
+// Rough delivery-time bands from the Kumasi (Ashanti) HQ — not a carrier
+// quote, just a heads-up so the customer isn't guessing before they pay.
+var DELIVERY_ESTIMATES = {
+  'Ashanti': '1-2 business days',
+  'Greater Accra': '2-3 business days',
+  'Central': '2-3 business days',
+  'Western': '2-4 business days',
+  'Eastern': '2-4 business days',
+  'Bono East': '2-4 business days',
+  'Brong-Ahafo': '2-4 business days',
+  'Ahafo': '2-4 business days',
+  'Western North': '3-5 business days',
+  'Volta': '3-5 business days',
+  'Oti': '3-5 business days',
+  'Northern': '4-6 business days',
+  'Savannah': '4-6 business days',
+  'North East': '4-6 business days',
+  'Upper East': '4-6 business days',
+  'Upper West': '4-6 business days'
+};
+function updateDeliveryEstimate() {
+  var region = document.getElementById('ord-region').value;
+  var box = document.getElementById('ord-delivery-estimate');
+  var text = document.getElementById('ord-delivery-estimate-text');
+  var estimate = DELIVERY_ESTIMATES[region];
+  if (!estimate) { box.style.display = 'none'; return; }
+  text.textContent = 'Estimated delivery: ' + estimate;
+  box.style.display = 'flex';
+}
+
 function selectPayment(card, method) {
   _selectedPayment = method;
   document.querySelectorAll('.payment-method-card').forEach(function(c) { c.classList.remove('selected'); });
@@ -2484,6 +2516,7 @@ function finishOrderSuccess(order, name, phone, email, address, region, payment,
     var el = document.getElementById(id); if (el) el.value = '';
   });
   var rg = document.getElementById('ord-region');  if (rg) rg.value = '';
+  updateDeliveryEstimate();
   var py = document.getElementById('ord-payment'); if (py) py.value = '';
   var cb = document.getElementById('ord-consent'); if (cb) cb.checked = false;
   closeOrderModal();
