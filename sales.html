@@ -45,6 +45,14 @@
     transition: all 0.3s; cursor: pointer; margin-left: 4px;
   }
   .nav-admin-lock:hover { color: var(--blue); background: #EFF6FF; }
+  .nav-account-btn {
+    width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; color: var(--dark2); font-size: 15px; text-decoration: none;
+    transition: all 0.2s; cursor: pointer; margin-left: 4px; background: #f1f5f9; border: none;
+    position: relative; font-family: 'Manrope', sans-serif; font-weight: 800;
+  }
+  .nav-account-btn:hover { background: #EFF6FF; color: var(--blue); }
+  .nav-account-btn.logged-in { background: var(--blue); color: #fff; }
   .mobile-menu-btn {
     display: none; background: none; border: none; font-size: 1.6rem;
     cursor: pointer; color: var(--dark2); padding: 4px 6px; line-height: 1;
@@ -1094,6 +1102,7 @@
     <a href="portal.html">Portal</a>
     <a href="#" onclick="openTrackOrderModal();return false;"><i class="fas fa-truck" style="margin-right:5px;"></i>Track Order</a>
   </div>
+  <button class="nav-account-btn" id="navAccountBtn" onclick="openAccountModal()" title="My Account"><i class="fas fa-user" id="navAccountIcon"></i></button>
   <a class="nav-admin-lock" href="https://jtes-admin.jassan.workers.dev" title="Admin"><i class="fas fa-lock"></i></a>
   <button class="mobile-menu-btn" id="menuBtn">&#9776;</button>
   <a class="btn-primary" id="nav-cta" href="contact.html">Get Started</a>
@@ -2393,7 +2402,7 @@ async function placeOrder() {
   try {
     var res = await fetch('/api/place-order', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: Object.assign({ 'Content-Type': 'application/json' }, storeAuthHeaders()),
       body: JSON.stringify({
         name: name, phone: phone, email: email, address: address,
         region: region, payment: payment, notes: notes,
@@ -2443,7 +2452,7 @@ async function payWithPaystack(name, phone, email, address, region, notes, items
   try {
     var prepRes = await fetch('/api/paystack-prepare', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: Object.assign({ 'Content-Type': 'application/json' }, storeAuthHeaders()),
       body: JSON.stringify({
         name: name, phone: phone, email: email, address: address, region: region, notes: notes,
         items: items.map(function(i){ return { id: i.id, name: i.name, price: i.price, qty: i.qty }; })
@@ -2995,10 +3004,359 @@ async function lookupOrder() {
 }
 </script>
 
+<!-- ===== MY ACCOUNT (optional login — guest checkout is unaffected) ===== -->
+<style>
+  .acct-tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+  .acct-tab { padding: 10px 4px; margin-right: 20px; font-size: 14px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; }
+  .acct-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+  .acct-pane { display: none; }
+  .acct-pane.active { display: block; }
+  .acct-field { margin-bottom: 16px; }
+  .acct-field label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.3px; margin-bottom: 6px; }
+  .acct-field input, .acct-field select {
+    width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 10px;
+    font-size: 14px; font-family: 'Manrope', sans-serif; box-sizing: border-box; outline: none;
+  }
+  .acct-field input:focus, .acct-field select:focus { border-color: var(--blue); }
+  .acct-submit-btn {
+    width: 100%; background: var(--blue); color: #fff; border: none; padding: 13px; border-radius: 10px;
+    font-size: 14.5px; font-weight: 800; cursor: pointer; font-family: 'Manrope', sans-serif;
+    display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s;
+  }
+  .acct-submit-btn:hover { background: var(--blue-dark); }
+  .acct-submit-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+  .acct-error { display: none; color: #ef4444; font-size: 12.5px; margin: -8px 0 14px; }
+  .acct-forgot { text-align: center; margin-top: 16px; font-size: 12.5px; }
+  .acct-forgot a { color: var(--blue); text-decoration: none; font-weight: 700; }
+  .acct-switch { text-align: center; margin-top: 18px; font-size: 13px; color: var(--text-muted); }
+  .acct-switch a { color: var(--blue); font-weight: 700; text-decoration: none; cursor: pointer; }
+  .acct-welcome { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .acct-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; flex-shrink: 0; }
+  .acct-welcome-name { font-size: 16px; font-weight: 800; color: var(--dark2); }
+  .acct-welcome-user { font-size: 12.5px; color: var(--text-muted); }
+  .acct-logout-btn { margin-left: auto; background: #fee2e2; color: #ef4444; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: 'Manrope', sans-serif; }
+  .acct-section-title { font-size: 13px; font-weight: 800; color: var(--dark2); margin: 24px 0 14px; display: flex; align-items: center; gap: 8px; }
+  .acct-section-title i { color: var(--blue); }
+  .acct-save-note { display: none; color: var(--green, #16a34a); font-size: 12.5px; margin-top: 10px; }
+</style>
+
+<div class="trk-modal-overlay" id="acctModalOverlay">
+  <div class="trk-modal-topbar">
+    <div class="trk-modal-topbar-title"><i class="fas fa-user"></i> My Account</div>
+    <button type="button" class="trk-modal-close" onclick="closeAccountModal()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="trk-modal-box">
+    <div class="trk-modal-card">
+
+      <!-- LOGGED OUT: LOGIN / SIGN UP -->
+      <div id="acctLoggedOutView">
+        <div class="acct-tabs">
+          <div class="acct-tab active" id="acctTabLogin" onclick="switchAccountTab('login')">Log In</div>
+          <div class="acct-tab" id="acctTabSignup" onclick="switchAccountTab('signup')">Create Account</div>
+        </div>
+
+        <div class="acct-pane active" id="acctPaneLogin">
+          <p class="trk-modal-sub">An account is optional — you can always check out as a guest. Logging in just saves your details and order history for next time.</p>
+          <p class="acct-error" id="acctLoginError"></p>
+          <div class="acct-field"><label>Username</label><input type="text" id="acctLoginUsername" autocomplete="username"></div>
+          <div class="acct-field"><label>Password</label><input type="password" id="acctLoginPassword" autocomplete="current-password"></div>
+          <button class="acct-submit-btn" id="acctLoginBtn" onclick="attemptStoreLogin()"><i class="fas fa-arrow-right-to-bracket"></i> Log In</button>
+          <p class="acct-forgot"><a id="acctForgotLink" href="#" target="_blank" rel="noopener">Forgot your password?</a></p>
+          <p class="acct-switch">New here? <a onclick="switchAccountTab('signup')">Create an account</a></p>
+        </div>
+
+        <div class="acct-pane" id="acctPaneSignup">
+          <p class="trk-modal-sub">Creates a simple shopping account — no email needed, just a username and password you choose.</p>
+          <p class="acct-error" id="acctSignupError"></p>
+          <div class="acct-field"><label>Full Name</label><input type="text" id="acctSignupName" autocomplete="name"></div>
+          <div class="acct-field"><label>Phone</label><input type="tel" id="acctSignupPhone" autocomplete="tel"></div>
+          <div class="acct-field"><label>Choose a Username</label><input type="text" id="acctSignupUsername" autocomplete="username" placeholder="letters, numbers, - . _  only"></div>
+          <div class="acct-field"><label>Choose a Password</label><input type="password" id="acctSignupPassword" autocomplete="new-password"></div>
+          <button class="acct-submit-btn" id="acctSignupBtn" onclick="attemptStoreSignup()"><i class="fas fa-user-plus"></i> Create Account</button>
+          <p class="acct-switch">Already have an account? <a onclick="switchAccountTab('login')">Log in</a></p>
+        </div>
+      </div>
+
+      <!-- LOGGED IN -->
+      <div id="acctLoggedInView" style="display:none;">
+        <div class="acct-welcome">
+          <div class="acct-avatar" id="acctAvatarLetter">?</div>
+          <div>
+            <div class="acct-welcome-name" id="acctWelcomeName">—</div>
+            <div class="acct-welcome-user" id="acctWelcomeUser">—</div>
+          </div>
+          <button class="acct-logout-btn" onclick="storeLogout()"><i class="fas fa-arrow-right-from-bracket"></i> Log Out</button>
+        </div>
+
+        <div class="acct-section-title"><i class="fas fa-bag-shopping"></i> My Orders</div>
+        <div id="acctOrdersWrap"></div>
+
+        <div class="acct-section-title"><i class="fas fa-id-card"></i> Saved Details</div>
+        <div class="acct-field"><label>Full Name</label><input type="text" id="acctProfileName"></div>
+        <div class="acct-field"><label>Phone</label><input type="tel" id="acctProfilePhone"></div>
+        <div class="acct-field"><label>Delivery Address</label><input type="text" id="acctProfileAddress"></div>
+        <div class="acct-field">
+          <label>Region</label>
+          <select id="acctProfileRegion">
+            <option value="">Select your region</option>
+            <option>Greater Accra</option><option>Ashanti</option><option>Central</option>
+            <option>Western</option><option>Eastern</option><option>Volta</option>
+            <option>Northern</option><option>Upper East</option><option>Upper West</option>
+            <option>Brong-Ahafo</option><option>Oti</option><option>Savannah</option>
+            <option>North East</option><option>Western North</option><option>Ahafo</option><option>Bono East</option>
+          </select>
+        </div>
+        <button class="acct-submit-btn" onclick="saveStoreProfile()"><i class="fas fa-save"></i> Save Details</button>
+        <p class="acct-save-note" id="acctSaveNote"><i class="fas fa-check-circle"></i> Saved — these will prefill your next checkout.</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  STORE ACCOUNTS — entirely optional. Guest checkout works exactly as it
+//  always has whether or not a customer ever opens this modal. Logging in
+//  just prefills checkout and remembers order history across devices.
+//  Session token is kept in localStorage (not sessionStorage) — a
+//  deliberate choice for a shopping account: customers expect "stay
+//  logged in" here, unlike the Client Portal's higher-sensitivity,
+//  shorter-lived sessions.
+// ═══════════════════════════════════════════
+var STORE_TOKEN_KEY = 'jtes_store_token';
+var STORE_USERNAME_KEY = 'jtes_store_username';
+var storeToken = null;
+var storeUsername = null;
+
+async function hashStorePassword(password, salt) {
+  var enc = new TextEncoder();
+  var buf = await crypto.subtle.digest('SHA-256', enc.encode(salt + ':' + password));
+  return Array.from(new Uint8Array(buf)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+}
+function generateStoreSalt() {
+  var arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+}
+
+function openAccountModal() {
+  document.getElementById('acctModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  if (storeToken) refreshAccountView();
+}
+function closeAccountModal() {
+  document.getElementById('acctModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function switchAccountTab(tab) {
+  document.getElementById('acctTabLogin').classList.toggle('active', tab === 'login');
+  document.getElementById('acctTabSignup').classList.toggle('active', tab === 'signup');
+  document.getElementById('acctPaneLogin').classList.toggle('active', tab === 'login');
+  document.getElementById('acctPaneSignup').classList.toggle('active', tab === 'signup');
+}
+
+function storeAuthHeaders() {
+  return storeToken ? { 'Authorization': 'Bearer ' + storeToken } : {};
+}
+
+async function attemptStoreSignup() {
+  var name     = (document.getElementById('acctSignupName').value || '').trim();
+  var phone    = (document.getElementById('acctSignupPhone').value || '').trim();
+  var username = (document.getElementById('acctSignupUsername').value || '').trim();
+  var password = document.getElementById('acctSignupPassword').value;
+  var errEl = document.getElementById('acctSignupError');
+  errEl.style.display = 'none';
+
+  if (!name || !phone || !username || !password) { errEl.textContent = 'Please fill in every field.'; errEl.style.display = 'block'; return; }
+  if (!/^[A-Za-z0-9_.-]{3,40}$/.test(username)) { errEl.textContent = 'Username can only use letters, numbers, - . and _ (3-40 chars).'; errEl.style.display = 'block'; return; }
+  if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.style.display = 'block'; return; }
+
+  var btn = document.getElementById('acctSignupBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account…';
+
+  try {
+    var existing = await fbGet('storeCustomers/' + username);
+    if (existing) { errEl.textContent = 'That username is already taken — please choose another.'; errEl.style.display = 'block'; btn.disabled = false; btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account'; return; }
+
+    var salt = generateStoreSalt();
+    var passwordHash = await hashStorePassword(password, salt);
+    await fbSet('storeCustomers/' + username, { passwordHash: passwordHash, passwordSalt: salt, sessionEpoch: 1, name: name, phone: phone, createdAt: new Date().toISOString() });
+
+    document.getElementById('acctLoginUsername').value = username;
+    document.getElementById('acctLoginPassword').value = password;
+    await attemptStoreLogin();
+  } catch (e) {
+    errEl.textContent = 'Something went wrong. Please try again.';
+    errEl.style.display = 'block';
+  }
+  btn.disabled = false; btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+}
+
+async function attemptStoreLogin() {
+  var username = (document.getElementById('acctLoginUsername').value || '').trim();
+  var password = document.getElementById('acctLoginPassword').value;
+  var errEl = document.getElementById('acctLoginError');
+  errEl.style.display = 'none';
+  if (!username || !password) { errEl.textContent = 'Please enter your username and password.'; errEl.style.display = 'block'; return; }
+
+  var btn = document.getElementById('acctLoginBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in…';
+
+  try {
+    var res = await fetch('/api/store-login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: username, password: password })
+    });
+    var result = await res.json();
+    if (!res.ok || !result.token) {
+      errEl.textContent = result.error || 'Incorrect username or password.';
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i> Log In';
+      return;
+    }
+    storeToken = result.token;
+    storeUsername = username;
+    localStorage.setItem(STORE_TOKEN_KEY, storeToken);
+    localStorage.setItem(STORE_USERNAME_KEY, storeUsername);
+    document.getElementById('acctLoginUsername').value = '';
+    document.getElementById('acctLoginPassword').value = '';
+    prefillCheckoutFromAccount(result.name, result.phone, result.address, result.region);
+    updateAccountNavIcon();
+    await refreshAccountView();
+  } catch (e) {
+    errEl.textContent = 'Something went wrong. Please try again.';
+    errEl.style.display = 'block';
+  }
+  btn.disabled = false; btn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i> Log In';
+}
+
+function storeLogout() {
+  storeToken = null;
+  storeUsername = null;
+  localStorage.removeItem(STORE_TOKEN_KEY);
+  localStorage.removeItem(STORE_USERNAME_KEY);
+  updateAccountNavIcon();
+  document.getElementById('acctLoggedOutView').style.display = 'block';
+  document.getElementById('acctLoggedInView').style.display = 'none';
+  switchAccountTab('login');
+}
+
+function updateAccountNavIcon() {
+  var btn = document.getElementById('navAccountBtn');
+  var icon = document.getElementById('navAccountIcon');
+  if (storeToken) {
+    btn.classList.add('logged-in');
+    icon.className = '';
+    icon.textContent = (storeUsername || '?').charAt(0).toUpperCase();
+  } else {
+    btn.classList.remove('logged-in');
+    icon.className = 'fas fa-user';
+    icon.textContent = '';
+  }
+}
+
+// Only called right after a fresh login (so we have the profile fields
+// from the login response already) — pre-fills the checkout form fields
+// if they're on screen and still empty, never overwriting something the
+// guest already typed.
+function prefillCheckoutFromAccount(name, phone, address, region) {
+  var nameEl = document.getElementById('ord-name');
+  var phoneEl = document.getElementById('ord-phone');
+  var addrEl = document.getElementById('ord-address');
+  var regionEl = document.getElementById('ord-region');
+  if (nameEl && !nameEl.value && name) nameEl.value = name;
+  if (phoneEl && !phoneEl.value && phone) phoneEl.value = phone;
+  if (addrEl && !addrEl.value && address) addrEl.value = address;
+  if (regionEl && !regionEl.value && region) { regionEl.value = region; updateDeliveryEstimate(); }
+}
+
+async function refreshAccountView() {
+  if (!storeToken) return;
+  try {
+    var res = await fetch('/api/store-data', { headers: storeAuthHeaders() });
+    if (res.status === 401) { storeLogout(); return; }
+    var data = await res.json();
+
+    document.getElementById('acctLoggedOutView').style.display = 'none';
+    document.getElementById('acctLoggedInView').style.display = 'block';
+    document.getElementById('acctAvatarLetter').textContent = (data.name || storeUsername || '?').charAt(0).toUpperCase();
+    document.getElementById('acctWelcomeName').textContent = data.name || storeUsername;
+    document.getElementById('acctWelcomeUser').textContent = '@' + storeUsername;
+    document.getElementById('acctProfileName').value = data.name || '';
+    document.getElementById('acctProfilePhone').value = data.phone || '';
+    document.getElementById('acctProfileAddress').value = data.address || '';
+    document.getElementById('acctProfileRegion').value = data.region || '';
+
+    loadMyStoreOrders();
+  } catch (e) { /* stay on whatever's shown */ }
+}
+
+async function loadMyStoreOrders() {
+  var wrap = document.getElementById('acctOrdersWrap');
+  wrap.innerHTML = '<div class="trk-hint"><i class="fas fa-spinner fa-spin"></i> Loading your orders…</div>';
+  try {
+    var res = await fetch('/api/store-orders', { headers: storeAuthHeaders() });
+    if (res.status === 401) { storeLogout(); return; }
+    var result = await res.json();
+    var orders = result.orders || [];
+    if (!orders.length) {
+      wrap.innerHTML = '<div class="trk-empty"><i class="fas fa-inbox"></i><p>No orders placed while logged in yet.</p></div>';
+      return;
+    }
+    wrap.innerHTML = '<div class="trk-results">' + orders.map(trkRenderOrderCard).join('') + '</div>';
+  } catch (e) {
+    wrap.innerHTML = '';
+  }
+}
+
+async function saveStoreProfile() {
+  if (!storeToken) return;
+  var name = (document.getElementById('acctProfileName').value || '').trim();
+  var phone = (document.getElementById('acctProfilePhone').value || '').trim();
+  var address = (document.getElementById('acctProfileAddress').value || '').trim();
+  var region = document.getElementById('acctProfileRegion').value;
+  try {
+    var res = await fetch('/api/store-profile-update', {
+      method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, storeAuthHeaders()),
+      body: JSON.stringify({ name: name, phone: phone, address: address, region: region })
+    });
+    if (res.status === 401) { storeLogout(); return; }
+    var note = document.getElementById('acctSaveNote');
+    note.style.display = 'block';
+    setTimeout(function() { note.style.display = 'none'; }, 2500);
+  } catch (e) { /* silent — non-critical */ }
+}
+
+// Restore a saved session on page load. A 401 here (expired/revoked token)
+// just silently drops back to guest mode — never an error the shopper sees.
+(async function restoreStoreSession() {
+  var savedToken = localStorage.getItem(STORE_TOKEN_KEY);
+  var savedUsername = localStorage.getItem(STORE_USERNAME_KEY);
+  if (!savedToken || !savedUsername) return;
+  storeToken = savedToken;
+  storeUsername = savedUsername;
+  updateAccountNavIcon();
+  try {
+    var res = await fetch('/api/store-data', { headers: storeAuthHeaders() });
+    if (res.status === 401) { storeLogout(); return; }
+    var data = await res.json();
+    prefillCheckoutFromAccount(data.name, data.phone, data.address, data.region);
+  } catch (e) { /* stay logged in visually; will retry when the modal opens */ }
+})();
+</script>
+
 <script>
 (function() {
   var SITE_SETTINGS_FB_URL = 'https://jtes-website-default-rtdb.firebaseio.com/siteSettings.json';
   window.JTES_WA_NUMBER = '233548029027';
+  function updateForgotPasswordLink() {
+    var link = document.getElementById('acctForgotLink');
+    if (!link) return;
+    var msg = encodeURIComponent('Hi! I forgot my store account password' + (storeUsername ? ' for username "' + storeUsername + '"' : '') + ' — could you help me reset it?');
+    link.href = 'https://wa.me/' + window.JTES_WA_NUMBER + '?text=' + msg;
+  }
+  updateForgotPasswordLink();
   fetch(SITE_SETTINGS_FB_URL)
     .then(function(r) { return r.json(); })
     .then(function(s) {
@@ -3007,6 +3365,7 @@ async function lookupOrder() {
         window.JTES_WA_NUMBER = String(s.whatsapp).replace(/[^0-9]/g, '');
         var waLink = document.getElementById('footer-wa-link');
         if (waLink) waLink.href = 'https://wa.me/' + window.JTES_WA_NUMBER;
+        updateForgotPasswordLink();
       }
       if (s.supportPhone) {
         var phoneEl = document.getElementById('footer-phone-text');

@@ -61,6 +61,21 @@
 //                             See the "CLIENT PORTAL AUTH" comment block further down
 //                             this file for the full design and its one disclosed
 //                             limitation (no Firebase Security Rules access from here).
+//   POST /api/store-login    — OPTIONAL customer login for sales.html — same real-auth
+//                             pattern as the portal (see "STORE ACCOUNTS" comment
+//                             block below), but self-service: anyone can sign up, and
+//                             guest checkout keeps working exactly as before whether
+//                             or not a customer ever creates an account.
+//   GET  /api/store-data     — the logged-in customer's own saved name/phone/address/
+//                             region, for checkout prefill.
+//   POST /api/store-profile-update — same auth, saves those fields.
+//   GET  /api/store-orders   — the logged-in customer's own order history — only
+//                             orders placed WHILE logged in are tagged and appear
+//                             here; guest orders are never retroactively linked.
+//                             /api/place-order and /api/paystack-prepare both accept
+//                             an optional Bearer token to tag the resulting order this
+//                             way; a missing or invalid token just means a guest order,
+//                             never a checkout failure.
 //
 // ── ONE-TIME SETUP ──
 //
@@ -116,6 +131,14 @@
 //                                      admin.html, no shared secret needed for that
 //                                      part. Set with:
 //                                        wrangler secret put PORTAL_SESSION_SECRET
+//                                      e.g. using a value from `openssl rand -hex 32`.)
+//      STORE_SESSION_SECRET          (type: Secret — required for optional customer
+//                                      login on sales.html. Same idea as
+//                                      PORTAL_SESSION_SECRET, but MUST be a different
+//                                      value — this signs store-customer session
+//                                      tokens, a separate trust boundary from the
+//                                      Client Portal. Set with:
+//                                        wrangler secret put STORE_SESSION_SECRET
 //                                      e.g. using a value from `openssl rand -hex 32`.)
 //
 // 3. wrangler.jsonc (in this same repo root) tells Cloudflare to use this file as
@@ -206,7 +229,8 @@ export default {
         paystackConfigured: !!env.PAYSTACK_SECRET_KEY,
         adminApiConfigured: !!env.ADMIN_API_TOKEN,
         composioConfigured: !!env.COMPOSIO_API_KEY,
-        portalAuthConfigured: !!env.PORTAL_SESSION_SECRET
+        portalAuthConfigured: !!env.PORTAL_SESSION_SECRET,
+        storeAuthConfigured: !!env.STORE_SESSION_SECRET
       });
     }
     if (url.pathname === '/api/portal-login' && request.method === 'POST') {
@@ -229,6 +253,18 @@ export default {
     }
     if (url.pathname === '/api/portal-feedback' && request.method === 'GET') {
       return handlePortalFeedbackGet(request, env);
+    }
+    if (url.pathname === '/api/store-login' && request.method === 'POST') {
+      return handleStoreLogin(request, env);
+    }
+    if (url.pathname === '/api/store-data' && request.method === 'GET') {
+      return handleStoreData(request, env);
+    }
+    if (url.pathname === '/api/store-profile-update' && request.method === 'POST') {
+      return handleStoreProfileUpdate(request, env);
+    }
+    if (url.pathname === '/api/store-orders' && request.method === 'GET') {
+      return handleStoreOrders(request, env);
     }
     if (url.pathname === '/api/debug-composio' && request.method === 'GET') {
       return handleDebugComposio(request, env);
@@ -280,9 +316,11 @@ async function handlePlaceOrder(request, env) {
   const validation = await validateCartAgainstCatalog(items);
   if (validation.error) return jsonResponse(validation.error, validation.status);
 
+  const customerUsername = await getOptionalStoreUsername(request, env);
   const result = await reserveStockAndWriteOrder(validation.items, validation.products, {
     name: name, phone: phone, email: email, address: address,
-    region: region, payment: payment, notes: notes, paymentStatus: 'Unpaid'
+    region: region, payment: payment, notes: notes, paymentStatus: 'Unpaid',
+    customerUsername: customerUsername || null
   });
   if (result.error) return jsonResponse(result.error, result.status);
 
@@ -408,10 +446,12 @@ async function handlePaystackPrepare(request, env) {
   const validation = await validateCartAgainstCatalog(items);
   if (validation.error) return jsonResponse(validation.error, validation.status);
 
+  const customerUsername = await getOptionalStoreUsername(request, env);
   const reference = 'PSK-' + Date.now();
   const pending = {
     reference: reference, name: name, phone: phone, email: email, address: address,
     region: region, notes: notes, items: validation.items, total: validation.total,
+    customerUsername: customerUsername || null,
     createdAt: new Date().toISOString()
   };
 
@@ -481,7 +521,8 @@ async function completePaystackPayment(reference, env) {
   const result = await reserveStockAndWriteOrder(pending.items, stockCheck.products, {
     name: pending.name, phone: pending.phone, email: pending.email, address: pending.address,
     region: pending.region, payment: 'Paystack', notes: pending.notes,
-    paymentStatus: 'Paid', paymentReference: reference
+    paymentStatus: 'Paid', paymentReference: reference,
+    customerUsername: pending.customerUsername || null
   });
   if (result.error) return result;
 
@@ -868,6 +909,198 @@ async function handlePortalFeedbackSend(request, env) {
     return jsonResponse({ success: true });
   } catch (err) {
     return jsonResponse({ error: 'Failed to send feedback.' }, 502);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  STORE ACCOUNTS — optional customer login for sales.html, built on the
+//  same real-auth pattern as the Client Portal (see "CLIENT PORTAL AUTH"
+//  above for the full design rationale) but with two deliberate
+//  differences suited to a public storefront rather than a business
+//  relationship:
+//
+//  1. SELF-SERVICE, NOT ADMIN-PROVISIONED. Anyone can sign up. Signup
+//     itself doesn't go through this Worker at all — sales.html hashes
+//     the chosen password client-side (salted SHA-256, same primitive as
+//     the portal) and writes storeCustomers/{username} directly to
+//     Firebase, exactly like every other public form on this site already
+//     does (project/service/design requests, newsletter signups). This
+//     keeps the architecture consistent rather than treating store
+//     accounts as a special case.
+//
+//  2. LOGIN AND EVERY AUTHENTICATED ROUTE BELOW are what's actually new
+//     and actually enforced here: passwords are verified against the
+//     hash server-side (never client-side, never trusting a plaintext
+//     compare), sessions are signed + expiring + revocable exactly like
+//     the portal's, and "My Orders" / saved profile routes only ever
+//     return the token's own account's data.
+//
+//  GUEST CHECKOUT IS UNCHANGED AND UNAFFECTED. /api/place-order and
+//  /api/paystack-prepare both accept an optional Authorization header —
+//  present and valid, the resulting order is tagged with that verified
+//  username (via getOptionalStoreUsername, below) so it shows up in "My
+//  Orders"; absent, invalid, or expired, checkout proceeds exactly as it
+//  always has, as a guest order with no account involved. A malformed or
+//  stale token never blocks or errors a checkout — worst case it's just
+//  treated as no token at all.
+// ═══════════════════════════════════════════════════════════════════════
+
+const STORE_SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days — a shopping account, not a sensitive business relationship; longer-lived by design than the portal's 12h.
+
+async function createStoreSessionToken(username, secret, epoch) {
+  const payload = JSON.stringify({ u: username, exp: Date.now() + STORE_SESSION_TTL_MS, e: epoch || 0, t: 'store' });
+  const payloadB64 = base64UrlEncode(payload);
+  const sig = await hmacSha256Hex(payloadB64, secret);
+  return payloadB64 + '.' + sig;
+}
+
+async function verifyStoreSessionToken(token, secret) {
+  if (!token || token.indexOf('.') === -1) return null;
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+  const [payloadB64, sig] = parts;
+  const expectedSig = await hmacSha256Hex(payloadB64, secret);
+  if (sig !== expectedSig) return null;
+  let payload;
+  try { payload = JSON.parse(base64UrlDecode(payloadB64)); } catch (err) { return null; }
+  if (!payload || !payload.u || payload.t !== 'store' || !payload.exp || payload.exp < Date.now()) return null;
+  return { username: payload.u, epoch: payload.e || 0 };
+}
+
+async function requireStoreAuth(request, env) {
+  if (!env.STORE_SESSION_SECRET) {
+    return { error: jsonResponse({ error: 'Server is missing STORE_SESSION_SECRET env var.' }, 500) };
+  }
+  const authHeader = request.headers.get('Authorization') || '';
+  const token = authHeader.indexOf('Bearer ') === 0 ? authHeader.slice(7) : '';
+  const verified = await verifyStoreSessionToken(token, env.STORE_SESSION_SECRET);
+  if (!verified) {
+    return { error: jsonResponse({ error: 'Session expired or invalid. Please log in again.' }, 401) };
+  }
+  let account;
+  try {
+    account = await (await fetch(STORE_DB_URL + '/storeCustomers/' + encodeURIComponent(verified.username) + '.json')).json();
+  } catch (err) {
+    return { error: jsonResponse({ error: 'Could not verify your session. Please try again.' }, 502) };
+  }
+  const currentEpoch = (account && account.sessionEpoch) || 0;
+  if (!account || verified.epoch !== currentEpoch) {
+    return { error: jsonResponse({ error: 'Session expired or invalid. Please log in again.' }, 401) };
+  }
+  return { username: verified.username };
+}
+
+// Used by checkout routes ONLY — never errors, never blocks. Returns the
+// verified username if a valid Bearer token is present, or null for
+// literally any other case (no token, malformed token, expired token,
+// wrong secret, revoked session). Guest checkout must never fail because
+// of a stale token sitting in localStorage.
+async function getOptionalStoreUsername(request, env) {
+  if (!env.STORE_SESSION_SECRET) return null;
+  const authHeader = request.headers.get('Authorization') || '';
+  const token = authHeader.indexOf('Bearer ') === 0 ? authHeader.slice(7) : '';
+  if (!token) return null;
+  try {
+    const verified = await verifyStoreSessionToken(token, env.STORE_SESSION_SECRET);
+    if (!verified) return null;
+    const account = await (await fetch(STORE_DB_URL + '/storeCustomers/' + encodeURIComponent(verified.username) + '.json')).json();
+    const currentEpoch = (account && account.sessionEpoch) || 0;
+    if (!account || verified.epoch !== currentEpoch) return null;
+    return verified.username;
+  } catch (err) {
+    return null;
+  }
+}
+
+async function handleStoreLogin(request, env) {
+  if (!env.STORE_SESSION_SECRET) {
+    return jsonResponse({ error: 'Server is missing STORE_SESSION_SECRET env var.' }, 500);
+  }
+  let body;
+  try { body = await request.json(); } catch (err) { return jsonResponse({ error: 'Invalid request.' }, 400); }
+  const username = (body.username || '').trim();
+  const password = body.password || '';
+  if (!username || !password) return jsonResponse({ error: 'Username and password are required.' }, 400);
+
+  const attemptsPath = STORE_DB_URL + '/storeLoginAttempts/' + encodeURIComponent(username) + '.json';
+  let attempts = null;
+  try { attempts = await (await fetch(attemptsPath)).json(); } catch (err) { attempts = null; }
+  if (attempts && attempts.lockedUntil && attempts.lockedUntil > Date.now()) {
+    return jsonResponse({ error: 'Too many failed attempts. Please try again in a few minutes.' }, 429);
+  }
+
+  let account = null;
+  try { account = await (await fetch(STORE_DB_URL + '/storeCustomers/' + encodeURIComponent(username) + '.json')).json(); } catch (err) {
+    return jsonResponse({ error: 'Could not check credentials. Please try again.' }, 502);
+  }
+
+  const validAccount = account && account.passwordHash && account.passwordSalt;
+  const computedHash = validAccount ? await sha256Hex(account.passwordSalt + ':' + password) : null;
+
+  if (!validAccount || computedHash !== account.passwordHash) {
+    await recordFailedPortalLogin(attemptsPath, attempts); // shared helper — the logic is identical, just a different Firebase path
+    return jsonResponse({ error: 'Incorrect username or password.' }, 401);
+  }
+
+  try { await fetch(attemptsPath, { method: 'DELETE' }); } catch (err) { /* non-fatal */ }
+
+  const token = await createStoreSessionToken(username, env.STORE_SESSION_SECRET, account.sessionEpoch || 0);
+  return jsonResponse({
+    token: token, username: username, expiresAt: Date.now() + STORE_SESSION_TTL_MS,
+    name: account.name || '', phone: account.phone || '', address: account.address || '', region: account.region || ''
+  });
+}
+
+// Profile only — name/phone/address/region for checkout prefill. Never
+// includes passwordHash/passwordSalt.
+async function handleStoreData(request, env) {
+  const auth = await requireStoreAuth(request, env);
+  if (auth.error) return auth.error;
+  let account;
+  try {
+    account = await (await fetch(STORE_DB_URL + '/storeCustomers/' + encodeURIComponent(auth.username) + '.json')).json();
+  } catch (err) {
+    return jsonResponse({ error: 'Could not load your account.' }, 502);
+  }
+  if (!account) return jsonResponse({ error: 'Account not found.' }, 404);
+  return jsonResponse({ name: account.name || '', phone: account.phone || '', address: account.address || '', region: account.region || '' });
+}
+
+async function handleStoreProfileUpdate(request, env) {
+  const auth = await requireStoreAuth(request, env);
+  if (auth.error) return auth.error;
+  let body;
+  try { body = await request.json(); } catch (err) { return jsonResponse({ error: 'Invalid request.' }, 400); }
+  const update = {
+    name: (body.name || '').trim(), phone: (body.phone || '').trim(),
+    address: (body.address || '').trim(), region: body.region || ''
+  };
+  try {
+    await fetch(STORE_DB_URL + '/storeCustomers/' + encodeURIComponent(auth.username) + '.json', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update)
+    });
+    return jsonResponse({ success: true });
+  } catch (err) {
+    return jsonResponse({ error: 'Failed to save your details.' }, 502);
+  }
+}
+
+// "My Orders" — every order this logged-in customer has ever placed while
+// signed in. Orders placed as a guest (no token at checkout) are never
+// tagged with a username and so never appear here, even to that same
+// person if they later create an account with a matching phone number —
+// there's no retroactive linking, only what was tagged at checkout time.
+async function handleStoreOrders(request, env) {
+  const auth = await requireStoreAuth(request, env);
+  if (auth.error) return auth.error;
+  try {
+    const data = await (await fetch(STORE_DB_URL + '/store/orders.json')).json();
+    const all = data && typeof data === 'object' ? Object.values(data) : [];
+    const mine = all.filter(function(o) { return o && o.customerUsername === auth.username; })
+      .sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+    return jsonResponse({ orders: mine });
+  } catch (err) {
+    return jsonResponse({ error: 'Could not load your orders.' }, 502);
   }
 }
 
