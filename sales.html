@@ -428,6 +428,9 @@
   .pd-divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
   .pd-desc-label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
   .pd-desc { font-size: 14.5px; color: var(--text); line-height: 1.8; white-space: pre-line; }
+  .pd-specs-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .pd-specs-list li { font-size: 13.5px; color: var(--text); line-height: 1.5; padding: 9px 12px; background: var(--gray-light); border-radius: 8px; display: flex; align-items: flex-start; gap: 8px; }
+  .pd-specs-list li i { color: var(--blue); font-size: 11px; margin-top: 3px; }
   .pd-footer {
     padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 12px;
     background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); flex-shrink: 0;
@@ -1293,6 +1296,10 @@
       <hr class="pd-divider">
       <div class="pd-desc-label">Description</div>
       <div class="pd-desc" id="pdDesc"></div>
+      <div id="pdSpecsBlock" style="display:none;">
+        <div class="pd-desc-label" style="margin-top:18px;">Specifications</div>
+        <ul class="pd-specs-list" id="pdSpecsList"></ul>
+      </div>
     </div>
     </div>
     <div class="pd-related" id="pdRelated" style="display:none;">
@@ -1600,6 +1607,12 @@
 </footer>
 
 <script>
+function escapeHtml(s) {
+  var d = document.createElement('div');
+  d.textContent = s == null ? '' : String(s);
+  return d.innerHTML;
+}
+
 // ===== CART STATE =====
 var cart = {};
 
@@ -1958,6 +1971,14 @@ function openPdSheet(p) {
   }
   document.getElementById('pdRating').innerHTML = stars + '<span style="margin-left:4px;">' + rating.toFixed(1) + '</span>';
   document.getElementById('pdDesc').textContent = p.description || 'No description available.';
+  var specsBlock = document.getElementById('pdSpecsBlock');
+  var specsList = document.getElementById('pdSpecsList');
+  if (p.specs && p.specs.length) {
+    specsList.innerHTML = p.specs.map(function(s) { return '<li><i class="fas fa-check"></i> ' + escapeHtml(s) + '</li>'; }).join('');
+    specsBlock.style.display = 'block';
+  } else {
+    specsBlock.style.display = 'none';
+  }
   var cartBtn = document.getElementById('pdCartBtn');
   var id = p.id || p.name;
   cartBtn.className = 'pd-btn-cart';

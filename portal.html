@@ -99,6 +99,8 @@ main { padding-top: 64px; min-height: 100vh; }
 .portal-quick-action.wa { border-color: #25D366; }
 .portal-quick-action.wa i { color: #25D366; }
 .portal-quick-action.wa:hover { background: #ECFDF5; }
+.portal-unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); display: none; }
+.portal-unread-dot.show { display: inline-block; }
 
 /* Your Requests */
 .portal-requests-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 40px; }
@@ -286,7 +288,7 @@ footer { background: #0A0F1E; padding: 48px 80px 24px; text-align: center; color
 
       <div class="portal-quick-actions">
         <a class="portal-quick-action wa" id="portal-wa-action" href="https://wa.me/233548029027" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp Us</a>
-        <a class="portal-quick-action" href="#portal-chat-anchor"><i class="fas fa-comments"></i> Message Us</a>
+        <a class="portal-quick-action" href="#portal-chat-anchor" id="portal-message-quick-action" onclick="markPortalMessagesSeen()"><i class="fas fa-comments"></i> Message Us <span class="portal-unread-dot" id="portal-unread-dot"></span></a>
         <a class="portal-quick-action" href="#portal-feedback-anchor"><i class="fas fa-envelope-open-text"></i> Send Feedback</a>
       </div>
 
@@ -328,7 +330,7 @@ footer { background: #0A0F1E; padding: 48px 80px 24px; text-align: center; color
           <div class="chat-empty"><i class="fas fa-comment-dots"></i><p>No messages yet — send us a message any time.</p></div>
         </div>
         <div class="chat-input-row">
-          <input type="text" id="portal-chat-input" placeholder="Type a message…" onkeypress="if(event.key==='Enter') sendPortalChatMessage()">
+          <input type="text" id="portal-chat-input" placeholder="Type a message…" onfocus="markPortalMessagesSeen()" onkeypress="if(event.key==='Enter') sendPortalChatMessage()">
           <button onclick="sendPortalChatMessage()"><i class="fas fa-paper-plane"></i></button>
         </div>
       </div>
@@ -525,6 +527,7 @@ function renderPortalChatThread(data) {
   const thread = document.getElementById('portal-chat-thread');
   const atBottom = thread.scrollTop + thread.clientHeight >= thread.scrollHeight - 40;
   const msgs = Object.values(data).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  checkPortalUnread(msgs);
   if (!msgs.length) {
     thread.innerHTML = '<div class="chat-empty"><i class="fas fa-comment-dots"></i><p>No messages yet — send us a message any time.</p></div>';
     return;
@@ -540,6 +543,29 @@ function renderPortalChatThread(data) {
   if (atBottom) thread.scrollTop = thread.scrollHeight;
 }
 
+// "Seen" is tracked per portal account in localStorage — the first render
+// after login compares each admin message's timestamp against it and shows
+// a dot on the Message Us quick action if anything is newer. There's no
+// concept of a signed-in session across devices here (same posture as the
+// rest of this portal), so "seen" is local to this browser, same as the
+// device-local Track Request history elsewhere on the site.
+function portalLastSeenKey() { return 'jtes_portal_lastseen_' + portalKey; }
+
+function checkPortalUnread(msgs) {
+  const lastSeen = localStorage.getItem(portalLastSeenKey());
+  const lastSeenTime = lastSeen ? new Date(lastSeen).getTime() : 0;
+  const hasUnread = msgs.some(m => m.from === 'admin' && new Date(m.timestamp).getTime() > lastSeenTime);
+  const dot = document.getElementById('portal-unread-dot');
+  if (dot) dot.classList.toggle('show', hasUnread);
+}
+
+function markPortalMessagesSeen() {
+  if (!portalKey) return;
+  localStorage.setItem(portalLastSeenKey(), new Date().toISOString());
+  const dot = document.getElementById('portal-unread-dot');
+  if (dot) dot.classList.remove('show');
+}
+
 async function sendPortalChatMessage() {
   const input = document.getElementById('portal-chat-input');
   const text = input.value.trim();
@@ -550,6 +576,7 @@ async function sendPortalChatMessage() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ from: 'client', text: text, timestamp: new Date().toISOString() })
     });
+    markPortalMessagesSeen();
     loadPortalChatThread();
   } catch (e) {
     showToast('Failed to send message. Please try again.', true);

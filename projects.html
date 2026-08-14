@@ -224,157 +224,110 @@ nav {
 
 .folders-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 40px 16px;
   margin-bottom: 60px;
 }
 
-/* Folder shape wrapper */
+/* Desktop-style folder icon: a real folder silhouette (back panel with a
+   tab notch + a shorter front flap layered over it), not a content card.
+   Click/hover behaviour mimics an OS icon grid — the whole tile highlights
+   and lifts, rather than a "card" hovering. */
 .folder-card {
   cursor: pointer;
-  transition: transform 0.3s ease, filter 0.3s ease;
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 14px 8px 12px;
+  border-radius: 14px;
+  transition: background 0.15s ease, transform 0.15s ease;
+  -webkit-user-select: none; user-select: none;
 }
-.folder-card:hover {
-  transform: translateY(-6px);
-  filter: drop-shadow(0 14px 28px rgba(37,99,235,0.2));
-}
+.folder-card:hover { background: rgba(37,99,235,0.07); }
+.folder-card:active { transform: scale(0.96); }
 
-/* Folder tab */
-.folder-tab {
-  height: 13px;
-  width: 40%;
-  border-radius: 5px 5px 0 0;
-  margin-left: 10px;
-}
-.folder-tab.public  { background: #2563EB; }
-
-/* Folder main body */
-.folder-main {
-  border-radius: 0 10px 10px 10px;
-  overflow: hidden;
+.folder-icon {
   position: relative;
+  width: 100%;
+  max-width: 116px;
+  aspect-ratio: 4 / 3;
+  margin: 0 auto 12px;
+  filter: drop-shadow(0 6px 14px rgba(15,23,42,0.18));
+  transition: filter 0.25s ease, transform 0.25s ease;
 }
-.folder-main.public  { background: #2563EB; }
+.folder-card:hover .folder-icon {
+  transform: translateY(-4px) scale(1.03);
+  filter: drop-shadow(0 14px 24px rgba(37,99,235,0.3));
+}
 
-/* Folder preview image */
-.folder-preview {
-  height: 105px;
-  position: relative;
+/* Back panel + tab, cut with clip-path into the classic folder silhouette */
+.folder-back {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(150deg, #60a5fa 0%, #2563EB 55%, #1d4ed8 100%);
+  clip-path: polygon(0% 18%, 38% 18%, 47% 4%, 100% 4%, 100% 100%, 0% 100%);
+  border-radius: 2px 8px 8px 8px;
+}
+
+/* A resource preview "peeking" out of the folder mouth, like a photo
+   tucked halfway into a real folder. Only rendered when a folder has an
+   image/video resource to show; folders without one just show the plain
+   folder shape below. */
+.folder-peek {
+  position: absolute;
+  left: 14%; right: 14%; top: 20%; height: 44%;
+  background: #fff;
+  border-radius: 4px;
   overflow: hidden;
-  margin: 6px 6px 0;
-  border-radius: 5px 5px 0 0;
-  background: rgba(0,0,0,0.25);
+  box-shadow: 0 3px 8px rgba(15,23,42,0.28);
+  transform: rotate(-3deg);
 }
-.folder-preview img, .folder-preview video {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  transition: transform 0.4s ease;
+.folder-peek img, .folder-peek video { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Front flap, shorter than the back panel, layered on top to fake depth */
+.folder-front {
+  position: absolute;
+  left: 0; right: 0; bottom: 0; height: 60%;
+  background: linear-gradient(150deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 5px 8px 8px 8px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -10px 16px rgba(0,0,0,0.1);
 }
-.folder-card:hover .folder-preview img,
-.folder-card:hover .folder-preview video { transform: scale(1.06); }
-.folder-preview-placeholder {
-  width: 100%; height: 100%;
+
+.folder-count-badge {
+  position: absolute;
+  bottom: -6px; right: -6px;
+  background: #fff;
+  color: var(--blue, #2563EB);
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(15,23,42,0.25);
+  font-size: 10px;
+  font-weight: 800;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.folder-preview-placeholder i {
-  font-size: 32px;
-  color: rgba(255,255,255,0.18);
-}
 
-/* Badge */
-.folder-badge {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 9px;
+.folder-label { width: 100%; }
+.folder-name {
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  backdrop-filter: blur(6px);
-}
-.folder-badge.public  { background: rgba(255,255,255,0.2); color: #fff; }
-
-/* File count */
-.folder-resource-count {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  background: rgba(0,0,0,0.45);
-  backdrop-filter: blur(6px);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* Info strip */
-.folder-body {
-  background: #fff;
-  margin: 0 6px 6px;
-  border-radius: 0 0 5px 5px;
-  padding: 10px 11px 12px;
-}
-.folder-category {
-  font-size: 8px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  margin-bottom: 3px;
-}
-.folder-title {
-  font-size: 12px;
-  font-weight: 800;
   color: var(--dark2);
-  margin-bottom: 3px;
   line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
-.folder-desc {
+.folder-meta {
   font-size: 11px;
   color: var(--text-muted);
-  line-height: 1.5;
-  margin-bottom: 8px;
+  margin-top: 4px;
 }
-.folder-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 8px;
-  border-top: 1px solid var(--border);
-}
-.folder-date {
-  font-size: 10px;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-.btn-view {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: #fff;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 5px;
-  font-size: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: inherit;
-  transition: opacity 0.2s, transform 0.2s;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-}
-.btn-view.public-btn  { background: #2563EB; }
-.btn-view:hover { opacity: 0.88; transform: translateX(2px); }
 .empty-state { text-align: center; padding: 60px; background: #fff; border-radius: 20px; }
 
 /* ── FULLSCREEN FOLDER VIEW ── */
@@ -729,7 +682,7 @@ footer { background: #0A0F1E; padding: 48px 80px 24px; text-align: center; color
   .carousel-arrow { display: none; }
   .slide-counter { top: 20px; right: 20px; }
   .project-container { padding: 0 20px; }
-  .folders-grid { grid-template-columns: 1fr; }
+  .folders-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 28px 8px; }
   .resources-grid { grid-template-columns: 1fr; }
 }
   /* ===== NEWSLETTER ===== */
@@ -1147,39 +1100,28 @@ function renderFolders() {
 
 function renderFolderCard(folder) {
   const previewResource = folder.resources && folder.resources.length > 0 ? folder.resources[0] : null;
-  let previewHtml = '';
+  let peekHtml = '';
 
   if (previewResource && previewResource.type === 'image') {
-    previewHtml = `<img src="${previewResource.url}" alt="${escapeHtml(folder.name)}">`;
+    peekHtml = `<div class="folder-peek"><img src="${previewResource.url}" alt="" loading="lazy"></div>`;
   } else if (previewResource && previewResource.type === 'video') {
-    previewHtml = `<video src="${previewResource.url}" muted></video>`;
-  } else {
-    previewHtml = `<div class="folder-preview-placeholder"><i class="fas fa-folder-open"></i></div>`;
+    peekHtml = `<div class="folder-peek"><video src="${previewResource.url}" muted></video></div>`;
   }
 
   const resourceCount = folder.resources ? folder.resources.length : 0;
   const dateStr = new Date(folder.updatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
   return `
-    <div class="folder-card" onclick="openFolder('${folder.id}')">
-      <div class="folder-tab public"></div>
-      <div class="folder-main public">
-        <div class="folder-preview">
-          ${previewHtml}
-          <span class="folder-badge public"><i class="fas fa-globe"></i> Public</span>
-          <span class="folder-resource-count"><i class="fas fa-layer-group"></i> ${resourceCount} file${resourceCount !== 1 ? 's' : ''}</span>
-        </div>
-        <div class="folder-body">
-          <div class="folder-category">Open Project</div>
-          <h3 class="folder-title">${escapeHtml(folder.name)}</h3>
-          <p class="folder-desc">${escapeHtml((folder.description || 'No description provided.').substring(0, 100))}</p>
-          <div class="folder-footer">
-            <span class="folder-date"><i class="fas fa-calendar-alt"></i> ${dateStr}</span>
-            <button class="btn-view public-btn" onclick="event.stopPropagation(); openFolder('${folder.id}')">
-              Open <i class="fas fa-arrow-right"></i>
-            </button>
-          </div>
-        </div>
+    <div class="folder-card" onclick="openFolder('${folder.id}')" title="${escapeHtml(folder.description || folder.name)}">
+      <div class="folder-icon">
+        <div class="folder-back"></div>
+        ${peekHtml}
+        <div class="folder-front"></div>
+        ${resourceCount ? `<span class="folder-count-badge">${resourceCount}</span>` : ''}
+      </div>
+      <div class="folder-label">
+        <div class="folder-name">${escapeHtml(folder.name)}</div>
+        <div class="folder-meta">${resourceCount} file${resourceCount !== 1 ? 's' : ''} &middot; ${dateStr}</div>
       </div>
     </div>
   `;
