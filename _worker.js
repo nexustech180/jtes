@@ -24,6 +24,10 @@
 //                             the same stock-decrement + order-write flow as Cash on
 //                             Delivery, using the pending order stashed by
 //                             /api/paystack-prepare rather than anything in this request.
+//   GET  /api/integration-status — reports which server-side secrets are actually set
+//                             (booleans only, never the values), so admin.html's
+//                             Settings tab can show real "Configured"/"Not confirmed"
+//                             status instead of a client-side guess.
 //
 // ── ONE-TIME SETUP ──
 //
@@ -146,6 +150,13 @@ export default {
     }
     if (url.pathname === '/api/paystack-verify' && request.method === 'POST') {
       return handlePaystackVerify(request, env);
+    }
+    if (url.pathname === '/api/integration-status' && request.method === 'GET') {
+      return jsonResponse({
+        paystackConfigured: !!env.PAYSTACK_SECRET_KEY,
+        adminApiConfigured: !!env.ADMIN_API_TOKEN,
+        composioConfigured: !!env.COMPOSIO_API_KEY
+      });
     }
     if (url.pathname === '/api/debug-composio' && request.method === 'GET') {
       return handleDebugComposio(request, env);

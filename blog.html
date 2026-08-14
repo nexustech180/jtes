@@ -1214,7 +1214,7 @@
   <a class="social-icon" href="https://youtube.com/@therobotseries?si=xlG2jzS2aUnC-pyV"><i class="fab fa-youtube"></i></a>
   <a class="social-icon" href="#"><i class="fab fa-instagram"></i></a>
   <a class="social-icon" href="https://www.linkedin.com/in/assan-james-201016230?utm_source=share_via&utm_content=profile&utm_medium=member_android"><i class="fab fa-linkedin-in"></i></a>
-  <a class="social-icon" href="https://wa.me/233548029027"><i class="fas fa-comment"></i></a>
+  <a class="social-icon" id="footer-wa-link" href="https://wa.me/233548029027"><i class="fas fa-comment"></i></a>
 </div>
       </div>
       <div class="footer-col">
@@ -1239,11 +1239,11 @@
         <h4>Contact Us</h4>
         <div class="footer-contact">
           <div class="contact-icon"><i class="fas fa-phone"></i></div>
-          <div>0548029027<br>0203212915</div>
+          <div id="footer-phone-text">0548029027<br>0203212915</div>
         </div>
         <div class="footer-contact">
           <div class="contact-icon"><i class="fas fa-envelope"></i></div>
-          <div><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3b515a48485a554f5e5853555457545c525e487b5c565a525715585456">[email&#160;protected]</a></div>
+          <div id="footer-email-text"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3b515a48485a554f5e5853555457545c525e487b5c565a525715585456">[email&#160;protected]</a></div>
         </div>
       </div>
     </div>
@@ -1257,7 +1257,32 @@
   </footer>
 
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></body>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+(function() {
+  var SITE_SETTINGS_FB_URL = 'https://jtes-website-default-rtdb.firebaseio.com/siteSettings.json';
+  window.JTES_WA_NUMBER = '233548029027';
+  fetch(SITE_SETTINGS_FB_URL)
+    .then(function(r) { return r.json(); })
+    .then(function(s) {
+      if (!s) return;
+      if (s.whatsapp) {
+        window.JTES_WA_NUMBER = String(s.whatsapp).replace(/[^0-9]/g, '');
+        var waLink = document.getElementById('footer-wa-link');
+        if (waLink) waLink.href = 'https://wa.me/' + window.JTES_WA_NUMBER;
+      }
+      if (s.supportPhone) {
+        var phoneEl = document.getElementById('footer-phone-text');
+        if (phoneEl) phoneEl.textContent = s.supportPhone;
+      }
+      if (s.supportEmail) {
+        var emailEl = document.getElementById('footer-email-text');
+        if (emailEl) emailEl.textContent = s.supportEmail;
+      }
+    })
+    .catch(function() {});
+})();
+</script>
+</body>
 
 <script>
 

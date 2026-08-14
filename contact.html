@@ -140,6 +140,22 @@
   .map-section .map-pin { font-size: 48px; color: var(--blue); }
   .map-section p { color: rgba(255,255,255,0.5); font-size: 14px; }
 
+  /* FAQ */
+  .faq-pub-section { padding: 90px 80px; max-width: 900px; margin: 0 auto; }
+  .faq-pub-header { text-align: center; margin-bottom: 48px; }
+  .faq-pub-header h2 { font-size: 40px; font-weight: 900; color: var(--dark2, #0F172A); }
+  .faq-pub-header h2 span { color: var(--blue); }
+  .faq-pub-header p { font-size: 15px; color: var(--text-muted, #64748b); margin-top: 10px; }
+  .faq-pub-list { display: flex; flex-direction: column; gap: 14px; }
+  .faq-pub-item { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: #fff; }
+  .faq-pub-q { padding: 18px 22px; font-size: 15px; font-weight: 700; color: var(--dark2, #0F172A); cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .faq-pub-q i { color: var(--blue); transition: transform 0.2s; flex-shrink: 0; }
+  .faq-pub-item.open .faq-pub-q i { transform: rotate(180deg); }
+  .faq-pub-a { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
+  .faq-pub-item.open .faq-pub-a { max-height: 400px; }
+  .faq-pub-a-inner { padding: 0 22px 20px; font-size: 14px; color: var(--text-muted, #64748b); line-height: 1.7; }
+  @media (max-width: 700px) { .faq-pub-section { padding: 60px 24px; } }
+
   /* NEWSLETTER */
   .newsletter-section { position:relative;overflow:hidden;background:linear-gradient(135deg,#060D1F 0%,#0F1E45 50%,#0A0F1E 100%);padding:100px 80px;text-align:center; }
   .newsletter-section::before { content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,0.15) 0%,transparent 70%);top:-200px;left:-100px;pointer-events:none; }
@@ -459,6 +475,17 @@
   <p>Ghana, Kumasi-Lake-Road, Kumasi</p>
 </div>
 
+<section class="faq-pub-section" id="faq-pub-section">
+  <div class="faq-pub-header">
+    <div class="section-badge" style="margin:0 auto 16px;display:inline-flex;"><span class="dot"></span> FAQ</div>
+    <h2>Frequently Asked <span>Questions</span></h2>
+    <p>Quick answers to the questions we hear most often.</p>
+  </div>
+  <div class="faq-pub-list" id="faq-pub-list">
+    <div class="faq-pub-item"><div class="faq-pub-q">Loading FAQs…</div></div>
+  </div>
+</section>
+
   <div class="newsletter-section" id="newsletter-preview">
     <div class="nl-inner">
       <div class="nl-icon-wrap"><i class="fas fa-envelope-open-text"></i></div>
@@ -498,7 +525,7 @@
   <a class="social-icon" href="https://youtube.com/@therobotseries?si=xlG2jzS2aUnC-pyV"><i class="fab fa-youtube"></i></a>
   <a class="social-icon" href="#"><i class="fab fa-instagram"></i></a>
   <a class="social-icon" href="https://www.linkedin.com/in/assan-james-201016230?utm_source=share_via&utm_content=profile&utm_medium=member_android"><i class="fab fa-linkedin-in"></i></a>
-  <a class="social-icon" href="https://wa.me/233548029027"><i class="fas fa-comment"></i></a>
+  <a class="social-icon" id="footer-wa-link" href="https://wa.me/233548029027"><i class="fas fa-comment"></i></a>
 </div>
     </div>
     <div class="footer-col">
@@ -525,11 +552,11 @@
       <h4>Contact Us</h4>
       <div class="footer-contact">
         <div class="contact-icon"><i class="fas fa-phone"></i></div>
-        <div>0548029027<br>0203212915</div>
+        <div id="footer-phone-text">0548029027<br>0203212915</div>
       </div>
       <div class="footer-contact">
         <div class="contact-icon"><i class="fas fa-envelope"></i></div>
-        <div>jassantechnologies@gmail.com</div>
+        <div id="footer-email-text">jassantechnologies@gmail.com</div>
       </div>
     </div>
   </div>
@@ -1357,6 +1384,38 @@ async function subscribeNewsletter() {
   if (btn) { btn.disabled = false; btn.textContent = 'Subscribe'; }
 }
 
+// ── FAQ ACCORDION (ADM-08) ──
+function escapeHtmlPub(s) {
+  var d = document.createElement('div');
+  d.textContent = s == null ? '' : String(s);
+  return d.innerHTML;
+}
+function toggleFaqItem(el) {
+  var wasOpen = el.classList.contains('open');
+  document.querySelectorAll('.faq-pub-item.open').forEach(function(i) { i.classList.remove('open'); });
+  if (!wasOpen) el.classList.add('open');
+}
+fetch(CMS_FB_URL + '/faqs.json')
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var list = document.getElementById('faq-pub-list');
+    if (!list) return;
+    var entries = data && typeof data === 'object' ? Object.values(data) : [];
+    if (!entries.length) {
+      list.innerHTML = '<div class="faq-pub-item"><div class="faq-pub-q">FAQs coming soon.</div></div>';
+      return;
+    }
+    list.innerHTML = entries.map(function(f) {
+      return '<div class="faq-pub-item" onclick="toggleFaqItem(this)">' +
+        '<div class="faq-pub-q">' + escapeHtmlPub(f.question) + ' <i class="fas fa-chevron-down"></i></div>' +
+        '<div class="faq-pub-a"><div class="faq-pub-a-inner">' + escapeHtmlPub(f.answer) + '</div></div>' +
+      '</div>';
+    }).join('');
+  })
+  .catch(function() {
+    var list = document.getElementById('faq-pub-list');
+    if (list) list.innerHTML = '<div class="faq-pub-item"><div class="faq-pub-q">FAQs coming soon.</div></div>';
+  });
 
 // ── SERVICES DROPDOWN MOBILE TOGGLE
 document.querySelectorAll('.nav-dropdown > a').forEach(function(link) {
@@ -1479,5 +1538,30 @@ document.querySelectorAll('.nav-dropdown > a').forEach(function(link) {
   </span>
 </a>
 
+<script>
+(function() {
+  var SITE_SETTINGS_FB_URL = 'https://jtes-website-default-rtdb.firebaseio.com/siteSettings.json';
+  window.JTES_WA_NUMBER = '233548029027';
+  fetch(SITE_SETTINGS_FB_URL)
+    .then(function(r) { return r.json(); })
+    .then(function(s) {
+      if (!s) return;
+      if (s.whatsapp) {
+        window.JTES_WA_NUMBER = String(s.whatsapp).replace(/[^0-9]/g, '');
+        var waLink = document.getElementById('footer-wa-link');
+        if (waLink) waLink.href = 'https://wa.me/' + window.JTES_WA_NUMBER;
+      }
+      if (s.supportPhone) {
+        var phoneEl = document.getElementById('footer-phone-text');
+        if (phoneEl) phoneEl.textContent = s.supportPhone;
+      }
+      if (s.supportEmail) {
+        var emailEl = document.getElementById('footer-email-text');
+        if (emailEl) emailEl.textContent = s.supportEmail;
+      }
+    })
+    .catch(function() {});
+})();
+</script>
 </body>
 </html>

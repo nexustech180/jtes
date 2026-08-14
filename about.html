@@ -488,6 +488,20 @@
   .serve-item h4 { font-size: 16px; font-weight: 700; color: var(--dark2); margin-bottom: 4px; }
   .serve-item p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
 
+  /* Testimonials */
+  .testimonials-section { padding: 100px 80px; background: #f8fafc; }
+  .testimonials-header { text-align: center; margin-bottom: 56px; }
+  .testimonials-header h2 { font-size: 48px; font-weight: 900; color: var(--dark2); }
+  .testimonials-header h2 span { color: var(--blue); }
+  .testimonials-header p { font-size: 16px; color: var(--text-muted); margin-top: 12px; }
+  .testimonials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .tm-pub-card { background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 28px 26px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+  .tm-pub-stars { color: #F59E0B; font-size: 14px; margin-bottom: 14px; }
+  .tm-pub-quote { font-size: 14.5px; color: var(--text); line-height: 1.7; font-style: italic; margin-bottom: 20px; }
+  .tm-pub-name { font-size: 15px; font-weight: 800; color: var(--dark2); }
+  .tm-pub-role { font-size: 12.5px; color: var(--text-muted); }
+  @media (max-width: 900px) { .testimonials-grid { grid-template-columns: 1fr; } .testimonials-section { padding: 60px 24px; } }
+
   /* Photo Gallery */
   .gallery-section { padding: 0 80px 60px; }
   .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
@@ -1243,6 +1257,19 @@
     </div>
   </section>
 
+  <!-- TESTIMONIALS -->
+  <section class="testimonials-section" id="testimonials-section">
+    <div class="testimonials-header">
+      <div class="section-badge" style="margin:0 auto 16px;display:inline-flex;"><span class="dot"></span> CLIENT VOICES</div>
+      <h2>What Our <span>Clients Say</span></h2>
+      <div class="section-divider center"><div class="div-line"></div><div class="div-dot"></div><div class="div-line2"></div></div>
+      <p>Real feedback from the people and organizations we've worked with.</p>
+    </div>
+    <div class="testimonials-grid" id="testimonials-grid">
+      <div class="tm-pub-card"><div class="tm-pub-quote">Loading testimonials…</div></div>
+    </div>
+  </section>
+
   <!-- FOOTER (About) -->
   <div class="newsletter-section" id="newsletter-preview">
     <div class="nl-inner">
@@ -1286,7 +1313,7 @@
   <a class="social-icon" href="https://youtube.com/@therobotseries?si=xlG2jzS2aUnC-pyV"><i class="fab fa-youtube"></i></a>
   <a class="social-icon" href="#"><i class="fab fa-instagram"></i></a>
   <a class="social-icon" href="https://www.linkedin.com/in/assan-james-201016230?utm_source=share_via&utm_content=profile&utm_medium=member_android"><i class="fab fa-linkedin-in"></i></a>
-  <a class="social-icon" href="https://wa.me/233548029027"><i class="fas fa-comment"></i></a>
+  <a class="social-icon" id="footer-wa-link" href="https://wa.me/233548029027"><i class="fas fa-comment"></i></a>
 </div>
     </div>
     <div class="footer-col">
@@ -1311,11 +1338,11 @@
       <h4>Contact Us</h4>
       <div class="footer-contact">
         <div class="contact-icon"><i class="fas fa-phone"></i></div>
-        <div>0548029027<br>0203212915</div>
+        <div id="footer-phone-text">0548029027<br>0203212915</div>
       </div>
       <div class="footer-contact">
         <div class="contact-icon"><i class="fas fa-envelope"></i></div>
-        <div><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="274d46545446495342444f49484b48404e425467404a464e4b0944484a">[email&#160;protected]</a></div>
+        <div id="footer-email-text"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="274d46545446495342444f49484b48404e425467404a464e4b0944484a">[email&#160;protected]</a></div>
       </div>
     </div>
   </div>
@@ -2316,6 +2343,36 @@ async function subscribeNewsletter() {
   if (btn) { btn.disabled = false; btn.textContent = 'Subscribe'; }
 }
 
+// ── TESTIMONIALS (ADM-08) ──
+function escapeHtmlPub(s) {
+  var d = document.createElement('div');
+  d.textContent = s == null ? '' : String(s);
+  return d.innerHTML;
+}
+fetch(CMS_FB_URL + '/testimonials.json')
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var grid = document.getElementById('testimonials-grid');
+    if (!grid) return;
+    var entries = data && typeof data === 'object' ? Object.values(data) : [];
+    if (!entries.length) {
+      grid.innerHTML = '<div class="tm-pub-card"><div class="tm-pub-quote">Client testimonials coming soon.</div></div>';
+      return;
+    }
+    grid.innerHTML = entries.slice(0, 6).map(function(t) {
+      var stars = '<i class="fas fa-star"></i>'.repeat(Math.max(0, Math.min(5, parseInt(t.rating, 10) || 5)));
+      return '<div class="tm-pub-card">' +
+        '<div class="tm-pub-stars">' + stars + '</div>' +
+        '<div class="tm-pub-quote">&ldquo;' + escapeHtmlPub(t.quote) + '&rdquo;</div>' +
+        '<div class="tm-pub-name">' + escapeHtmlPub(t.name) + '</div>' +
+        (t.role ? '<div class="tm-pub-role">' + escapeHtmlPub(t.role) + '</div>' : '') +
+      '</div>';
+    }).join('');
+  })
+  .catch(function() {
+    var grid = document.getElementById('testimonials-grid');
+    if (grid) grid.innerHTML = '<div class="tm-pub-card"><div class="tm-pub-quote">Client testimonials coming soon.</div></div>';
+  });
 
 // ── SERVICES DROPDOWN MOBILE TOGGLE
 document.querySelectorAll('.nav-dropdown > a').forEach(function(link) {
@@ -2438,5 +2495,30 @@ document.querySelectorAll('.nav-dropdown > a').forEach(function(link) {
   </span>
 </a>
 
+<script>
+(function() {
+  var SITE_SETTINGS_FB_URL = 'https://jtes-website-default-rtdb.firebaseio.com/siteSettings.json';
+  window.JTES_WA_NUMBER = '233548029027';
+  fetch(SITE_SETTINGS_FB_URL)
+    .then(function(r) { return r.json(); })
+    .then(function(s) {
+      if (!s) return;
+      if (s.whatsapp) {
+        window.JTES_WA_NUMBER = String(s.whatsapp).replace(/[^0-9]/g, '');
+        var waLink = document.getElementById('footer-wa-link');
+        if (waLink) waLink.href = 'https://wa.me/' + window.JTES_WA_NUMBER;
+      }
+      if (s.supportPhone) {
+        var phoneEl = document.getElementById('footer-phone-text');
+        if (phoneEl) phoneEl.textContent = s.supportPhone;
+      }
+      if (s.supportEmail) {
+        var emailEl = document.getElementById('footer-email-text');
+        if (emailEl) emailEl.textContent = s.supportEmail;
+      }
+    })
+    .catch(function() {});
+})();
+</script>
 </body>
 </html>

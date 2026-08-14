@@ -1556,7 +1556,7 @@
         <a class="social-icon" href="https://youtube.com/@therobotseries?si=xlG2jzS2aUnC-pyV"><i class="fab fa-youtube"></i></a>
         <a class="social-icon" href="#"><i class="fab fa-instagram"></i></a>
         <a class="social-icon" href="https://www.linkedin.com/in/assan-james-201016230"><i class="fab fa-linkedin-in"></i></a>
-        <a class="social-icon" href="https://wa.me/233548029027"><i class="fas fa-comment"></i></a>
+        <a class="social-icon" id="footer-wa-link" href="https://wa.me/233548029027"><i class="fas fa-comment"></i></a>
       </div>
     </div>
     <div class="footer-col">
@@ -1580,11 +1580,11 @@
       <h4>Contact Us</h4>
       <div class="footer-contact">
         <div class="contact-icon"><i class="fas fa-phone"></i></div>
-        <div>0548029027<br>0203212915</div>
+        <div id="footer-phone-text">0548029027<br>0203212915</div>
       </div>
       <div class="footer-contact">
         <div class="contact-icon"><i class="fas fa-envelope"></i></div>
-        <div>jassantechnologies@gmail.com</div>
+        <div id="footer-email-text">jassantechnologies@gmail.com</div>
       </div>
     </div>
   </div>
@@ -1937,7 +1937,7 @@ function openPdSheet(p) {
   var inquiryBtn = document.getElementById('pdInquiryBtn');
   if (inquiryBtn) {
     var waMsg = encodeURIComponent('Hi Jassan Technologies! I\'m interested in: ' + (p.name || 'a product') + ' (GHS ' + safePrice.toFixed(2) + '). Could you give me more details?');
-    inquiryBtn.href = 'https://wa.me/233548029027?text=' + waMsg;
+    inquiryBtn.href = 'https://wa.me/' + window.JTES_WA_NUMBER + '?text=' + waMsg;
   }
   document.getElementById('pdOverlay').classList.add('open');
   document.getElementById('pdSheet').classList.add('open');
@@ -2471,7 +2471,7 @@ function finishOrderSuccess(order, name, phone, email, address, region, payment,
   waLines.push('━━━━━━━━━━━━━━━━━━━━');
   waLines.push('💰 *TOTAL: GHS ' + total.toFixed(2) + '*');
   if (notes) waLines.push('📝 *Notes:* ' + notes);
-  var waUrl = 'https://wa.me/233548029027?text=' + encodeURIComponent(waLines.join('\n'));
+  var waUrl = 'https://wa.me/' + window.JTES_WA_NUMBER + '?text=' + encodeURIComponent(waLines.join('\n'));
   var waBtn = document.getElementById('successWaBtn');
   if (waBtn) waBtn.href = waUrl;
   var refEl = document.getElementById('successOrderRef');
@@ -2941,5 +2941,30 @@ async function lookupOrder() {
 }
 </script>
 
+<script>
+(function() {
+  var SITE_SETTINGS_FB_URL = 'https://jtes-website-default-rtdb.firebaseio.com/siteSettings.json';
+  window.JTES_WA_NUMBER = '233548029027';
+  fetch(SITE_SETTINGS_FB_URL)
+    .then(function(r) { return r.json(); })
+    .then(function(s) {
+      if (!s) return;
+      if (s.whatsapp) {
+        window.JTES_WA_NUMBER = String(s.whatsapp).replace(/[^0-9]/g, '');
+        var waLink = document.getElementById('footer-wa-link');
+        if (waLink) waLink.href = 'https://wa.me/' + window.JTES_WA_NUMBER;
+      }
+      if (s.supportPhone) {
+        var phoneEl = document.getElementById('footer-phone-text');
+        if (phoneEl) phoneEl.textContent = s.supportPhone;
+      }
+      if (s.supportEmail) {
+        var emailEl = document.getElementById('footer-email-text');
+        if (emailEl) emailEl.textContent = s.supportEmail;
+      }
+    })
+    .catch(function() {});
+})();
+</script>
 </body>
 </html>

@@ -1053,7 +1053,7 @@ footer { background: #0A0F1E; padding: 48px 80px 24px; text-align: center; color
   <a class="social-icon" href="https://youtube.com/@therobotseries?si=xlG2jzS2aUnC-pyV"><i class="fab fa-youtube"></i></a>
   <a class="social-icon" href="#"><i class="fab fa-instagram"></i></a>
   <a class="social-icon" href="https://www.linkedin.com/in/assan-james-201016230?utm_source=share_via&utm_content=profile&utm_medium=member_android"><i class="fab fa-linkedin-in"></i></a>
-  <a class="social-icon" href="https://wa.me/233548029027"><i class="fas fa-comment"></i></a>
+  <a class="social-icon" id="footer-wa-link" href="https://wa.me/233548029027"><i class="fas fa-comment"></i></a>
 </div>
     </div>
     <div class="footer-col">
@@ -1078,11 +1078,11 @@ footer { background: #0A0F1E; padding: 48px 80px 24px; text-align: center; color
       <h4>Contact Us</h4>
       <div class="footer-contact">
         <div class="contact-icon"><i class="fas fa-phone"></i></div>
-        <div>0548029027<br>0203212915</div>
+        <div id="footer-phone-text">0548029027<br>0203212915</div>
       </div>
       <div class="footer-contact">
         <div class="contact-icon"><i class="fas fa-envelope"></i></div>
-        <div>jassantechnologies@gmail.com</div>
+        <div id="footer-email-text">jassantechnologies@gmail.com</div>
       </div>
     </div>
   </div>
@@ -1821,7 +1821,7 @@ async function submitProjectRequest() {
     waLines.push('━━━━━━━━━━━━━━━━━━━━');
     waLines.push('📝 *Description:* ' + desc);
     var waBtn = document.getElementById('pspSuccessWaBtn');
-    if (waBtn) waBtn.href = 'https://wa.me/233548029027?text=' + encodeURIComponent(waLines.join('\n'));
+    if (waBtn) waBtn.href = 'https://wa.me/' + window.JTES_WA_NUMBER + '?text=' + encodeURIComponent(waLines.join('\n'));
 
     document.getElementById('pspRefCode').textContent = refCode;
     if (typeof trkSaveRequestToDevice === 'function') trkSaveRequestToDevice(refCode);
@@ -1902,6 +1902,14 @@ async function submitProjectRequest() {
   .trk-badge.declined    { background: #FEE2E2; color: #991B1B; }
   .trk-card-items { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 6px; }
   .trk-card-total { font-size: 14px; font-weight: 800; color: var(--dark2); }
+  .trk-milestones { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
+  .trk-milestones-label { font-size: 12px; font-weight: 700; color: var(--dark2); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .trk-milestones-label i { color: var(--blue); }
+  .trk-milestone-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-muted); padding: 3px 0; }
+  .trk-milestone-row i { font-size: 11px; width: 14px; }
+  .trk-milestone-row.done { color: var(--dark2); }
+  .trk-milestone-row.done i { color: #16a34a; }
+  .trk-milestone-row:not(.done) i { color: var(--border); }
   @media (max-width: 560px) {
     .trk-search-row { flex-direction: column; }
     .trk-search-btn { padding: 12px; justify-content: center; }
@@ -1961,6 +1969,17 @@ function trkNormalizePhone(p) { return (p || '').replace(/\D/g, ''); }
 function trkRenderRequestCard(r) {
   var statusClass = (r.status || 'new').toLowerCase().replace(/\s+/g, '');
   var statusLabel = r.status || 'New';
+  var milestones = r.milestones || [];
+  var milestonesHtml = '';
+  if (milestones.length) {
+    var doneCount = milestones.filter(function(m) { return m.done; }).length;
+    milestonesHtml = '<div class="trk-milestones">'
+      + '<div class="trk-milestones-label"><i class="fas fa-list-check"></i> Progress (' + doneCount + '/' + milestones.length + ')</div>'
+      + milestones.map(function(m) {
+          return '<div class="trk-milestone-row' + (m.done ? ' done' : '') + '"><i class="fas ' + (m.done ? 'fa-circle-check' : 'fa-circle') + '"></i> ' + (m.text ? m.text.replace(/</g,'&lt;') : '') + '</div>';
+        }).join('')
+      + '</div>';
+  }
   return '<div class="trk-card">'
     + '<div class="trk-card-head">'
     + '<span class="trk-card-ref">' + (r.ref || '—') + '</span>'
@@ -1968,6 +1987,7 @@ function trkRenderRequestCard(r) {
     + '</div>'
     + '<div class="trk-card-date">' + (r.date ? new Date(r.date).toLocaleString() : '—') + '</div>'
     + '<div class="trk-card-items" style="margin-top:8px;"><strong>' + (r.type || '—') + '</strong> — ' + (r.description || '—') + '</div>'
+    + milestonesHtml
     + '</div>';
 }
 
@@ -2053,5 +2073,30 @@ async function lookupRequest() {
 }
 </script>
 
+<script>
+(function() {
+  var SITE_SETTINGS_FB_URL = 'https://jtes-website-default-rtdb.firebaseio.com/siteSettings.json';
+  window.JTES_WA_NUMBER = '233548029027';
+  fetch(SITE_SETTINGS_FB_URL)
+    .then(function(r) { return r.json(); })
+    .then(function(s) {
+      if (!s) return;
+      if (s.whatsapp) {
+        window.JTES_WA_NUMBER = String(s.whatsapp).replace(/[^0-9]/g, '');
+        var waLink = document.getElementById('footer-wa-link');
+        if (waLink) waLink.href = 'https://wa.me/' + window.JTES_WA_NUMBER;
+      }
+      if (s.supportPhone) {
+        var phoneEl = document.getElementById('footer-phone-text');
+        if (phoneEl) phoneEl.textContent = s.supportPhone;
+      }
+      if (s.supportEmail) {
+        var emailEl = document.getElementById('footer-email-text');
+        if (emailEl) emailEl.textContent = s.supportEmail;
+      }
+    })
+    .catch(function() {});
+})();
+</script>
 </body>
 </html>
